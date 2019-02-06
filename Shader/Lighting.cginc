@@ -4,14 +4,16 @@
 #include "AutoLight.cginc"
 sampler2D  _AlbedoMap;
 float4 _AlbedoMap_ST;
+sampler2D _Normal;
 float _Metalic;
 float _Smoothness;
 
 
 struct VIN
 {
-	float4 pos : POSITION ;
+	float4 vertex : POSITION ;
 	float3 nor : NORMAL;
+	float4 tan : TANGENT;
 	float2 uv : TEXCOORD0 ;
 }; 
 struct VOUT
@@ -20,10 +22,12 @@ struct VOUT
 	float3 nor : NORMAL;
 	float2 uv : TEXCOORD0 ;
 	float3 pos_w : TEXCOORD1;
-	SHADOW_COORDS(2)
+	float3 tan : TEXCOORD2;
+	float3 bi : TEXCOORD3;
+	SHADOW_COORDS(4)
 
 	#if defined (VERTEXLIGHT_ON)
-		float3 vertextLightCol : TEXCOORD3;
+		float3 vertextLightCol : TEXCOORD5;
 	#endif
 };
 
@@ -36,13 +40,15 @@ void vertextLight(inout VOUT IN)
 	#endif
 }
 
-VOUT vert(VIN IN)
+VOUT vert(VIN v)
 {
 	VOUT OUT;
-	OUT.pos = UnityObjectToClipPos(IN.pos);
-	OUT.nor = UnityObjectToWorldNormal(IN.nor);
-	OUT.uv = IN.uv;
-	OUT.pos_w = mul(unity_ObjectToWorld,IN.pos);
+	OUT.pos = UnityObjectToClipPos(v.vertex);
+	OUT.nor = UnityObjectToWorldNormal(v.nor);
+	OUT.uv = v.uv;
+	OUT.pos_w = mul(unity_ObjectToWorld,v.vertex);
+	OUT.tan = UnityObjectToWorldDir(v.tan.xyz);
+	OUT.bi = normalize(cross(OUT.nor , OUT.tan) *v.tan.w * unity_WorldTransformParams.w);
 	TRANSFER_SHADOW(OUT);
 	#if defined (VERTEXLIGHT_ON)
 		vertextLight(OUT);
@@ -85,6 +91,9 @@ float4 frag(VOUT IN) : SV_TARGET
 {
 	float2 uv0 = TRANSFORM_TEX(IN.uv , _AlbedoMap);
 	float3 albedo = tex2D(_AlbedoMap , uv0);
+	float3 No = UnpackScaleNormal(tex2D(_Normal , uv0),0.1).xzy;
+	No = normalize(No.x * IN.tan + No.y * IN.nor + No.z * IN.bi);
+	IN.nor = No;
 	float3 ViewVec = normalize(_WorldSpaceCameraPos - IN.pos_w);
 	float3 specular;
 	float OneMinusReflectivity;
@@ -93,7 +102,6 @@ float4 frag(VOUT IN) : SV_TARGET
 	UnityIndirect iLight = creatInLight(IN);
 	float4 col = UNITY_BRDF_PBS(albedo , specular , OneMinusReflectivity , _Smoothness ,IN.nor , ViewVec , dLight , iLight);
 
-	//col = float4(ViewVec,1);
 	return col;
 }
 #endif

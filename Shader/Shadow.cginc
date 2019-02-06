@@ -1,34 +1,45 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+#if !defined(MY_SHADOW)
+	#define MY_SHADOW
 
-#if !defined(MYSHADOW)
-#define MYSHADOW
 #include "UnityCG.cginc"
 
-struct VIN
-{
-	float4 pos : POSITION;
-	float3 nor : NORMAL;
+
+struct VertexData {
+	float4 position : POSITION;
+	float3 normal : NORMAL;
 };
 
-struct VOUT
-{
-	float4 pos : SV_POSITION;
-};
+// #if defined(SHADOWS_CUBE)
+// struct VOUT
+// {
+// 	float4 pos : SV_POSITION;
+// 	float3 lightVec : TEXCOORD0;
+// };
 
-VOUT vert(VIN IN)
-{
-	VOUT OUT;
+// VOUT vert (VertexData v)  {
+// 	VOUT OUT;
+// 	OUT.pos = UnityObjectToClipPos(v.position);
+// 	OUT.lightVec = mul(unity_ObjectToWorld , v.position).xyz -  _LightPositionRange.xyz;
+// 	return OUT;
+// 	}
 
-	OUT. pos = UnityClipSpaceShadowCasterPos(IN.pos.xyz, IN.nor);
-	//OUT. pos = UnityObjectToClipPos(IN.pos);
-	OUT.pos = UnityApplyLinearShadowBias(OUT. pos);
-	return OUT;
-}
+// 	half4 frag (VOUT IN) : SV_TARGET 
+// 	{
+// 		float depth = length(IN.lightVec) + unity_LightShadowBias.x;
+// 		depth *=_LightPositionRange.w;
+// 		return UnityEncodeCubeShadowDepth(depth);
+// 	}
 
+// #else
+	float4 vert (VertexData v) : SV_POSITION {
+		float4 position =
+			UnityClipSpaceShadowCasterPos(v.position.xyz, v.normal);
+		return UnityApplyLinearShadowBias(position);
+	}
 
-float4 frag(VOUT IN) : SV_Target
-{
-	return 0;
-}
+	half4 frag () : SV_TARGET {
+		return 0;
+	}
+// #endif
 
 #endif
