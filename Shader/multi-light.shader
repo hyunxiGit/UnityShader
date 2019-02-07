@@ -1,4 +1,4 @@
-﻿Shader "Custom/Multi" {
+Shader "Custom/Multi" {
 	Properties
 	{
 		_AlbedoMap("albedo",2D) = "white"{}
@@ -21,7 +21,7 @@
 			#pragma multi_compile _ VERTEXLIGHT_ON
 			#pragma vertex vert
 			#pragma fragment frag
-
+			
 			#define FORWARD_BASE_PASS
 			#include "Lighting.cginc"
 			ENDCG
@@ -50,6 +50,7 @@
 			}
 			CGPROGRAM
 			#pragma target 3.0
+			#pragma multi_compile_shadowcaster
 			#pragma vertex vert
 			#pragma fragment frag
 			#include "Shadow.cginc"
