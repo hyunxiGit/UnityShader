@@ -1,7 +1,8 @@
-﻿Shader "Custom/Multi" {
+Shader "Custom/Multi" {
 	Properties
 	{
 		_AlbedoMap("albedo",2D) = "white"{}
+		[noScaleOffset]_Normal("normal",2D) = "normal"{}
 		[gamma]_Metalic("metalic", range(0,1)) = 0.5
 		[gamma]_Smoothness("smoothness", range(0,1)) = 0.5
 	}
@@ -20,12 +21,12 @@
 			#pragma multi_compile _ VERTEXLIGHT_ON
 			#pragma vertex vert
 			#pragma fragment frag
-
+			
 			#define FORWARD_BASE_PASS
 			#include "Lighting.cginc"
 			ENDCG
 		}
-/*		Pass 
+		Pass 
 		{
 			Tags 
 			{
@@ -33,13 +34,14 @@
 			}
 			Blend One One
 			CGPROGRAM		
-			#pragma multi_compile_fwdadd	
+			#pragma target 3.0
+			#pragma multi_compile_fwdadd_fullshadows
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma target 3.0
+			
 			#include "Lighting.cginc"
 			ENDCG
-		}*/
+		}
 		Pass
 		{
 			Tags
@@ -48,6 +50,7 @@
 			}
 			CGPROGRAM
 			#pragma target 3.0
+			#pragma multi_compile_shadowcaster
 			#pragma vertex vert
 			#pragma fragment frag
 			#include "Shadow.cginc"
