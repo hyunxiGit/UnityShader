@@ -117,14 +117,14 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Metalic: 0
+    - _Metalic: 1
     - _Metallic: 0
     - _Mode: 0
     - _NormalScale: 0.5
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _Roughness: 0.5
-    - _Smooth: 0.287
+    - _Smooth: 1
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1

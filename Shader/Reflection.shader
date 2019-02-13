@@ -54,11 +54,18 @@
                 l.ndotl = DotClamped(IN.nor , l.dir);
                 return l;
             }
-            UnityIndirect iLight (VOUT IN)
+            UnityIndirect iLight (VOUT IN , half Sm ,half3 Rd)
             {
                 UnityIndirect l;
                 l.diffuse = 0;
-                l.specular = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, IN.nor);
+                float Ro = 1- Sm;
+                // Ro *= 1.7 - 0.7 * Ro;
+                // float4 envSample = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, Vd , Ro * UNITY_SPECCUBE_LOD_STEPS);
+                // l.specular = DecodeHDR(envSample, unity_SpecCube0_HDR);
+                Unity_GlossyEnvironmentData envData;
+                envData.roughness = 1- Sm;
+                envData.reflUVW = Rd;
+                l.specular = Unity_GlossyEnvironment(UNITY_PASS_TEXCUBE(unity_SpecCube0),unity_SpecCube0_HDR,envData);
                 return l;
             }
             half4 frag(VOUT IN) : SV_TARGET
@@ -75,8 +82,9 @@
                 Al = DiffuseAndSpecularFromMetallic(Al,Me, Sp ,OMR);
 
                 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
+                half3 Rd = reflect(-Vd , No);
                 UnityLight Dl = dLight (IN);
-                UnityIndirect Il = iLight (IN);
+                UnityIndirect Il = iLight (IN , Sm ,Rd);
                 half4 col = UNITY_BRDF_PBS(Al,Sp,OMR,Sm,No,Vd,Dl,Il);
                 return col;
             }
