@@ -1,4 +1,4 @@
-﻿Shader "Custom/reflect"
+Shader "Custom/reflect"
 {
     Properties
     {
@@ -58,13 +58,11 @@
             {
                 UnityIndirect l;
                 l.diffuse = 0;
+                
                 float Ro = 1- Sm;
-                // Ro *= 1.7 - 0.7 * Ro;
-                // float4 envSample = UNITY_SAMPLE_TEXCUBE_LOD(unity_SpecCube0, Vd , Ro * UNITY_SPECCUBE_LOD_STEPS);
-                // l.specular = DecodeHDR(envSample, unity_SpecCube0_HDR);
                 Unity_GlossyEnvironmentData envData;
                 envData.roughness = 1- Sm;
-                envData.reflUVW = Rd;
+                envData.reflUVW = BoxProjectedCubemapDirection(Rd, IN.pos_w, unity_SpecCube0_ProbePosition,unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax);
                 l.specular = Unity_GlossyEnvironment(UNITY_PASS_TEXCUBE(unity_SpecCube0),unity_SpecCube0_HDR,envData);
                 return l;
             }
