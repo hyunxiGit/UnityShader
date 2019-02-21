@@ -1,4 +1,3 @@
-// Upgrade NOTE: replaced 'UNITY_PASS_TEXCUBE(unity_SpecCube1)' with 'UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube1,unity_SpecCube0)'
 
 Shader "Custom/reflect"
 {
@@ -67,13 +66,25 @@ Shader "Custom/reflect"
                 envData.reflUVW = BoxProjectedCubemapDirection(Rd, IN.pos_w, unity_SpecCube0_ProbePosition,unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax);
                 float3 specular1 = Unity_GlossyEnvironment(UNITY_PASS_TEXCUBE(unity_SpecCube0),unity_SpecCube0_HDR,envData);
 
- 				Unity_GlossyEnvironmentData envData2;
-                envData2.roughness = 1- Sm;
-                envData2.reflUVW = BoxProjectedCubemapDirection(Rd, IN.pos_w, unity_SpecCube1_ProbePosition,unity_SpecCube1_BoxMin, unity_SpecCube1_BoxMax);
-                float3 specular2 = Unity_GlossyEnvironment(UNITY_PASS_TEXCUBE(unity_SpecCube1),unity_SpecCube1_HDR,envData2);
 
-                l.specular = lerp(specular1,specular2,unity_SpecCube0_BoxMin.w);
+                float interpolator = unity_SpecCube0_BoxMin.w;
+                #if UNITY_SPECCUBE_BLENDING
+                    if (interpolator <0.9999)
+                    UNITY_BRANCH
+                    {
+                        envData.reflUVW = BoxProjectedCubemapDirection(Rd, IN.pos_w, unity_SpecCube1_ProbePosition,unity_SpecCube1_BoxMin, unity_SpecCube1_BoxMax);
+                        float3 specular2 = Unity_GlossyEnvironment(UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube1,unity_SpecCube0),unity_SpecCube1_HDR,envData);
 
+                        l.specular = lerp(specular2,specular1,interpolator);
+                    }
+                    else
+                    {
+                        l.specular = specular1;
+                    }
+                #else
+                    l.specular = specular1;
+
+                #endif
                 return l;
             }
             half4 frag(VOUT IN) : SV_TARGET
