@@ -67,7 +67,7 @@ UnityLight dLight(VOUT IN)
     return l;
 }
 
-UnityIndirect iLight(VOUT IN)
+UnityIndirect iLight(VOUT IN , half3 Rd, float Ro)
 {
     UnityIndirect l;
     l.diffuse = 0;
@@ -77,8 +77,31 @@ UnityIndirect iLight(VOUT IN)
     #if defined (FORWARD_BASE_PASS)
         l.diffuse += ShadeSH9 (half4(IN.nor,1));
     #endif
+    //l.specular = 0;
+    Unity_GlossyEnvironmentData envData;
+    envData.roughness = Ro;
+    envData.reflUVW = BoxProjectedCubemapDirection (Rd, IN.pos_w, unity_SpecCube0_ProbePosition, unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax);
+    half3 s0 = Unity_GlossyEnvironment (UNITY_PASS_TEXCUBE(unity_SpecCube0) , unity_SpecCube0_HDR , envData);
+   
+    half interpo = unity_SpecCube0_BoxMin.w ;
 
-    l.specular = 0;
+    #if UNITY_SPECCUBE_BLENDING
+        UNITY_BRANCH
+        if (interpo <0.999)
+        {
+            envData.reflUVW = BoxProjectedCubemapDirection (Rd, IN.pos_w, unity_SpecCube1_ProbePosition, unity_SpecCube1_BoxMin, unity_SpecCube1_BoxMax);
+            half3 s1 = Unity_GlossyEnvironment (UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube1 , unity_SpecCube0) , unity_SpecCube1_HDR , envData);
+
+            l.specular = lerp (s0 , s1 , interpo);    
+        }
+        else
+        {
+            l.specular = s0 ;
+        }
+    #else
+        l.specular = s0 ;
+    #endif
+        
     return l;
 }
 
@@ -94,12 +117,13 @@ half4 frag(VOUT IN) : SV_TARGET
     float Ro = _Roughness;
     half3 Sp;
     half Omr;
-    half Sm = 1- Ro;
-    
+    half Sm = 1- Ro;    
     half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
+    half3 Rd = reflect(-Vd , No);
+
     half3 Di = DiffuseAndSpecularFromMetallic(Al, Me, Sp, Omr);
     UnityLight dL = dLight(IN);
-    UnityIndirect iL = iLight(IN);
+    UnityIndirect iL = iLight(IN , Rd , Ro);
     
     return UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL);
 }
