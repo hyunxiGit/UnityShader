@@ -24,7 +24,12 @@ public class MyLightingShaderGUI : ShaderGUI {
 		this.properties = properties;
 		DoMain();
 	}
-
+	void DoSecondary()
+	{
+		MaterialProperty second = FindProperty("_Secondary");
+	    editor.TexturePropertySingleLine(MakeLabel(second , "secondary (grey)"), second );
+	    editor.TextureScaleOffsetProperty(second);
+	}
 	void DoNormals()
 	{
 		MaterialProperty normal = FindProperty("_Normal");
@@ -51,10 +56,14 @@ public class MyLightingShaderGUI : ShaderGUI {
 		MaterialProperty albedo = FindProperty("_Albedo");
 		MaterialProperty tint =  FindProperty("_Tint");
 	    editor.TexturePropertySingleLine(MakeLabel(albedo , "albedo (RGB)"), albedo, tint);
+
 		DoNormals();
 		DoMetalic();
 		DoRoughness();
 		editor.TextureScaleOffsetProperty(albedo);
+
+		GUILayout.Label("Secondary Maps",EditorStyles.boldLabel);
+		DoSecondary();
 	}
 
 

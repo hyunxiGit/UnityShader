@@ -5,6 +5,7 @@
     _Albedo("albedo" , 2d) = "white" {}
     _Tint("tint" , color) = (1,1,1,1)
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
+    _Secondary("secondary map" , 2d) = "white" {}
     [gamma]_BumpScale("bump scale", float) = 0.5
     [gamma]_Metalic("metalic" , range(0,1)) = 0.5
     [gamma]_Roughness("roughness" , range(0,1)) = 0.5
