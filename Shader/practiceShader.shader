@@ -5,6 +5,7 @@
     _Albedo("albedo" , 2d) = "white" {}
     _Tint("tint" , color) = (1,1,1,1)
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
+    [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
     _Secondary("secondary map" , 2d) = "white" {}
     [gamma]_BumpScale("bump scale", float) = 0.5
     [gamma]_Metalic("metalic" , range(0,1)) = 0.5
@@ -34,7 +35,7 @@
         }
         CGPROGRAM
         #pragma target 3.0
-
+        #pragma shader_feature _ _METALIC_MAP
         #pragma multi_compile _ VERTEXLIGHT_ON
         #pragma multi_compile _ SHADOWS_SCREEN
         #define FORWARD_BASE_PASS
@@ -52,6 +53,7 @@
         Blend ONE ONE
         CGPROGRAM
         #pragma target 3.0
+        #pragma multi_compile _ _METALIC_MAP
         #pragma multi_compile_fwdadd_fullshadows
         #pragma vertex vert
         #pragma fragment frag

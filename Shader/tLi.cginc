@@ -3,6 +3,7 @@
 
 sampler2D _Albedo;
 sampler2D _Normal;
+sampler2D _MetalicMap;
 float4 _Albedo_ST;
 float _Metalic;
 float _Roughness;
@@ -105,6 +106,17 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro)
     return l;
 }
 
+half getMetalic(float2 uv0)
+{
+    half Me;
+    #if defined (_METALIC_MAP)
+        Me = tex2D(_MetalicMap, uv0).r;
+    #else
+        Me = _Metalic;
+    #endif
+    return Me;
+}
+
 half4 frag(VOUT IN) : SV_TARGET
 {
     float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);
@@ -113,11 +125,13 @@ half4 frag(VOUT IN) : SV_TARGET
     half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
     IN.nor = No;
 
-    float Me = _Metalic;
+    float Me;
     float Ro = _Roughness;
     half3 Sp;
     half Omr;
     half Sm = 1- Ro;    
+
+    Me = getMetalic(uv0);
     half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Rd = reflect(-Vd , No);
 

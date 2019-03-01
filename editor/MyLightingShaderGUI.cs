@@ -2,6 +2,7 @@
 using UnityEditor;
 public class MyLightingShaderGUI : ShaderGUI {
 	
+	Material target;
 	MaterialEditor editor;
 	MaterialProperty[] properties;
 
@@ -20,9 +21,21 @@ public class MyLightingShaderGUI : ShaderGUI {
 	
 	public override void OnGUI (MaterialEditor editor, MaterialProperty[] properties) 
 	{
+		this.target = editor.target as Material;
 		this.editor = editor;
 		this.properties = properties;
 		DoMain();
+	}
+	void SetKeyword(string keyword , bool state)
+	{
+		if (state)
+		{
+			target.EnableKeyword(keyword);
+		}
+		else
+		{
+			target.DisableKeyword(keyword);
+		}
 	}
 	void DoSecondary()
 	{
@@ -37,10 +50,18 @@ public class MyLightingShaderGUI : ShaderGUI {
 	}
 	void DoMetalic()
 	{
+		MaterialProperty metalicMap = FindProperty("_MetalicMap");
 		MaterialProperty metalic = FindProperty("_Metalic");
-		EditorGUI.indentLevel +=2;
-		editor.ShaderProperty(metalic, MakeLabel(metalic , "metalness"));
-		EditorGUI.indentLevel -=2;
+		editor.TexturePropertySingleLine(MakeLabel(metalicMap , "metalic map (grey)"), metalicMap,  metalicMap.textureValue? null : metalic);
+		
+		EditorGUI.BeginChangeCheck();
+		if (EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_METALIC_MAP", metalicMap.textureValue);	
+		}
+		// EditorGUI.indentLevel +=2;
+		// editor.ShaderProperty(metalic, MakeLabel(metalic , "metalness"));
+		// EditorGUI.indentLevel -=2;
 	}
 	void DoRoughness()
 	{

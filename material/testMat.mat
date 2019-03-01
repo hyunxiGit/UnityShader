@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: testMat
   m_Shader: {fileID: 4800000, guid: 2b2a52949ee89b7448d3d11ca445daaa, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: _METALIC_MAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -83,6 +83,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MetalicMap:
+        m_Texture: {fileID: 2800000, guid: a32e1a027f240e8498da9a3d49f3914c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -127,8 +131,8 @@ Material:
     - _NormalScale: 0.5
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Roughness: 0.293
-    - _Smooth: 1
+    - _Roughness: 0.078
+    - _Smooth: 0.927
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
