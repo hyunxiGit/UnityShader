@@ -36,6 +36,7 @@
         CGPROGRAM
         #pragma target 3.0
         #pragma shader_feature _ _METALIC_MAP
+        #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
         #pragma multi_compile _ VERTEXLIGHT_ON
         #pragma multi_compile _ SHADOWS_SCREEN
         #define FORWARD_BASE_PASS
@@ -53,7 +54,8 @@
         Blend ONE ONE
         CGPROGRAM
         #pragma target 3.0
-        #pragma multi_compile _ _METALIC_MAP
+        #pragma multi_compile _METALIC_MAP
+        #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
         #pragma multi_compile_fwdadd_fullshadows
         #pragma vertex vert
         #pragma fragment frag

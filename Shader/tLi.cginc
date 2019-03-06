@@ -117,6 +117,26 @@ half getMetalic(float2 uv0)
     return Me;
 }
 
+half getSmooth(float2 uv0)
+{
+    half Sm = 1 - _Roughness;
+    
+    //#if defined (_SMOOTHNESS_ALBEDO)
+    //    Sm = tex2D(_Albedo, uv0).a
+    //#elif defined (_SMOOTHNESS_METALIC)
+    //    Sm = tex2D(_MetalicMap, uv0).a;
+    //#else
+    //    Sm = 1 - _Roughness;
+    //#endif
+
+    // #if defined (_METALIC_MAP)
+    //     Sm = tex2D(_MetalicMap, uv0).a;
+    // #else
+    //     Sm = 1 - _Roughness;
+    // #endif
+    return Sm;
+}
+
 half4 frag(VOUT IN) : SV_TARGET
 {
     float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);

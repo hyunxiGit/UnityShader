@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 public class MyLightingShaderGUI : ShaderGUI {
 	
@@ -50,11 +50,12 @@ public class MyLightingShaderGUI : ShaderGUI {
 	}
 	void DoMetalic()
 	{
+		EditorGUI.BeginChangeCheck();
 		MaterialProperty metalicMap = FindProperty("_MetalicMap");
 		MaterialProperty metalic = FindProperty("_Metalic");
 		editor.TexturePropertySingleLine(MakeLabel(metalicMap , "metalic map (grey)"), metalicMap,  metalicMap.textureValue? null : metalic);
 		
-		EditorGUI.BeginChangeCheck();
+
 		if (EditorGUI.EndChangeCheck())
 		{
 			SetKeyword("_METALIC_MAP", metalicMap.textureValue);	
@@ -63,12 +64,44 @@ public class MyLightingShaderGUI : ShaderGUI {
 		// editor.ShaderProperty(metalic, MakeLabel(metalic , "metalness"));
 		// EditorGUI.indentLevel -=2;
 	}
+
+	enum SmoothnessSource
+	{
+		Uniform, Albedo, Metalic
+	}
+
+	bool IsKeywordEnable (string keyword)
+	{
+		return target.IsKeywordEnabled(keyword);
+	}
+
 	void DoRoughness()
 	{
+		SmoothnessSource source = SmoothnessSource.Uniform;
+		// if (IsKeywordEnable("_SMOOTHNESS_ALBEDO"))
+		// {
+		// 	source = SmoothnessSource.Albedo;
+		// }
+		// else if (IsKeywordEnable("_SMOOTHNESS_METALIC"))
+		// {
+		// 	source = SmoothnessSource.Metalic;	
+		// }
+
 		MaterialProperty rough = FindProperty("_Roughness");
-		EditorGUI.indentLevel +=2;
-		editor.ShaderProperty(rough , MakeLabel(rough , "roughness"));
-		EditorGUI.indentLevel -=2;
+		//下拉菜单
+		EditorGUI.BeginChangeCheck();
+		EditorGUILayout.EnumPopup(MakeLabel(rough), source);
+		if (EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_SMOOTHNESS_ALBEDO", source == SmoothnessSource.Albedo);
+			SetKeyword("_SMOOTHNESS_METALIC", source == SmoothnessSource.Metalic);
+		}
+
+		//做一个slider
+		// MaterialProperty rough = FindProperty("_Roughness");
+		// EditorGUI.indentLevel +=2;
+		// editor.ShaderProperty(rough , MakeLabel(rough , "roughness"));
+		// EditorGUI.indentLevel -=2;
 	}
 	void DoMain() 
 	{
