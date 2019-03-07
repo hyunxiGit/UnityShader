@@ -65,6 +65,13 @@ public class MyLightingShaderGUI : ShaderGUI {
 		// EditorGUI.indentLevel -=2;
 	}
 
+	void DoEmission()
+	{
+		MaterialProperty emissionMap = FindProperty("_EmissionMap");
+		MaterialProperty emission = FindProperty("_Emission");
+		editor.TexturePropertySingleLine(MakeLabel(emissionMap, "emission map") , emissionMap,emissionMap.textureValue ?null: emission);
+	}
+
 	enum SmoothnessSource
 	{
 		Uniform, Albedo, Metalic
@@ -75,8 +82,17 @@ public class MyLightingShaderGUI : ShaderGUI {
 		return target.IsKeywordEnabled(keyword);
 	}
 
-	void DoRoughness()
+	void DoSmoothness()
 	{
+
+		MaterialProperty smooth = FindProperty("_Smoothness");
+		
+		//做一个slider
+		EditorGUI.indentLevel +=2;
+		editor.ShaderProperty(smooth , MakeLabel(smooth , "smoothness"));
+		
+
+		//下拉菜单
 		SmoothnessSource source = SmoothnessSource.Uniform;
 		if (IsKeywordEnable("_SMOOTHNESS_ALBEDO"))
 		{
@@ -86,23 +102,17 @@ public class MyLightingShaderGUI : ShaderGUI {
 		{
 			source = SmoothnessSource.Metalic;	
 		}
-
-		MaterialProperty rough = FindProperty("_Roughness");
-		//下拉菜单
+		EditorGUI.indentLevel +=2;
 		EditorGUI.BeginChangeCheck();
-		source = (SmoothnessSource)EditorGUILayout.EnumPopup(MakeLabel(rough), source);
+		source = (SmoothnessSource)EditorGUILayout.EnumPopup("source", source);
 		if (EditorGUI.EndChangeCheck())
 		{
-			editor.RegisterPropertyChangeUndo("roughness");
+			//支持redo undo
+			editor.RegisterPropertyChangeUndo("smooth");
 			SetKeyword("_SMOOTHNESS_ALBEDO", source == SmoothnessSource.Albedo);
 			SetKeyword("_SMOOTHNESS_METALIC", source == SmoothnessSource.Metalic);
 		}
-
-		//做一个slider
-		// MaterialProperty rough = FindProperty("_Roughness");
-		// EditorGUI.indentLevel +=2;
-		// editor.ShaderProperty(rough , MakeLabel(rough , "roughness"));
-		// EditorGUI.indentLevel -=2;
+		EditorGUI.indentLevel -=4;
 	}
 	void DoMain() 
 	{
@@ -114,12 +124,12 @@ public class MyLightingShaderGUI : ShaderGUI {
 
 		DoNormals();
 		DoMetalic();
-		DoRoughness();
+		DoSmoothness();
+		DoEmission();
 		editor.TextureScaleOffsetProperty(albedo);
 
 		GUILayout.Label("Secondary Maps",EditorStyles.boldLabel);
 		DoSecondary();
 	}
-
 
 }

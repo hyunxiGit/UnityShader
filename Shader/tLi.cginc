@@ -4,9 +4,11 @@
 sampler2D _Albedo;
 sampler2D _Normal;
 sampler2D _MetalicMap;
+//sampler2D _EmissionMap;
 float4 _Albedo_ST;
 float _Metalic;
-float _Roughness;
+float _Smoothness;
+
 
 struct VIN
 {
@@ -119,21 +121,13 @@ half getMetalic(float2 uv0)
 
 half getSmooth(float2 uv0)
 {
-    half Sm = 1 - _Roughness;
+    half Sm = _Smoothness;
     
-    //#if defined (_SMOOTHNESS_ALBEDO)
-    //    Sm = tex2D(_Albedo, uv0).a
-    //#elif defined (_SMOOTHNESS_METALIC)
-    //    Sm = tex2D(_MetalicMap, uv0).a;
-    //#else
-    //    Sm = 1 - _Roughness;
-    //#endif
-
-    // #if defined (_METALIC_MAP)
-    //     Sm = tex2D(_MetalicMap, uv0).a;
-    // #else
-    //     Sm = 1 - _Roughness;
-    // #endif
+    #if defined (_SMOOTHNESS_ALBEDO)
+       Sm = tex2D(_Albedo, uv0).a;
+    #elif defined (_SMOOTHNESS_METALIC)
+       Sm = tex2D(_MetalicMap, uv0).a;
+    #endif
     return Sm;
 }
 
@@ -146,10 +140,10 @@ half4 frag(VOUT IN) : SV_TARGET
     IN.nor = No;
 
     float Me;
-    float Ro = _Roughness;
     half3 Sp;
     half Omr;
-    half Sm = 1- Ro;    
+    half Sm = getSmooth(uv0);
+    half Ro = 1-Sm;   
 
     Me = getMetalic(uv0);
     half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
