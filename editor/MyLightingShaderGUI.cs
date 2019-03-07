@@ -78,21 +78,22 @@ public class MyLightingShaderGUI : ShaderGUI {
 	void DoRoughness()
 	{
 		SmoothnessSource source = SmoothnessSource.Uniform;
-		// if (IsKeywordEnable("_SMOOTHNESS_ALBEDO"))
-		// {
-		// 	source = SmoothnessSource.Albedo;
-		// }
-		// else if (IsKeywordEnable("_SMOOTHNESS_METALIC"))
-		// {
-		// 	source = SmoothnessSource.Metalic;	
-		// }
+		if (IsKeywordEnable("_SMOOTHNESS_ALBEDO"))
+		{
+			source = SmoothnessSource.Albedo;
+		}
+		else if (IsKeywordEnable("_SMOOTHNESS_METALIC"))
+		{
+			source = SmoothnessSource.Metalic;	
+		}
 
 		MaterialProperty rough = FindProperty("_Roughness");
 		//下拉菜单
 		EditorGUI.BeginChangeCheck();
-		EditorGUILayout.EnumPopup(MakeLabel(rough), source);
+		source = (SmoothnessSource)EditorGUILayout.EnumPopup(MakeLabel(rough), source);
 		if (EditorGUI.EndChangeCheck())
 		{
+			editor.RegisterPropertyChangeUndo("roughness");
 			SetKeyword("_SMOOTHNESS_ALBEDO", source == SmoothnessSource.Albedo);
 			SetKeyword("_SMOOTHNESS_METALIC", source == SmoothnessSource.Metalic);
 		}
