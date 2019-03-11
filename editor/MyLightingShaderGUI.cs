@@ -6,6 +6,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 	MaterialEditor editor;
 	MaterialProperty[] properties;
 
+
 	MaterialProperty FindProperty(string name)
 	{
 		return FindProperty(name,properties);
@@ -67,9 +68,21 @@ public class MyLightingShaderGUI : ShaderGUI {
 
 	void DoEmission()
 	{
+		EditorGUI.BeginChangeCheck();
 		MaterialProperty emissionMap = FindProperty("_EmissionMap");
 		MaterialProperty emission = FindProperty("_Emission");
-		editor.TexturePropertySingleLine(MakeLabel(emissionMap, "emission map") , emissionMap,emissionMap.textureValue ?null: emission);
+		// editor.TexturePropertySingleLine(MakeLabel(emissionMap, "emission map") , emissionMap,emissionMap.textureValue ?null: emission);
+
+		//ColorPickerHDRConfig emissionConfig = new ColorPickerHDRConfig(0f,99f,1f/99f,3f);
+
+		// editor.TexturePropertyWithHDRColor
+		// (MakeLabel(emissionMap, "emission map"), emissionMap,emission,emissionConfig, false);
+		editor.TexturePropertyWithHDRColor(MakeLabel(emissionMap, "emission map"), emissionMap, emission, false);
+
+		if (EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_EMISSION_MAP",emissionMap.textureValue);
+		}
 	}
 
 	enum SmoothnessSource

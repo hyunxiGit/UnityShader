@@ -4,7 +4,8 @@
 sampler2D _Albedo;
 sampler2D _Normal;
 sampler2D _MetalicMap;
-//sampler2D _EmissionMap;
+sampler2D _EmissionMap;
+float4 _Emission;
 float4 _Albedo_ST;
 float _Metalic;
 float _Smoothness;
@@ -131,9 +132,25 @@ half getSmooth(float2 uv0)
     return Sm;
 }
 
+half4 getEmissive(float2 uv)
+{
+    half4 col = half4(0,0,0,0);
+    #if defined (FORWARD_BASE_PASS)
+        #if defined (_EMISSION_MAP)
+            col = tex2D(_EmissionMap, uv);
+        #else
+            col = _Emission;
+        #endif
+    #endif
+    return col;
+}
+
 half4 frag(VOUT IN) : SV_TARGET
 {
+    half4 col;
+
     float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);
+    half4 Em = getEmissive(uv0);
     half3 Al = tex2D(_Albedo, uv0);
     half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv0), 0.5).xzy;
     half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
@@ -152,6 +169,7 @@ half4 frag(VOUT IN) : SV_TARGET
     half3 Di = DiffuseAndSpecularFromMetallic(Al, Me, Sp, Omr);
     UnityLight dL = dLight(IN);
     UnityIndirect iL = iLight(IN , Rd , Ro);
-    
-    return UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL);
+
+    col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL) +Em ;
+    return col;
 }
