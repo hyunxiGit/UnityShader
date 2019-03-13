@@ -1,6 +1,7 @@
 #if ! defined(MY_LIGHTING)
 #define MY_LIGHTING
 #include "UnityPBSLighting.cginc"
+#include "AutoLight.cginc"
 
 sampler2D _Albedo;
 float4 _Albedo_ST;
@@ -27,7 +28,17 @@ struct VOUT
     float3 tan : TEXCOORD2;
     float3 bi : TEXCOORD3;
     float3 nor : NORMAL;
+    #if defined (VERTEXLIGHT_ON)
+        float3 vLightCol : TEXCOORD4; 
+    #endif
 };
+
+void vertexLight(inout VOUT IN)
+{
+    #if defined (VERTEXLIGHT_ON)
+        IN.vLightCol =  Shade4PointLights( unity_4LightPosX0, unity_4LightPosY0, unity_4LightPosZ0,unity_LightColor[0].xyz, unity_LightColor[1].xyz, unity_LightColor[2].xyz, unity_LightColor[3].xyz,unity_4LightAtten0,IN.pos_w, IN.nor);
+    #endif
+}
 
 VOUT vert(VIN IN)
 {
@@ -38,13 +49,20 @@ VOUT vert(VIN IN)
     OUT.nor = UnityObjectToWorldNormal(IN.nor);
     OUT.tan = UnityObjectToWorldDir(IN.tan.xyz);
     OUT.bi = normalize(cross( OUT.nor, OUT.tan) * IN.tan.w * unity_WorldTransformParams.w);
+    #if defined (VERTEXLIGHT_ON)
+        vertexLight(OUT);
+    #endif
     return OUT;
 }
 UnityLight DirectLight(VOUT IN )
 {
     UnityLight l;
     l.dir = _WorldSpaceLightPos0;
-    l.color = _LightColor0;
+    #if defined(POINT)|| defined (SPOT)
+        l.dir = normalize(l.dir - IN.pos_w);
+    #endif
+    UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w);
+    l.color = _LightColor0 * attenuation;
     l.ndotl = DotClamped(IN.nor , l.dir);
     return l;
 }
@@ -53,6 +71,12 @@ UnityIndirect IndirectLight(VOUT IN)
     UnityIndirect l;
     l.diffuse = 0;
     l.specular = 0; 
+    #if defined (VERTEXLIGHT_ON)
+        l.diffuse += IN.vLightCol;
+    #endif
+    #if defined (FORWARD_BASE_PASS)
+        l.diffuse += ShadeSH9 (half4(IN.nor,1));
+    #endif
     return l;
 }
 
