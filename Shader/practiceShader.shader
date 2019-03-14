@@ -15,12 +15,26 @@
     {
         Tags
         {
+            "LightMode" = "ShadowCaster"
+        }
+        CGPROGRAM
+        #pragma target 3.0
+        #pragma vertex vert
+        #pragma fragment frag
+        #include "tSh.cginc"
+        ENDCG
+    }
+    Pass
+    {
+        Tags
+        {
             "LightMode" = "ForwardBase"
         }
         CGPROGRAM
         #pragma target 3.0
         #define FORWARD_BASE_PASS
         #pragma multi_compile _ VERTEXLIGHT_ON
+        #pragma multi_compile _ SHADOWS_SCREEN
         #pragma vertex vert
         #pragma fragment frag
         #include "tLi.cginc"

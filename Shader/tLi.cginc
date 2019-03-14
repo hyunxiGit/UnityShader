@@ -28,8 +28,11 @@ struct VOUT
     float3 tan : TEXCOORD2;
     float3 bi : TEXCOORD3;
     float3 nor : NORMAL;
+    #if defined (SHADOWS_SCREEN)
+        SHADOW_COORDS(4)
+    #endif
     #if defined (VERTEXLIGHT_ON)
-        float3 vLightCol : TEXCOORD4; 
+        float3 vLightCol : TEXCOORD5; 
     #endif
 };
 
@@ -49,6 +52,9 @@ VOUT vert(VIN IN)
     OUT.nor = UnityObjectToWorldNormal(IN.nor);
     OUT.tan = UnityObjectToWorldDir(IN.tan.xyz);
     OUT.bi = normalize(cross( OUT.nor, OUT.tan) * IN.tan.w * unity_WorldTransformParams.w);
+    #if defined (SHADOWS_SCREEN)
+        TRANSFER_SHADOW(OUT);
+    #endif
     #if defined (VERTEXLIGHT_ON)
         vertexLight(OUT);
     #endif
