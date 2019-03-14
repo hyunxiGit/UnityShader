@@ -9,6 +9,7 @@
     [gamma]_Metalic ("metalic" , range(0,1)) = 0.5
     [gamma]_Roughness ("roughness" , range(0,1)) = 0.5
   }
+
   SubShader 
   {
     Pass
@@ -19,6 +20,7 @@
         }
         CGPROGRAM
         #pragma target 3.0
+        #pragma multi_compile_shadowcaster
         #pragma vertex vert
         #pragma fragment frag
         #include "tSh.cginc"
@@ -33,8 +35,9 @@
         CGPROGRAM
         #pragma target 3.0
         #define FORWARD_BASE_PASS
-        #pragma multi_compile _ VERTEXLIGHT_ON
         #pragma multi_compile _ SHADOWS_SCREEN
+        #pragma multi_compile _ VERTEXLIGHT_ON
+
         #pragma vertex vert
         #pragma fragment frag
         #include "tLi.cginc"
@@ -47,9 +50,11 @@
             "LightMode" = "ForwardAdd"
         }
         Blend one one
+        ZWrite Off
         CGPROGRAM
-        #pragma multi_compile_fwdadd
+
         #pragma target 3.0
+        #pragma multi_compile_fwdadd_fullshadows
         #pragma vertex vert
         #pragma fragment frag
         #include "tLi.cginc"

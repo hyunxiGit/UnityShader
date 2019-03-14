@@ -14,7 +14,7 @@ float4 _Detail_ST;
 
 struct VIN
 {
-    float4 pos : POSITION;
+    float4 vertex : POSITION;
     float2 uv : TEXCOORD0; 
     float3 nor : NORMAL;
     float4 tan : TANGENT;
@@ -28,9 +28,7 @@ struct VOUT
     float3 tan : TEXCOORD2;
     float3 bi : TEXCOORD3;
     float3 nor : NORMAL;
-    #if defined (SHADOWS_SCREEN)
-        SHADOW_COORDS(4)
-    #endif
+    SHADOW_COORDS(4)
     #if defined (VERTEXLIGHT_ON)
         float3 vLightCol : TEXCOORD5; 
     #endif
@@ -43,18 +41,16 @@ void vertexLight(inout VOUT IN)
     #endif
 }
 
-VOUT vert(VIN IN)
+VOUT vert(VIN v)
 {
     VOUT OUT;
-    OUT.pos = UnityObjectToClipPos(IN.pos);
-    OUT.pos_w = mul(unity_ObjectToWorld , IN.pos);
-    OUT.uv = IN.uv;
-    OUT.nor = UnityObjectToWorldNormal(IN.nor);
-    OUT.tan = UnityObjectToWorldDir(IN.tan.xyz);
-    OUT.bi = normalize(cross( OUT.nor, OUT.tan) * IN.tan.w * unity_WorldTransformParams.w);
-    #if defined (SHADOWS_SCREEN)
-        TRANSFER_SHADOW(OUT);
-    #endif
+    OUT.pos = UnityObjectToClipPos(v.vertex);
+    OUT.pos_w = mul(unity_ObjectToWorld , v.vertex);
+    OUT.uv = v.uv;
+    OUT.nor = UnityObjectToWorldNormal(v.nor);
+    OUT.tan = UnityObjectToWorldDir(v.tan.xyz);
+    OUT.bi = normalize(cross( OUT.nor, OUT.tan) * v.tan.w * unity_WorldTransformParams.w);
+    TRANSFER_SHADOW(OUT);
     #if defined (VERTEXLIGHT_ON)
         vertexLight(OUT);
     #endif

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -984,7 +984,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 519653322, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 724100843, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_IsActive
@@ -1004,14 +1004,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1701451825, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Intensity
-      value: 5.2
+      value: 5.21
       objectReference: {fileID: 0}
     - target: {fileID: 1701451825, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Range
-      value: 4.8
+      value: 30.42
       objectReference: {fileID: 0}
     - target: {fileID: 1701451825, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1701451825, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_Shadows.m_Type
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 519653323, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
@@ -1026,21 +1030,49 @@ PrefabInstance:
       propertyPath: m_Intensity
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 25270502, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_Shadows.m_Type
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 25270502, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 519653324, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Range
       value: 3.18
       objectReference: {fileID: 0}
     - target: {fileID: 519653324, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Intensity
-      value: 1.59
+      value: 8.26
       objectReference: {fileID: 0}
     - target: {fileID: 1621325445, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Intensity
-      value: 7.5
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 1621325445, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_Range
-      value: 2.21
+      value: 61.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 1621325445, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_Shadows.m_Strength
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1621325445, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1621325445, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_Shadows.m_Type
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1621325444, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 21.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1621325444, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -66.4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
