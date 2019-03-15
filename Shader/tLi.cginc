@@ -68,7 +68,7 @@ UnityLight DirectLight(VOUT IN )
     l.ndotl = DotClamped(IN.nor , l.dir);
     return l;
 }
-UnityIndirect IndirectLight(VOUT IN)
+UnityIndirect IndirectLight(VOUT IN, float3 Rv , float Ro)
 {
     UnityIndirect l;
     l.diffuse = 0;
@@ -78,7 +78,12 @@ UnityIndirect IndirectLight(VOUT IN)
     #endif
     #if defined (FORWARD_BASE_PASS)
         l.diffuse += ShadeSH9 (half4(IN.nor,1));
+        Unity_GlossyEnvironmentData glossIn;
+        glossIn. roughness = Ro;
+        glossIn. reflUVW = Rv;
+        l.specular += Unity_GlossyEnvironment (UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube0,unity_SpecCube0), unity_SpecCube0_HDR, glossIn);
     #endif
+
     return l;
 }
 
@@ -104,8 +109,10 @@ half4 frag(VOUT IN):SV_TARGET
     half3 Sp ;
     half OMR ;
     float3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
+
+    float3 Rv  = reflect(Vd, No);
     UnityLight Dl = DirectLight (IN);
-    UnityIndirect Gi = IndirectLight (IN);
+    UnityIndirect Gi = IndirectLight (IN , Rv , Ro);
 
     Di = DiffuseAndSpecularFromMetallic(_AlbedoMap, Me, Sp, OMR);
     col = UNITY_BRDF_PBS(Di, Sp, OMR, Sm, No, Vd, Dl, Gi);
