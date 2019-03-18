@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.45064622, g: 0.50061333, b: 0.57495916, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -128,7 +128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!215 &27885876
 ReflectionProbe:
   m_ObjectHideFlags: 0
@@ -283,7 +283,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!215 &458928492
 ReflectionProbe:
   m_ObjectHideFlags: 0
@@ -713,7 +713,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1003823935
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -802,8 +802,8 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
 --- !u!215 &1182109354
 ReflectionProbe:
   m_ObjectHideFlags: 0
@@ -866,7 +866,7 @@ PrefabInstance:
     - target: {fileID: 5556376948615293283, guid: bdc1a5638c7b20e45b43c11f6571285e,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5879455069049761550, guid: bdc1a5638c7b20e45b43c11f6571285e,
         type: 3}
@@ -961,7 +961,7 @@ PrefabInstance:
     - target: {fileID: 4757723278231418922, guid: bdc1a5638c7b20e45b43c11f6571285e,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bdc1a5638c7b20e45b43c11f6571285e, type: 3}
@@ -992,7 +992,7 @@ PrefabInstance:
     - target: {fileID: 9151103159604387281, guid: 26b6abb414a2bbd459ad8c9987d315d3,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2097309790, guid: 26b6abb414a2bbd459ad8c9987d315d3, type: 3}
       propertyPath: m_LocalPosition.x

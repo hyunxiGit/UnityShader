@@ -78,10 +78,35 @@ UnityIndirect IndirectLight(VOUT IN, float3 Rv , float Ro)
     #endif
     #if defined (FORWARD_BASE_PASS)
         l.diffuse += ShadeSH9 (half4(IN.nor,1));
+
+        Rv = BoxProjectedCubemapDirection (Rv, IN.pos_w, unity_SpecCube0_ProbePosition, unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax);
+
         Unity_GlossyEnvironmentData glossIn;
         glossIn. roughness = Ro;
         glossIn. reflUVW = Rv;
-        l.specular += Unity_GlossyEnvironment (UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube0,unity_SpecCube0), unity_SpecCube0_HDR, glossIn);
+
+        half3 s0= Unity_GlossyEnvironment (UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube0,unity_SpecCube0), unity_SpecCube0_HDR, glossIn);
+
+        float Interpolator = unity_SpecCube0_BoxMin.w ; 
+
+        #if UNITY_SPECCUBE_BLENDING
+            UNITY_BRANCH
+            if (Interpolator <0.99f)
+            {
+                    Rv = BoxProjectedCubemapDirection (Rv, IN.pos_w, unity_SpecCube1_ProbePosition, unity_SpecCube1_BoxMin, unity_SpecCube1_BoxMax);
+                    glossIn.reflUVW = Rv;
+                    half3 s1= Unity_GlossyEnvironment (UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube1,unity_SpecCube0), unity_SpecCube1_HDR, glossIn);
+
+                    l.specular = lerp(s0, s1 , unity_SpecCube0_BoxMin.w);    
+            }
+            else
+            {
+                    l.specular = s0;   
+            }
+        #else
+           l.specular = s0;
+        #endif 
+        
     #endif
 
     return l;
@@ -110,7 +135,7 @@ half4 frag(VOUT IN):SV_TARGET
     half OMR ;
     float3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
 
-    float3 Rv  = reflect(Vd, No);
+    float3 Rv  = reflect(-Vd, No);
     UnityLight Dl = DirectLight (IN);
     UnityIndirect Gi = IndirectLight (IN , Rv , Ro);
 
