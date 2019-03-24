@@ -1,4 +1,4 @@
-﻿Shader "Custom/practice"
+Shader "Custom/practice"
 {
   Properties
   {
@@ -61,4 +61,5 @@
         ENDCG
     }
   }
+  //CustomEditor "MyPracticGUI"
 }
