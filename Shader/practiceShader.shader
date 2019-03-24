@@ -1,10 +1,11 @@
-Shader "Custom/practice"
+﻿Shader "Custom/practice"
 {
   Properties
   {
     _Albedo("albedo map" , 2D) = "white"{}
     [noscaleoffset]_Normal("normal map" , 2D) = "normal"{}
     _Detail("detail map" , 2D) = "normal"{}
+    _Tint("tint color" , color) = (1,1,1,1)
 
     [gamma]_Metalic ("metalic" , range(0,1)) = 0.5
     [gamma]_Roughness ("roughness" , range(0,1)) = 0.5
@@ -61,5 +62,5 @@ Shader "Custom/practice"
         ENDCG
     }
   }
-  //CustomEditor "MyPracticGUI"
+  CustomEditor "TemlateGUI"
 }
