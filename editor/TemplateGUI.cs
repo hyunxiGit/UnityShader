@@ -22,7 +22,7 @@ public class TemlateGUI : ShaderGUI {
 	public override void OnGUI (MaterialEditor editor, MaterialProperty[] properties) 
 	{
 		//render default material editor
-		//base.OnGUI(editor, properties);
+		base.OnGUI(editor, properties);
 
 		//reference
 		this.target = editor.target as Material;
@@ -33,13 +33,26 @@ public class TemlateGUI : ShaderGUI {
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
 
 		//find property
-		MaterialProperty albedoProperty = FindProperty("_Albedo");
+		MaterialProperty albedoPro = FindProperty("_Albedo");
 		MaterialProperty tint = FindProperty("_Tint" );
 
 		// make label from property
-		GUIContent albedoMapLabel = makeLabel(albedoProperty,"albedo map");
+		GUIContent albedoMapLabel = makeLabel(albedoPro,"albedo map");
 
 		//add texturemap to GUI
-		editor.TexturePropertySingleLine(albedoMapLabel, albedoProperty , tint);
+		editor.TexturePropertySingleLine(albedoMapLabel, albedoPro , tint);
+
+		//texture scale and offset , GUI indent
+		EditorGUI.indentLevel +=2;
+		editor.TextureScaleOffsetProperty(albedoPro);
+		EditorGUI.indentLevel -=2;
+
+		//show property depend on the texture value
+		MaterialProperty normalPro = FindProperty("_Normal");
+		editor.TexturePropertySingleLine(makeLabel(normalPro), normalPro, normalPro.textureValue?FindProperty("_NormalScale"):null);
+
+		//slider
+		MaterialProperty metalicPro = FindProperty("_Metalic");
+		editor.ShaderProperty(metalicPro, makeLabel(metalicPro));
 	}
 }

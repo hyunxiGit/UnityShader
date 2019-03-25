@@ -7,6 +7,7 @@
     _Detail("detail map" , 2D) = "normal"{}
     _Tint("tint color" , color) = (1,1,1,1)
 
+    [gamma]_NormalScale ("normal scale" , range(0,1)) = 0.5
     [gamma]_Metalic ("metalic" , range(0,1)) = 0.5
     [gamma]_Roughness ("roughness" , range(0,1)) = 0.5
   }
