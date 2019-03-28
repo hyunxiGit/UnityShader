@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'defined _METALIC_MAP' with 'defined (_METALIC_MAP)'
+
 #if ! defined(MY_LIGHTING)
 #define MY_LIGHTING
 #include "UnityPBSLighting.cginc"
@@ -5,6 +7,7 @@
 
 sampler2D _Albedo;
 float4 _Albedo_ST;
+sampler2D _MetalicMap; 
 sampler2D _Normal;
 float _Metalic;
 float _Roughness;
@@ -112,6 +115,18 @@ UnityIndirect IndirectLight(VOUT IN, float3 Rv , float Ro)
     return l;
 }
 
+half getMetalic(float2 uv)
+{
+    half m;
+    #if defined (_METALIC_MAP)
+        m = tex2D(_MetalicMap , uv).r;
+    #else
+        m = _Metalic;
+    #endif
+    
+    return m;
+}
+
 half4 frag(VOUT IN):SV_TARGET
 {
     half4 col;
@@ -129,6 +144,7 @@ half4 frag(VOUT IN):SV_TARGET
     float3 No = normalize(IN.tan * NM.x + IN.nor * NM.y + IN.bi *NM.z);
     half3 Di;
     half Me = _Metalic;
+    Me = getMetalic(uv0);
     float Ro = _Roughness;
     float Sm = 1-Ro;
     half3 Sp ;

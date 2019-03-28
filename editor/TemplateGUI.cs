@@ -13,16 +13,29 @@ public class TemlateGUI : ShaderGUI {
 
 	GUIContent makeLabel(MaterialProperty property, string tooltip = "" )
 	{
+		//initiate
 		GUIContent label = new GUIContent();
 		label.text = property.displayName;
 		label. tooltip = tooltip;
 		return label;
 	}
+
+	void seKeywords(string keyword , bool state)
+	{
+		if (state)
+		{
+			this.target.EnableKeyword(keyword);	
+		}
+		else
+		{
+			this.target.DisableKeyword(keyword);	
+		}
+	}
 	
 	public override void OnGUI (MaterialEditor editor, MaterialProperty[] properties) 
 	{
 		//render default material editor
-		base.OnGUI(editor, properties);
+		//base.OnGUI(editor, properties);
 
 		//reference
 		this.target = editor.target as Material;
@@ -52,7 +65,19 @@ public class TemlateGUI : ShaderGUI {
 		editor.TexturePropertySingleLine(makeLabel(normalPro), normalPro, normalPro.textureValue?FindProperty("_NormalScale"):null);
 
 		//slider
+		// MaterialProperty metalicPro = FindProperty("_Metalic");
+		// editor.ShaderProperty(metalicPro, makeLabel(metalicPro));
+
+		//adjust shader feature by texture value
+		EditorGUI.BeginChangeCheck();
 		MaterialProperty metalicPro = FindProperty("_Metalic");
-		editor.ShaderProperty(metalicPro, makeLabel(metalicPro));
+		MaterialProperty metalicMapPro = FindProperty("_MetalicMap");
+		editor.TexturePropertySingleLine(makeLabel(metalicMapPro), metalicMapPro ,metalicMapPro.textureValue ? null : metalicPro);
+		if (EditorGUI.EndChangeCheck())
+		{
+			seKeywords("_METALIC_MAP" , metalicMapPro.textureValue);			
+		}
+
 	}
+
 }
