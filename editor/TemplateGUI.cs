@@ -31,6 +31,11 @@ public class TemlateGUI : ShaderGUI {
 			this.target.DisableKeyword(keyword);	
 		}
 	}
+
+	enum SmoothnessSource
+	{
+		Uniform , Albedo , Metallic
+	}
 	
 	public override void OnGUI (MaterialEditor editor, MaterialProperty[] properties) 
 	{
@@ -78,6 +83,25 @@ public class TemlateGUI : ShaderGUI {
 			seKeywords("_METALIC_MAP" , metalicMapPro.textureValue);			
 		}
 
+		//dropdown menu
+		//initiate options
+		SmoothnessSource source = SmoothnessSource.Uniform;
+		if (this.target.IsKeywordEnabled("_SMOOTHNESS_ALBEDO"))
+		{
+			source = SmoothnessSource.Albedo;
+		}
+		else if (this.target.IsKeywordEnabled("_SMOOTHNESS_METALLIC"))
+		{
+			source = SmoothnessSource.Metallic;	
+		}
+
+		EditorGUI.BeginChangeCheck();
+		source = (SmoothnessSource)EditorGUILayout.EnumPopup("Source",source);
+		if(EditorGUI.EndChangeCheck())
+		{
+			seKeywords("_SMOOTHNESS_ALBEDO" , source == SmoothnessSource.Albedo);
+			seKeywords("_SMOOTHNESS_METALLIC" , source == SmoothnessSource.Metallic);
+		}
 	}
 
 }
