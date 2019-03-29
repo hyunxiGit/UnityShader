@@ -42,36 +42,45 @@ public class TemlateGUI : ShaderGUI {
 		//render default material editor
 		//base.OnGUI(editor, properties);
 
+
 		//reference
 		this.target = editor.target as Material;
 		this.editor = editor;
 		this.properties = properties;
 
+
 		//label
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
+
 
 		//find property
 		MaterialProperty albedoPro = FindProperty("_Albedo");
 		MaterialProperty tint = FindProperty("_Tint" );
 
+
 		// make label from property
 		GUIContent albedoMapLabel = makeLabel(albedoPro,"albedo map");
 
+
 		//add texturemap to GUI
 		editor.TexturePropertySingleLine(albedoMapLabel, albedoPro , tint);
+
 
 		//texture scale and offset , GUI indent
 		EditorGUI.indentLevel +=2;
 		editor.TextureScaleOffsetProperty(albedoPro);
 		EditorGUI.indentLevel -=2;
 
+
 		//show property depend on the texture value
 		MaterialProperty normalPro = FindProperty("_Normal");
 		editor.TexturePropertySingleLine(makeLabel(normalPro), normalPro, normalPro.textureValue?FindProperty("_NormalScale"):null);
 
+
 		//slider
 		// MaterialProperty metalicPro = FindProperty("_Metalic");
 		// editor.ShaderProperty(metalicPro, makeLabel(metalicPro));
+
 
 		//adjust shader feature by texture value
 		EditorGUI.BeginChangeCheck();
@@ -83,8 +92,9 @@ public class TemlateGUI : ShaderGUI {
 			seKeywords("_METALIC_MAP" , metalicMapPro.textureValue);			
 		}
 
+
 		//dropdown menu
-		//initiate options
+		//set variable value on gui
 		SmoothnessSource source = SmoothnessSource.Uniform;
 		if (this.target.IsKeywordEnabled("_SMOOTHNESS_ALBEDO"))
 		{
@@ -94,14 +104,22 @@ public class TemlateGUI : ShaderGUI {
 		{
 			source = SmoothnessSource.Metallic;	
 		}
-
+		//check GUI change
 		EditorGUI.BeginChangeCheck();
+		//set variabl value
 		source = (SmoothnessSource)EditorGUILayout.EnumPopup("Source",source);
 		if(EditorGUI.EndChangeCheck())
 		{
 			seKeywords("_SMOOTHNESS_ALBEDO" , source == SmoothnessSource.Albedo);
 			seKeywords("_SMOOTHNESS_METALLIC" , source == SmoothnessSource.Metallic);
 		}
+
+
+		//HDR color picker
+		MaterialProperty emissionMapPro = FindProperty("_EmissionMap");
+		MaterialProperty esmissionPro = FindProperty("_Emission");
+		editor.TexturePropertyWithHDRColor(makeLabel(emissionMapPro), emissionMapPro , esmissionPro,false);
+		
 	}
 
 }
