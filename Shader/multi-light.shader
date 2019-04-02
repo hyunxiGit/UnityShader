@@ -6,11 +6,13 @@ Shader "Custom/Multi" {
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
     [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
     [noscaleoffset]_EmissionMap("emission map" , 2d) = "white"{}
+    [noscaleoffset]_OcclusionMap("occlusion map" , 2d) = "white"{}
     _Emission("emission" , color) = (0,0,0,0)
     _Secondary("secondary map" , 2d) = "white" {}
     [gamma]_BumpScale("bump scale", float) = 0.5
     [gamma]_Metalic("metalic" , range(0,1)) = 0.5
     [gamma]_Smoothness("smoothness" , range(0,1)) = 0.5
+    [gamma]_OcclusionStrength("occlusion strength" , range(0,1)) = 0
   }
   SubShader 
   {
@@ -39,6 +41,7 @@ Shader "Custom/Multi" {
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
+        #pragma shader_feature _ _OCCLUSIONMAP
         #pragma multi_compile _ VERTEXLIGHT_ON
         #pragma multi_compile _ SHADOWS_SCREEN
         #define FORWARD_BASE_PASS

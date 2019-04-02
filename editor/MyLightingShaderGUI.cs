@@ -127,6 +127,17 @@ public class MyLightingShaderGUI : ShaderGUI {
 		}
 		EditorGUI.indentLevel -=4;
 	}
+	void DoOcclusion()
+	{
+		EditorGUI.BeginChangeCheck();
+		MaterialProperty OcMapPro = FindProperty("_OcclusionMap");
+		MaterialProperty OcStrPro = FindProperty("_OcclusionStrength");
+		editor.TexturePropertySingleLine(MakeLabel(OcMapPro), OcMapPro, OcMapPro.textureValue?OcStrPro : null);
+		if (EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_OCCLUSIONMAP ", OcMapPro.textureValue);
+		}
+	}
 	void DoMain() 
 	{
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
@@ -142,6 +153,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		editor.TextureScaleOffsetProperty(albedo);
 
 		GUILayout.Label("Secondary Maps",EditorStyles.boldLabel);
+		DoOcclusion();
 		DoSecondary();
 	}
 

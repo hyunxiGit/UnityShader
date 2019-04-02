@@ -8,10 +8,12 @@ sampler2D _Albedo;
 sampler2D _Normal;
 sampler2D _MetalicMap;
 sampler2D _EmissionMap;
+sampler2D _OcclusionMap;
 float4 _Emission;
 float4 _Albedo_ST;
 float _Metalic;
 float _Smoothness;
+float _OcclusionStrength;
 
 
 struct VIN
@@ -74,7 +76,7 @@ UnityLight dLight(VOUT IN)
     return l;
 }
 
-UnityIndirect iLight(VOUT IN , half3 Rd, float Ro)
+UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
 {
     UnityIndirect l;
     l.diffuse = 0;
@@ -108,6 +110,9 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro)
     #else
         l.specular = s0 ;
     #endif
+
+    l.specular *= Oc;
+    l.specular *= Oc;
         
     return l;
 }
@@ -121,6 +126,19 @@ half getMetalic(float2 uv0)
         Me = _Metalic;
     #endif
     return Me;
+}
+
+half getOcclusion(float2 uv)
+{
+
+    half Oc;
+    #if defined (_OCCLUSIONMAP)
+        Oc = tex2D(_OcclusionMap , uv).g;
+        Oc = lerp (1, Oc , _OcclusionStrength);
+    #else
+        Oc = 1;
+    #endif
+    return Oc;
 }
 
 half getSmooth(float2 uv0)
@@ -160,6 +178,7 @@ half4 frag(VOUT IN) : SV_TARGET
     IN.nor = No;
 
     float Me;
+    half Oc;
     half3 Sp;
     half Omr;
     half Sm = getSmooth(uv0);
@@ -169,9 +188,11 @@ half4 frag(VOUT IN) : SV_TARGET
     half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Rd = reflect(-Vd , No);
 
+    Oc = getOcclusion(uv0);
+
     half3 Di = DiffuseAndSpecularFromMetallic(Al, Me, Sp, Omr);
     UnityLight dL = dLight(IN);
-    UnityIndirect iL = iLight(IN , Rd , Ro);
+    UnityIndirect iL = iLight(IN , Rd , Ro , Oc);
 
     col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL) +Em ;
     return col;
