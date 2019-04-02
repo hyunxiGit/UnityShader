@@ -1,4 +1,4 @@
-﻿Shader "Custom/practice"
+﻿Shader "Custom/GUIShader"
 {
   Properties
   {
@@ -28,7 +28,7 @@
         #pragma multi_compile_shadowcaster
         #pragma vertex vert
         #pragma fragment frag
-        #include "tSh.cginc"
+        #include "gSh.cginc"
         ENDCG
     }
     Pass
@@ -46,7 +46,7 @@
         #pragma multi_compile _ VERTEXLIGHT_ON
         #pragma vertex vert
         #pragma fragment frag
-        #include "tLi.cginc"
+        #include "gLi.cginc"
         ENDCG
     }
     Pass
@@ -65,7 +65,7 @@
         #pragma multi_compile_fwdadd_fullshadows
         #pragma vertex vert
         #pragma fragment frag
-        #include "tLi.cginc"
+        #include "gLi.cginc"
         ENDCG
     }
   }

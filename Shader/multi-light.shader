@@ -25,7 +25,7 @@ Shader "Custom/Multi" {
         #pragma multi_compile_shadowcaster
         #pragma vertex vert
         #pragma fragment frag
-        #include "tSh.cginc"
+        #include "Shadow.cginc"
         ENDCG
     }
     Pass 
