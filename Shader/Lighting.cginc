@@ -9,12 +9,15 @@ sampler2D _Normal;
 sampler2D _MetalicMap;
 sampler2D _EmissionMap;
 sampler2D _OcclusionMap;
+sampler2D _DetailAbedoMap;
+sampler2D _DetailMaskMap;
+sampler2D _DetailNormalMap;
+
 float4 _Emission;
 float4 _Albedo_ST;
 float _Metalic;
 float _Smoothness;
 float _OcclusionStrength;
-
 
 struct VIN
 {
@@ -166,15 +169,28 @@ half4 getEmissive(float2 uv)
     return col;
 }
 
+half3 getAlbedo(float2 uv)
+{
+    half3 Al = tex2D(_Albedo, uv);
+    return Al;
+}
+
+half3 getnormal(float2 uv , VOUT IN)
+{
+    half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv), 0.5).xzy;
+    half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
+    return No;
+}
+
 half4 frag(VOUT IN) : SV_TARGET
 {
     half4 col;
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);
     half4 Em = getEmissive(uv0);
-    half3 Al = tex2D(_Albedo, uv0);
-    half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv0), 0.5).xzy;
-    half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
+    half3 Al = getAlbedo(uv0);
+    //half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv0), 0.5).xzy;
+    half3 No = getnormal(uv0 , IN);
     IN.nor = No;
 
     float Me;

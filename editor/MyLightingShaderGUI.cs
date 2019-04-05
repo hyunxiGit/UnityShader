@@ -38,12 +38,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 			target.DisableKeyword(keyword);
 		}
 	}
-	void DoSecondary()
-	{
-		MaterialProperty second = FindProperty("_Secondary");
-	    editor.TexturePropertySingleLine(MakeLabel(second , "secondary (grey)"), second );
-	    editor.TextureScaleOffsetProperty(second);
-	}
+
 	void DoNormals()
 	{
 		MaterialProperty normal = FindProperty("_Normal");
@@ -138,6 +133,19 @@ public class MyLightingShaderGUI : ShaderGUI {
 			SetKeyword("_OCCLUSIONMAP ", OcMapPro.textureValue);
 		}
 	}
+
+	void DoDetail()
+	{
+		
+		MaterialProperty DeAlbedoMap = FindProperty("_DetailAbedoMap");
+		MaterialProperty DeNormalMap = FindProperty("_DetailNormalMap");
+		MaterialProperty DeMaskMap = FindProperty("_DetailMaskMap");
+
+		editor.TexturePropertySingleLine(MakeLabel (DeAlbedoMap ), DeAlbedoMap);
+		editor.TexturePropertySingleLine(MakeLabel (DeNormalMap ), DeNormalMap);
+		editor.TexturePropertySingleLine(MakeLabel (DeMaskMap ), DeMaskMap);
+	}
+
 	void DoMain() 
 	{
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
@@ -152,9 +160,9 @@ public class MyLightingShaderGUI : ShaderGUI {
 		DoEmission();
 		editor.TextureScaleOffsetProperty(albedo);
 
-		GUILayout.Label("Secondary Maps",EditorStyles.boldLabel);
+		GUILayout.Label("detail map" , EditorStyles.boldLabel);
 		DoOcclusion();
-		DoSecondary();
+		DoDetail();
 	}
 
 }

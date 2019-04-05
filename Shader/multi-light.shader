@@ -7,8 +7,11 @@ Shader "Custom/Multi" {
     [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
     [noscaleoffset]_EmissionMap("emission map" , 2d) = "white"{}
     [noscaleoffset]_OcclusionMap("occlusion map" , 2d) = "white"{}
+    
+    _DetailAbedoMap("detail abedo" , 2d) = "white" {}
+    [noscaleoffset]_DetailNormalMap("detail normal" , 2d) = "normal" {}
+    [noscaleoffset]_DetailMaskMap("detail mask" , 2d) = "white" {}
     _Emission("emission" , color) = (0,0,0,0)
-    _Secondary("secondary map" , 2d) = "white" {}
     [gamma]_BumpScale("bump scale", float) = 0.5
     [gamma]_Metalic("metalic" , range(0,1)) = 0.5
     [gamma]_Smoothness("smoothness" , range(0,1)) = 0.5
