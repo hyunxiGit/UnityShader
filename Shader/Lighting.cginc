@@ -9,12 +9,13 @@ sampler2D _Normal;
 sampler2D _MetalicMap;
 sampler2D _EmissionMap;
 sampler2D _OcclusionMap;
-sampler2D _DetailAbedoMap;
+sampler2D _DetailAlbedoMap;
 sampler2D _DetailMaskMap;
 sampler2D _DetailNormalMap;
 
 float4 _Emission;
 float4 _Albedo_ST;
+float4 _DetailAlbedoMap_ST;
 float _Metalic;
 float _Smoothness;
 float _OcclusionStrength;
@@ -169,15 +170,34 @@ half4 getEmissive(float2 uv)
     return col;
 }
 
-half3 getAlbedo(float2 uv)
+half getDetailMask(float2 uv)
 {
-    half3 Al = tex2D(_Albedo, uv);
+    half mask;
+    #if defined(_DETAIL_MASK)
+        return tex2D(_DetailMaskMap , uv).w;
+    #else
+        return 1;
+    #endif
+}
+
+half3 getAlbedo( float2 uv0 , float2 uv1)
+{
+    half3 Al = tex2D(_Albedo, uv0);
+    #if defined (_DETAIL_ALBEDO)
+        half3 AlDe = Al * tex2D(_DetailAlbedoMap , uv1);
+        Al = lerp(Al ,AlDe , getDetailMask(uv0));
+    #endif
     return Al;
 }
 
-half3 getnormal(float2 uv , VOUT IN)
+half3 getnormal(float2 uv0 , float2 uv1 , VOUT IN)
 {
-    half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv), 0.5).xzy;
+    half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv0), 0.5).xzy;
+    #if defined (_DETAIL_NORMAL)
+        half3 NmDe = UnpackScaleNormal(tex2D(_DetailNormalMap , uv1) , 0.5).xyz;
+        NmDe = lerp ( half3 (0,1,0), NmDe , getDetailMask(uv0));
+        Nm = normalize(half3(Nm.x+ NmDe.x , Nm.y , Nm.z + NmDe.z));
+    #endif
     half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
     return No;
 }
@@ -187,10 +207,10 @@ half4 frag(VOUT IN) : SV_TARGET
     half4 col;
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);
+    float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
     half4 Em = getEmissive(uv0);
-    half3 Al = getAlbedo(uv0);
-    //half3 Nm = UnpackScaleNormal(tex2D(_Normal, uv0), 0.5).xzy;
-    half3 No = getnormal(uv0 , IN);
+    half3 Al = getAlbedo(uv0,uv1);
+    half3 No = getnormal(uv0 , uv1 , IN);
     IN.nor = No;
 
     float Me;

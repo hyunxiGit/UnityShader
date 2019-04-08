@@ -136,14 +136,21 @@ public class MyLightingShaderGUI : ShaderGUI {
 
 	void DoDetail()
 	{
-		
-		MaterialProperty DeAlbedoMap = FindProperty("_DetailAbedoMap");
+		EditorGUI.BeginChangeCheck();
+		MaterialProperty DeAlbedoMap = FindProperty("_DetailAlbedoMap");
 		MaterialProperty DeNormalMap = FindProperty("_DetailNormalMap");
 		MaterialProperty DeMaskMap = FindProperty("_DetailMaskMap");
 
 		editor.TexturePropertySingleLine(MakeLabel (DeAlbedoMap ), DeAlbedoMap);
 		editor.TexturePropertySingleLine(MakeLabel (DeNormalMap ), DeNormalMap);
 		editor.TexturePropertySingleLine(MakeLabel (DeMaskMap ), DeMaskMap);
+		editor.TextureScaleOffsetProperty(DeAlbedoMap);
+		if(EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_DETAIL_MASK", DeMaskMap.textureValue);
+			SetKeyword("_DETAIL_ALBEDO", DeAlbedoMap.textureValue);
+			SetKeyword("_DETAIL_NORMAL", DeNormalMap.textureValue);
+		}
 	}
 
 	void DoMain() 
