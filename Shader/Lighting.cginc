@@ -66,6 +66,7 @@ VOUT vert(VIN v)
     vertexLight (OUT);
     return OUT;
 } 
+
 UnityLight dLight(VOUT IN)
 {
     UnityLight l;
@@ -115,7 +116,7 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
         l.specular = s0 ;
     #endif
 
-    l.specular *= Oc;
+    l.diffuse *= Oc;
     l.specular *= Oc;
         
     return l;
@@ -174,7 +175,7 @@ half getDetailMask(float2 uv)
 {
     half mask;
     #if defined(_DETAIL_MASK)
-        return tex2D(_DetailMaskMap , uv).w;
+        return tex2D(_DetailMaskMap , uv).a;
     #else
         return 1;
     #endif
@@ -198,7 +199,8 @@ half3 getnormal(float2 uv0 , float2 uv1 , VOUT IN)
         NmDe = lerp ( half3 (0,1,0), NmDe , getDetailMask(uv0));
         Nm = normalize(half3(Nm.x+ NmDe.x , Nm.y , Nm.z + NmDe.z));
     #endif
-    half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
+    // half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
+        half3 No = BlendNormals(IN.nor , Nm);
     return No;
 }
 

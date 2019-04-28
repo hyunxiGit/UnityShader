@@ -9,8 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: testMat
   m_Shader: {fileID: 4800000, guid: 3d1a56d475b16db4a89c3e2eb3b2d852, type: 3}
-  m_ShaderKeywords: _DETAIL_ALBEDO _DETAIL_MASK _DETAIL_NORMAL _METALLICGLOSSMAP _OCCLUSIONMAP
-    _SMOOTHNESS_METALLIC
+  m_ShaderKeywords: _DETAIL_ALBEDO _DETAIL_MASK _DETAIL_NORMAL _METALIC_MAP _METALLICGLOSSMAP
+    _OCCLUSIONMAP _SMOOTHNESS_METALLIC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -61,7 +61,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailMaskMap:
-        m_Texture: {fileID: 2800000, guid: 11f8ff969a15a5c438a31ac159390ea1, type: 3}
+        m_Texture: {fileID: 2800000, guid: 164f3351675dbdc4f8cb6fa1737a9526, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailN:
@@ -93,7 +93,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetalicMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d8002be6789f34547bd5c0bbcaeb7270, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -101,7 +101,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal:
-        m_Texture: {fileID: 2800000, guid: bb3aba3a6cffd3b4bbc2b9d8e26853c1, type: 3}
+        m_Texture: {fileID: 2800000, guid: e59501b7d6cfd5747b54b24b0c42052e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
@@ -134,11 +134,11 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 1
-    - _Metalic: 0
+    - _Metalic: 1
     - _Metallic: 0
     - _Mode: 0
     - _NormalScale: 0
-    - _OcclusionStrength: 0
+    - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _Roughness: 0
     - _Smooth: 0.927
