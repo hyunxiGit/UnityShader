@@ -3,6 +3,7 @@ Shader "Custom/Multi" {
   {
     _Albedo("albedo" , 2d) = "white" {}
     _Tint("tint" , color) = (1,1,1,1)
+    _Cutoff("clip range", range(0,1)) = 0.5
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
     [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
     [noscaleoffset]_EmissionMap("emission map" , 2d) = "white"{}
@@ -79,5 +80,5 @@ Shader "Custom/Multi" {
     }
   }
   
-    CustomEditor "MyLightingShaderGUI"
+   CustomEditor "MyLightingShaderGUI"
 }

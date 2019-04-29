@@ -44,6 +44,14 @@ public class MyLightingShaderGUI : ShaderGUI {
 		MaterialProperty normal = FindProperty("_Normal");
 		editor.TexturePropertySingleLine(MakeLabel(normal,"normal map"), normal, normal.textureValue?FindProperty("_BumpScale"):null);
 	}
+
+	void DoAlpha()
+	{
+
+	    MaterialProperty clipped = FindProperty("_Cutoff");
+	    editor.ShaderProperty(clipped, "clip range");
+	}
+	
 	void DoMetalic()
 	{
 		EditorGUI.BeginChangeCheck();
@@ -161,6 +169,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		MaterialProperty tint =  FindProperty("_Tint");
 	    editor.TexturePropertySingleLine(MakeLabel(albedo , "albedo (RGB)"), albedo, tint);
 
+	    DoAlpha();
 		DoNormals();
 		DoMetalic();
 		DoSmoothness();

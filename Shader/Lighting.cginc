@@ -13,6 +13,7 @@ sampler2D _DetailAlbedoMap;
 sampler2D _DetailMaskMap;
 sampler2D _DetailNormalMap;
 
+float _Cutoff;
 float4 _Emission;
 float4 _Albedo_ST;
 float4 _DetailAlbedoMap_ST;
@@ -204,6 +205,15 @@ half3 getnormal(float2 uv0 , float2 uv1 , VOUT IN)
     return No;
 }
 
+half getAlpha(float2 uv)
+{
+    half a = 1;
+    #if !defined(_SMOOTHNESS_ALBEDO)
+        a = tex2D(_Albedo, uv).a;
+    #endif
+    return a;
+}
+
 half4 frag(VOUT IN) : SV_TARGET
 {
     half4 col;
@@ -212,6 +222,8 @@ half4 frag(VOUT IN) : SV_TARGET
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
+    half Alpha = getAlpha(uv0);
+    clip(Alpha - _Cutoff);
     half3 No = getnormal(uv0 , uv1 , IN);
     IN.nor = No;
 
