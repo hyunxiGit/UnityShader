@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEditor;
+
 public class MyLightingShaderGUI : ShaderGUI {
 	
 	Material target;
@@ -52,20 +54,27 @@ public class MyLightingShaderGUI : ShaderGUI {
 	enum RenderingMode{Opaque, Cutout}
 	void DoRenderMode()
 	{
-		RenderingMode source = RenderingMode.Opaque;
+		RenderingMode mode = RenderingMode.Opaque;
 		if (IsKeywordEnable("_RENDERING_CUTOUT"))
 		{
-			source = RenderingMode.Cutout;
+			mode = RenderingMode.Cutout;
 		}
 		else
 		{
-			source = RenderingMode.Opaque;	
+			mode = RenderingMode.Opaque;	
 		}
 		EditorGUI.BeginChangeCheck();
-		source = (RenderingMode)EditorGUILayout.EnumPopup("Render Mode", source);
+		mode = (RenderingMode)EditorGUILayout.EnumPopup("Render Mode", mode);
 		if(EditorGUI.EndChangeCheck())
 		{
-			SetKeyword("_RENDERING_CUTOUT",source == RenderingMode.Cutout);
+			SetKeyword("_RENDERING_CUTOUT",mode == RenderingMode.Cutout);
+			RenderQueue queue = mode == RenderingMode.Opaque ? RenderQueue.Geometry : RenderQueue.AlphaTest;
+			string renderType = mode == RenderingMode.Opaque ? "":"TransparentCutout";
+			foreach(Material m in editor.targets)
+			{
+				m.renderQueue = (int)queue;
+				m.SetOverrideTag("RenderType", renderType);
+			}
 		}
 	}
 
