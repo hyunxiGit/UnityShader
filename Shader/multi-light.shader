@@ -28,6 +28,7 @@ Shader "Custom/Multi" {
         }
         CGPROGRAM
         #pragma target 3.0
+        #pragma shader_feature _RENDERING_CUTOUT
         #pragma multi_compile_shadowcaster
         #pragma vertex vert
         #pragma fragment frag
@@ -42,6 +43,7 @@ Shader "Custom/Multi" {
         }
         CGPROGRAM
         #pragma target 3.0
+        #pragma shader_feature _RENDERING_CUTOUT
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC

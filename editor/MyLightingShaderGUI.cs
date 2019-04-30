@@ -19,7 +19,11 @@ public class MyLightingShaderGUI : ShaderGUI {
 		staticLabel.tooltip = tooltip;
 		return staticLabel;
 	}
-	
+	bool IsKeywordEnable (string keyword)
+	{
+		return target.IsKeywordEnabled(keyword);
+	}
+
 	public override void OnGUI (MaterialEditor editor, MaterialProperty[] properties) 
 	{
 		this.target = editor.target as Material;
@@ -45,10 +49,29 @@ public class MyLightingShaderGUI : ShaderGUI {
 		editor.TexturePropertySingleLine(MakeLabel(normal,"normal map"), normal, normal.textureValue?FindProperty("_BumpScale"):null);
 	}
 
+	enum RenderingMode{Opaque, Cutout}
+	void DoRenderMode()
+	{
+		RenderingMode source = RenderingMode.Opaque;
+		if (IsKeywordEnable("_RENDERING_CUTOUT"))
+		{
+			source = RenderingMode.Cutout;
+		}
+		else
+		{
+			source = RenderingMode.Opaque;	
+		}
+		EditorGUI.BeginChangeCheck();
+		source = (RenderingMode)EditorGUILayout.EnumPopup("Render Mode", source);
+		if(EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_RENDERING_CUTOUT",source == RenderingMode.Cutout);
+		}
+	}
+
 	void DoAlpha()
 	{
-
-	    MaterialProperty clipped = FindProperty("_Cutoff");
+		MaterialProperty clipped = FindProperty("_Cutoff");
 	    editor.ShaderProperty(clipped, "clip range");
 	}
 	
@@ -93,10 +116,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		Uniform, Albedo, Metalic
 	}
 
-	bool IsKeywordEnable (string keyword)
-	{
-		return target.IsKeywordEnabled(keyword);
-	}
+
 
 	void DoSmoothness()
 	{
@@ -163,6 +183,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 
 	void DoMain() 
 	{
+		DoRenderMode();
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
 
 		MaterialProperty albedo = FindProperty("_Albedo");

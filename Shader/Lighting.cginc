@@ -223,7 +223,11 @@ half4 frag(VOUT IN) : SV_TARGET
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
     half Alpha = getAlpha(uv0);
-    clip(Alpha - _Cutoff);
+
+    #if defined(_RENDERING_CUTOUT)
+        clip(Alpha - _Cutoff);
+    #endif
+        
     half3 No = getnormal(uv0 , uv1 , IN);
     IN.nor = No;
 
