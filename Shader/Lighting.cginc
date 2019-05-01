@@ -249,6 +249,9 @@ half4 frag(VOUT IN) : SV_TARGET
     UnityIndirect iL = iLight(IN , Rd , Ro , Oc);
 
     col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL) +Em ;
+    #if defined (_RENDERING_FADE)
+        col.a = getAlpha(uv0);
+    #endif
     return col;
 }
 #endif

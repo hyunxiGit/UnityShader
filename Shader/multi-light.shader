@@ -28,7 +28,6 @@ Shader "Custom/Multi" {
         }
         CGPROGRAM
         #pragma target 3.0
-        #pragma shader_feature _RENDERING_CUTOUT
         #pragma multi_compile_shadowcaster
         #pragma vertex vert
         #pragma fragment frag
@@ -41,9 +40,10 @@ Shader "Custom/Multi" {
         {
             "LightMode" = "ForwardBase"
         }
+        Blend SrcAlpha OneMinusSrcAlpha
         CGPROGRAM
         #pragma target 3.0
-        #pragma shader_feature _RENDERING_CUTOUT
+        #pragma shader_feature _RENDERING_CUTOUT _RENDERING_FADE
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
@@ -65,9 +65,10 @@ Shader "Custom/Multi" {
         {
             "LightMode" = "ForwardAdd"
         }
-        Blend ONE ONE
+        Blend SrcAlpha One
         CGPROGRAM
         #pragma target 3.0
+        #pragma shader_feature _RENDERING_CUTOUT _RENDERING_FADE
         #pragma multi_compile _METALIC_MAP
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
         #pragma multi_compile_fwdadd_fullshadows

@@ -51,7 +51,24 @@ public class MyLightingShaderGUI : ShaderGUI {
 		editor.TexturePropertySingleLine(MakeLabel(normal,"normal map"), normal, normal.textureValue?FindProperty("_BumpScale"):null);
 	}
 
-	enum RenderingMode{Opaque, Cutout}
+	enum RenderingMode{Opaque, Cutout,Fade}
+
+	struct RenderingSettings
+	{
+		public RenderQueue queue;
+		public string renderType;
+		public static RenderingSettings[] modes = {
+			new RenderingSettings(RenderQueue.Geometry , ""),
+			new RenderingSettings(RenderQueue.AlphaTest , "TransparentCutout"),
+			new RenderingSettings(RenderQueue.Transparent,"Transparent")
+		};
+		public RenderingSettings (RenderQueue q, string t)
+		{
+			queue = q;
+			renderType = t;
+		}
+	}
+
 	void DoRenderMode()
 	{
 		RenderingMode mode = RenderingMode.Opaque;
@@ -59,21 +76,27 @@ public class MyLightingShaderGUI : ShaderGUI {
 		{
 			mode = RenderingMode.Cutout;
 		}
-		else
+		else if(IsKeywordEnable("_RENDERING_FADE"))
 		{
-			mode = RenderingMode.Opaque;	
+			mode = RenderingMode.Fade;	
 		}
 		EditorGUI.BeginChangeCheck();
 		mode = (RenderingMode)EditorGUILayout.EnumPopup("Render Mode", mode);
 		if(EditorGUI.EndChangeCheck())
 		{
 			SetKeyword("_RENDERING_CUTOUT",mode == RenderingMode.Cutout);
-			RenderQueue queue = mode == RenderingMode.Opaque ? RenderQueue.Geometry : RenderQueue.AlphaTest;
-			string renderType = mode == RenderingMode.Opaque ? "":"TransparentCutout";
+			SetKeyword("_RENDERING_FADE",mode == RenderingMode.Fade);
+
+			RenderingSettings set = RenderingSettings.modes[(int)mode];
+
+			// RenderQueue queue = mode == RenderingMode.Opaque ? RenderQueue.Geometry : RenderQueue.AlphaTest;
+			// string renderType = mode == RenderingMode.Opaque ? "":"TransparentCutout";
 			foreach(Material m in editor.targets)
 			{
-				m.renderQueue = (int)queue;
-				m.SetOverrideTag("RenderType", renderType);
+				m.renderQueue = (int)set.queue;
+				m.SetOverrideTag("RenderType", set.renderType);
+				// m.renderQueue = (int)queue;
+				// m.SetOverrideTag("RenderType", renderType);
 			}
 		}
 	}
