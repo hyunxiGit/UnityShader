@@ -1,6 +1,8 @@
 Shader "Custom/Multi" {
   Properties
   {
+    [HideInInspector]_ScrBlend("screen blend" , float) = 1
+    [HideInInspector]_DstBlend("desty blend" , float) = 0
     _Albedo("albedo" , 2d) = "white" {}
     _Tint("tint" , color) = (1,1,1,1)
     _Cutoff("clip range", range(0,1)) = 0.5
@@ -40,10 +42,11 @@ Shader "Custom/Multi" {
         {
             "LightMode" = "ForwardBase"
         }
-        Blend SrcAlpha OneMinusSrcAlpha
+        //Blend SrcAlpha OneMinusSrcAlpha
+        Blend [_ScrBlend] [_DstBlend]
         CGPROGRAM
         #pragma target 3.0
-        #pragma shader_feature _RENDERING_CUTOUT _RENDERING_FADE
+        #pragma shader_feature _ _RENDERING_CUTOUT _RENDERING_FADE
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
@@ -65,10 +68,10 @@ Shader "Custom/Multi" {
         {
             "LightMode" = "ForwardAdd"
         }
-        Blend SrcAlpha One
+        Blend [_ScrBlend] One
         CGPROGRAM
         #pragma target 3.0
-        #pragma shader_feature _RENDERING_CUTOUT _RENDERING_FADE
+        #pragma shader_feature _ _RENDERING_CUTOUT _RENDERING_FADE
         #pragma multi_compile _METALIC_MAP
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
         #pragma multi_compile_fwdadd_fullshadows
