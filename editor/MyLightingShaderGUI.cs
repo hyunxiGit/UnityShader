@@ -57,15 +57,19 @@ public class MyLightingShaderGUI : ShaderGUI {
 	{
 		public RenderQueue queue;
 		public string renderType;
+		public int SrcBlend;
+		public int DstBlend;
 		public static RenderingSettings[] modes = {
-			new RenderingSettings(RenderQueue.Geometry , ""),
-			new RenderingSettings(RenderQueue.AlphaTest , "TransparentCutout"),
-			new RenderingSettings(RenderQueue.Transparent,"Transparent")
+			new RenderingSettings(RenderQueue.Geometry , "",BlendMode.One , BlendMode.Zero),
+			new RenderingSettings(RenderQueue.AlphaTest , "TransparentCutout",BlendMode.One , BlendMode.Zero),
+			new RenderingSettings(RenderQueue.Transparent,"Transparent",BlendMode.SrcAlpha , BlendMode.OneMinusSrcAlpha)
 		};
-		public RenderingSettings (RenderQueue q, string t)
+		public RenderingSettings (RenderQueue q, string t,BlendMode src, BlendMode dst)
 		{
 			queue = q;
 			renderType = t;
+			SrcBlend = (int)src;
+			DstBlend = (int)dst;
 		}
 	}
 
@@ -95,8 +99,8 @@ public class MyLightingShaderGUI : ShaderGUI {
 			{
 				m.renderQueue = (int)set.queue;
 				m.SetOverrideTag("RenderType", set.renderType);
-				// m.renderQueue = (int)queue;
-				// m.SetOverrideTag("RenderType", renderType);
+				m.SetInt("_ScrBlend" , set.SrcBlend);
+				m.SetInt("_DstBlend" , set.DstBlend);
 			}
 		}
 	}
