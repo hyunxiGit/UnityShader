@@ -75,7 +75,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		}
 	}
 
-	void DoRenderMode()
+	RenderingMode DoRenderMode()
 	{
 		RenderingMode mode = RenderingMode.Opaque;
 		if (IsKeywordEnable("_RENDERING_CUTOUT"))
@@ -106,6 +106,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 				m.SetInt("_ZWri" , set.zWrite);
 			}
 		}
+		return mode;
 	}
 
 	void DoAlpha()
@@ -222,14 +223,18 @@ public class MyLightingShaderGUI : ShaderGUI {
 
 	void DoMain() 
 	{
-		DoRenderMode();
+		RenderingMode m = DoRenderMode();
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
 
 		MaterialProperty albedo = FindProperty("_Albedo");
 		MaterialProperty tint =  FindProperty("_Tint");
 	    editor.TexturePropertySingleLine(MakeLabel(albedo , "albedo (RGB)"), albedo, tint);
 
-	    DoAlpha();
+	    if (m == RenderingMode.Cutout)
+	    {
+	    	DoAlpha();
+	    }
+
 		DoNormals();
 		DoMetalic();
 		DoSmoothness();
