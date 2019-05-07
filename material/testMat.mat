@@ -134,9 +134,12 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 1
+    - _JiTest: 1
     - _Metalic: 0
     - _Metallic: 0
     - _Mode: 0
+    - _MyGoD: 1
+    - _MyGoD1: 1
     - _NormalScale: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -150,8 +153,14 @@ Material:
     - _UVSec: 0
     - _UseFlow: 0
     - _UseNoise: 1
+    - _ZWri: 0
     - _ZWrite: 1
+    - _ZZWrite: 1
+    - _ZZtes1t: 1
+    - _ZZtest: 0
+    - _Zwrite: 0
     - _roughness: 0.5
+    - testFloat: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Emission: {r: 0, g: 0, b: 0, a: 0}

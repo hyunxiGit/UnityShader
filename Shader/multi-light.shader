@@ -3,6 +3,7 @@ Shader "Custom/Multi" {
   {
     [HideInInspector]_ScrBlend("screen blend" , float) = 1
     [HideInInspector]_DstBlend("desty blend" , float) = 0
+    [HideInInspector]_ZWri("ZWrite control" , float) = 0
     _Albedo("albedo" , 2d) = "white" {}
     _Tint("tint" , color) = (1,1,1,1)
     _Cutoff("clip range", range(0,1)) = 0.5
@@ -42,8 +43,9 @@ Shader "Custom/Multi" {
         {
             "LightMode" = "ForwardBase"
         }
-        //Blend SrcAlpha OneMinusSrcAlpha
+        ZWrite [_ZWri]
         Blend [_ScrBlend] [_DstBlend]
+        
         CGPROGRAM
         #pragma target 3.0
         #pragma shader_feature _ _RENDERING_CUTOUT _RENDERING_FADE
@@ -68,6 +70,7 @@ Shader "Custom/Multi" {
         {
             "LightMode" = "ForwardAdd"
         }
+        ZWrite [_ZWri]
         Blend [_ScrBlend] One
         CGPROGRAM
         #pragma target 3.0
@@ -86,5 +89,5 @@ Shader "Custom/Multi" {
     }
   }
   
-   CustomEditor "MyLightingShaderGUI"
+  CustomEditor "MyLightingShaderGUI"
 }
