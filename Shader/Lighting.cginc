@@ -227,6 +227,7 @@ half4 frag(VOUT IN) : SV_TARGET
     #if defined(_RENDERING_CUTOUT)
         clip(Alpha - _Cutoff);
     #endif
+
         
     half3 No = getnormal(uv0 , uv1 , IN);
     IN.nor = No;
@@ -244,14 +245,21 @@ half4 frag(VOUT IN) : SV_TARGET
 
     Oc = getOcclusion(uv0);
 
+    #if defined(_RENDERING_TRANSPARENT)
+        Al *=Alpha;
+        Omr = OneMinusReflectivityFromMetallic(Me);
+        Alpha = 1-Omr + Alpha*Omr;
+    #endif
+
     half3 Di = DiffuseAndSpecularFromMetallic(Al, Me, Sp, Omr);
     UnityLight dL = dLight(IN);
     UnityIndirect iL = iLight(IN , Rd , Ro , Oc);
 
     col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL) +Em ;
-    #if defined (_RENDERING_FADE)
-        col.a = getAlpha(uv0);
+    #if defined (_RENDERING_FADE) ||defined (_RENDERING_TRANSPARENT)
+        col.a = Alpha;
     #endif
+
     return col;
 }
 #endif

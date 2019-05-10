@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: testMat
   m_Shader: {fileID: 4800000, guid: 3d1a56d475b16db4a89c3e2eb3b2d852, type: 3}
-  m_ShaderKeywords: _METALLICGLOSSMAP _OCCLUSIONMAP _RENDERING_FADE _SMOOTHNESS_METALLIC
+  m_ShaderKeywords: _METALLICGLOSSMAP _OCCLUSIONMAP _SMOOTHNESS_METALLIC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -126,7 +126,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BumpScale: 1
-    - _Cutoff: 0
+    - _Cutoff: 0.055
     - _DetailBumpScale: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 10

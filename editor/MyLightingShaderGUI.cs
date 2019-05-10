@@ -51,7 +51,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		editor.TexturePropertySingleLine(MakeLabel(normal,"normal map"), normal, normal.textureValue?FindProperty("_BumpScale"):null);
 	}
 
-	enum RenderingMode{Opaque, Cutout,Fade}
+	enum RenderingMode{Opaque, Cutout,Fade,Transparent}
 
 	struct RenderingSettings
 	{
@@ -63,7 +63,8 @@ public class MyLightingShaderGUI : ShaderGUI {
 		public static RenderingSettings[] modes = {
 			new RenderingSettings(RenderQueue.Geometry , "",BlendMode.One , BlendMode.Zero , 1),
 			new RenderingSettings(RenderQueue.AlphaTest , "TransparentCutout",BlendMode.One , BlendMode.Zero , 1),
-			new RenderingSettings(RenderQueue.Transparent,"Transparent",BlendMode.SrcAlpha , BlendMode.OneMinusSrcAlpha , 0)
+			new RenderingSettings(RenderQueue.Transparent , "Transparent" , BlendMode.SrcAlpha , BlendMode.OneMinusSrcAlpha , 0),
+			new RenderingSettings(RenderQueue.Transparent , "Transparent" , BlendMode.One , BlendMode.OneMinusSrcAlpha , 0)
 		};
 		public RenderingSettings (RenderQueue q, string t,BlendMode src, BlendMode dst, int zWri)
 		{
@@ -86,17 +87,20 @@ public class MyLightingShaderGUI : ShaderGUI {
 		{
 			mode = RenderingMode.Fade;	
 		}
+		else if(IsKeywordEnable("_RENDERING_TRANSPARENT"))
+		{
+			mode = RenderingMode.Transparent;	
+		}
 		EditorGUI.BeginChangeCheck();
 		mode = (RenderingMode)EditorGUILayout.EnumPopup("Render Mode", mode);
 		if(EditorGUI.EndChangeCheck())
 		{
 			SetKeyword("_RENDERING_CUTOUT",mode == RenderingMode.Cutout);
 			SetKeyword("_RENDERING_FADE",mode == RenderingMode.Fade);
+			SetKeyword("_RENDERING_TRANSPARENT",mode == RenderingMode.Transparent);
 
 			RenderingSettings set = RenderingSettings.modes[(int)mode];
 
-			// RenderQueue queue = mode == RenderingMode.Opaque ? RenderQueue.Geometry : RenderQueue.AlphaTest;
-			// string renderType = mode == RenderingMode.Opaque ? "":"TransparentCutout";
 			foreach(Material m in editor.targets)
 			{
 				m.renderQueue = (int)set.queue;
@@ -105,6 +109,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 				m.SetInt("_DstBlend" , set.DstBlend);
 				m.SetInt("_ZWri" , set.zWrite);
 			}
+
 		}
 		return mode;
 	}
