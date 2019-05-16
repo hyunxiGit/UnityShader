@@ -9,13 +9,13 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: testMat
   m_Shader: {fileID: 4800000, guid: 3d1a56d475b16db4a89c3e2eb3b2d852, type: 3}
-  m_ShaderKeywords: _OCCLUSIONMAP _RENDERING_CUTOUT _SMOOTHNESS_METALLIC
+  m_ShaderKeywords: _OCCLUSIONMAP _RENDERING_TRANSPARENT _SMOOTHNESS_METALLIC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2450
+  m_CustomRenderQueue: 3000
   stringTagMap:
-    RenderType: TransparentCutout
+    RenderType: Transparent
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
@@ -129,7 +129,7 @@ Material:
     - _Cutoff: 0.186
     - _DetailBumpScale: 1
     - _DetailNormalMapScale: 1
-    - _DstBlend: 0
+    - _DstBlend: 10
     - _FlowSpeed: 0.5
     - _GlossMapScale: 0
     - _Glossiness: 0
@@ -153,7 +153,7 @@ Material:
     - _UVSec: 0
     - _UseFlow: 0
     - _UseNoise: 1
-    - _ZWri: 1
+    - _ZWri: 0
     - _ZWrite: 1
     - _ZZWrite: 1
     - _ZZtes1t: 1

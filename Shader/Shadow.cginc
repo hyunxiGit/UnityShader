@@ -3,12 +3,21 @@
 
 #include "UnityCG.cginc"
 
-	#if defined(_RENDERING_CUTOUT) && !defined(_SMOOTHNESS_ALBEDO)
+#if defined(_RENDERING_CUTOUT)||defined (_RENDERING_FADE) || defined (_RENDERING_TRANSPARENT)
+	#if !defined(_SMOOTHNESS_ALBEDO)
 		#define SHADOW_UV
 	#endif
+#endif
+
+#if defined (_RENDERING_FADE) || defined (_RENDERING_TRANSPARENT)
+
+	#define SHADOW_TRANSLUCENT
+
+#endif
 
 sampler2D _Albedo;
 float4 _Albedo_ST;
+sampler3D _DitherMaskLOD;
 
 struct VertexData 
 {
@@ -17,11 +26,23 @@ struct VertexData
 	float2 uv : TEXCOORD0;
 };
 
-struct FragmentData
+struct InterpolateVertex
 {
-	float4 pos : SV_POSITION;
 	#if defined (SHADOW_UV)
 		float2 uv : TEXCOORD0;
+	#endif
+	float4 pos : SV_POSITION;
+};
+
+struct InterpolateFrag
+{
+	#if defined (SHADOW_UV)
+		float2 uv : TEXCOORD0;
+	#endif
+	#if defined (SHADOW_TRANSLUCENT)
+		UNITY_VPOS_TYPE  vpos : VPOS;
+	#else
+		float4 pos : SV_POSITION;
 	#endif
 };
 
@@ -47,25 +68,32 @@ struct FragmentData
 // 	}
 
 // #else
-	FragmentData vert (VertexData IN)
+	InterpolateVertex vert (VertexData IN)
 	{
-		FragmentData OUT;
-		float4 position = UnityClipSpaceShadowCasterPos(IN.position.xyz, IN.normal);
-		OUT.pos = UnityApplyLinearShadowBias(position);
+		InterpolateVertex OUT;
 		#if defined (SHADOW_UV)
 			OUT.uv = IN.uv;
 		#endif
+		float4 position = UnityClipSpaceShadowCasterPos(IN.position.xyz, IN.normal);
+		OUT.pos = UnityApplyLinearShadowBias(position);
+
 		return OUT;
 	}
 
-	half4 frag (FragmentData IN) : SV_TARGET 
+	half4 frag (InterpolateFrag IN) : SV_TARGET 
 	{
 		#if defined (SHADOW_UV)
 			float2 uv = TRANSFORM_TEX(IN.uv, _Albedo);
-			half Alpha = tex2D(_Albedo , uv).a;
-			clip(Alpha - 0.5);
+			
+			#if defined(SHADOW_TRANSLUCENT)
+				half Dither = tex3D(_DitherMaskLOD, float3(IN.vpos.xy, 0.0625)).a;
+				clip(Dither-0.0001);
+			#else
+				half Alpha = tex2D(_Albedo , uv).a;
+				clip(Alpha - 0.3);
+			#endif
+			
 		#endif
-
 		return 0;
 	}
 #endif
