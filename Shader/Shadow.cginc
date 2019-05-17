@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'defined _TRANSLUCENT_SHADOW' with 'defined (_TRANSLUCENT_SHADOW)'
+
 #if !defined(MY_SHADOW)
 #define MY_SHADOW
 
@@ -9,12 +11,13 @@
 	#endif
 #endif
 
-#if defined (_RENDERING_FADE) || defined (_RENDERING_TRANSPARENT)
-
-	#define SHADOW_TRANSLUCENT
-
+#if defined (_TRANSLUCENT_SHADOW)
+	#if defined (_RENDERING_FADE) || defined (_RENDERING_TRANSPARENT)
+		#define SHADOW_TRANSLUCENT
+	#endif
 #endif
 
+float _Cutoff;
 sampler2D _Albedo;
 float4 _Albedo_ST;
 sampler3D _DitherMaskLOD;
@@ -72,7 +75,7 @@ struct InterpolateFrag
 	{
 		InterpolateVertex OUT;
 		#if defined (SHADOW_UV)
-			OUT.uv = IN.uv;
+			OUT.uv = TRANSFORM_TEX(IN.uv, _Albedo);
 		#endif
 		float4 position = UnityClipSpaceShadowCasterPos(IN.position.xyz, IN.normal);
 		OUT.pos = UnityApplyLinearShadowBias(position);
@@ -83,14 +86,12 @@ struct InterpolateFrag
 	half4 frag (InterpolateFrag IN) : SV_TARGET 
 	{
 		#if defined (SHADOW_UV)
-			float2 uv = TRANSFORM_TEX(IN.uv, _Albedo);
-			
+			half Alpha = tex2D(_Albedo , IN.uv).a;
 			#if defined(SHADOW_TRANSLUCENT)
-				half Dither = tex3D(_DitherMaskLOD, float3(IN.vpos.xy, 0.0625)).a;
-				clip(Dither-0.0001);
+				float Dither = tex3D(_DitherMaskLOD, float3(IN.vpos.xy*0.25, 0.9375 * Alpha)).a;
+				clip(Dither-0.01);
 			#else
-				half Alpha = tex2D(_Albedo , uv).a;
-				clip(Alpha - 0.3);
+				clip(Alpha - _Cutoff);
 			#endif
 			
 		#endif
