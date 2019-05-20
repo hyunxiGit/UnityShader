@@ -246,15 +246,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 	    }
 	    else if ( m == RenderingMode.Fade ||m == RenderingMode.Transparent)
 	    {
-	    	if (IsKeywordEnable"_TRANSLUCENT_SHADOW")
-	    	{
-	    		DoShadowTransparency();	
-	    	}
-	    	else
-	    	{
-	    		DoClip();
-	    	}
-	    	
+	    	DoShadowTransparency();	
 	    }
 
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
