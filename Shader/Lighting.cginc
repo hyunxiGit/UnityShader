@@ -84,14 +84,19 @@ VOUT vert(VIN v)
 UnityLight dLight(VOUT IN)
 {
     UnityLight l;
-    
-    l.dir = _WorldSpaceLightPos0;
-    #if defined(SPOT)|| defined(POINT)
-        l.dir = normalize(l.dir - IN.pos_w);
+
+    #if defined (DEFERRED_PASS)
+        l.dir = float3(0,1,0);
+        l.color = 0;
+    #else
+        l.dir = _WorldSpaceLightPos0;
+        #if defined(SPOT)|| defined(POINT)
+            l.dir = normalize(l.dir - IN.pos_w);
+        #endif
+        UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w);
+        //l.ndotl = DotClamped(IN.nor , l.dir);
+        l.color = _LightColor0 * attenuation;
     #endif
-    UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w);
-    l.ndotl = DotClamped(IN.nor , l.dir);
-    l.color = _LightColor0 * attenuation;
     return l;
 }
 
@@ -102,7 +107,7 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
     #if defined (VERTEXLIGHT_ON)
         l.diffuse += IN.Vc;
     #endif
-    #if defined (FORWARD_BASE_PASS)
+    #if defined (FORWARD_BASE_PASS) || defined (DEFERRED_PASS)
         l.diffuse += ShadeSH9 (half4(IN.nor,1));
     #endif
     //l.specular = 0;
@@ -175,7 +180,7 @@ half getSmooth(float2 uv0)
 half4 getEmissive(float2 uv)
 {
     half4 col = half4(0,0,0,0);
-    #if defined (FORWARD_BASE_PASS)
+    #if defined (FORWARD_BASE_PASS) || defined (DEFERRED_PASS)
         #if defined (_EMISSION_MAP)
             col = tex2D(_EmissionMap, uv);
         #else
@@ -211,10 +216,10 @@ half3 getnormal(float2 uv0 , float2 uv1 , VOUT IN)
     #if defined (_DETAIL_NORMAL)
         half3 NmDe = UnpackScaleNormal(tex2D(_DetailNormalMap , uv1) , 0.5).xyz;
         NmDe = lerp ( half3 (0,1,0), NmDe , getDetailMask(uv0));
-        Nm = normalize(half3(Nm.x+ NmDe.x , Nm.y , Nm.z + NmDe.z));
+        Nm = BlendNormals(Nm , NmDe);
     #endif
-    // half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
-        half3 No = BlendNormals(IN.nor , Nm);
+    
+        half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
     return No;
 }
 
@@ -244,6 +249,7 @@ FOUT frag(VOUT IN)
 
         
     half3 No = getnormal(uv0 , uv1 , IN);
+    float3 Ntemp = No;
     IN.nor = No;
 
     float Me;
@@ -276,15 +282,15 @@ FOUT frag(VOUT IN)
     #endif
    
     #if defined (DEFERRED_PASS)
-        buff.gbuffer0.rgb = Al;
+        buff.gbuffer0.rgb = Di;
         buff.gbuffer0.a = Oc;
 
         buff.gbuffer1.rgb = Sp;
         buff.gbuffer1.a = Sm;
-        buff.gbuffer2 = float4(No * 0.5+ 0.5,1);
-        buff.gbuffer3 = float4(1,0,1,1);
+        buff.gbuffer2 = float4(No *0.5+0.5 ,1);
+        buff.gbuffer3 = col;
     #else
-        buff.color = float4(0,1,0,1);//col;
+        buff.color = col;
     #endif
     return buff;
 }

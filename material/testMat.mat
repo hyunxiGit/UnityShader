@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: testMat
   m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: _OCCLUSIONMAP _RENDERING_CUTOUT _SMOOTHNESS_METALLIC
+  m_ShaderKeywords: _NORMALMAP _OCCLUSIONMAP _RENDERING_CUTOUT _SMOOTHNESS_METALLIC
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -28,7 +28,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: e59501b7d6cfd5747b54b24b0c42052e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DA:
@@ -84,7 +84,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 164f3351675dbdc4f8cb6fa1737a9526, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTexture:
@@ -135,7 +135,7 @@ Material:
     - _GlossyReflections: 1
     - _JiTest: 1
     - _Metalic: 0
-    - _Metallic: 0
+    - _Metallic: 1
     - _Mode: 0
     - _MyGoD: 1
     - _MyGoD1: 1
@@ -161,7 +161,7 @@ Material:
     - _roughness: 0.5
     - testFloat: 0
     m_Colors:
-    - _Color: {r: 0.6698113, g: 0.3254272, b: 0.3254272, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Emission: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _MainTint: {r: 1, g: 1, b: 1, a: 1}

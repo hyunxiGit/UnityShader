@@ -182,7 +182,7 @@ PrefabInstance:
     - target: {fileID: 2681785119479484863, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5289317117767822174, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
         type: 3}
@@ -197,6 +197,126 @@ PrefabInstance:
     - target: {fileID: 9218157851415799955, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
         type: 3}
       propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9218157851415799955, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_Name
+      value: matSphere (5)_my
+      objectReference: {fileID: 0}
+    - target: {fileID: 7397699731475578083, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -91
+      objectReference: {fileID: 0}
+    - target: {fileID: 7397699731475578083, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 65
+      objectReference: {fileID: 0}
+    - target: {fileID: 1739534614140331846, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2502970484016494507, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2502970484016494507, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_Name
+      value: matSphere (2)_my
+      objectReference: {fileID: 0}
+    - target: {fileID: 2582973342227940479, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3062829589506677821, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3203311992985414959, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3203311992985414959, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_Name
+      value: matSphere (6)_stand
+      objectReference: {fileID: 0}
+    - target: {fileID: 3310755611253903065, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3798367455996577261, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4086393728534082137, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4180435903312920274, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4958084779826490349, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5433220707593432377, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6464759753849668921, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7126002298501230091, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7458726628218231467, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8451338804680565754, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_HDR
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7925020358885689079, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8449556115847568246, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8960651684536247975, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_Name
+      value: matSphere_stand
+      objectReference: {fileID: 0}
+    - target: {fileID: 9107933791709225110, guid: d919fecd719ccc1458d3ae7c3fdb4c10,
+        type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

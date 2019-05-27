@@ -57,6 +57,7 @@ Shader "Custom/Multi" {
         #pragma shader_feature _ _DETAIL_ALBEDO
         #pragma shader_feature _ _DETAIL_NORMAL
         #pragma multi_compile _ VERTEXLIGHT_ON
+        #pragma multi_compile _ UNITY_HDR_ON
 
         #define DEFERRED_PASS
         #pragma vertex vert
