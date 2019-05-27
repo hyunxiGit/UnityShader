@@ -43,6 +43,19 @@ struct VOUT
     #endif
 };
 
+struct FOUT
+{
+    #if defined (DEFERRED_PASS)
+        float4 gbuffer0 : SV_TARGET0;
+        float4 gbuffer1 : SV_TARGET1;
+        float4 gbuffer2 : SV_TARGET2;
+        float4 gbuffer3 : SV_TARGET3;
+    
+    #else
+        float4 color : SV_TARGET;
+    #endif 
+};
+
 void vertexLight(inout VOUT IN)
 {
     #if defined(VERTEXLIGHT_ON)
@@ -214,8 +227,9 @@ half getAlpha(float2 uv)
     return a;
 }
 
-half4 frag(VOUT IN) : SV_TARGET
+FOUT frag(VOUT IN)
 {
+    FOUT buff;
     half4 col;
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);
@@ -256,10 +270,22 @@ half4 frag(VOUT IN) : SV_TARGET
     UnityIndirect iL = iLight(IN , Rd , Ro , Oc);
 
     col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL) +Em ;
+   
     #if defined (_RENDERING_FADE) ||defined (_RENDERING_TRANSPARENT)
         col.a = Alpha;
     #endif
+   
+    #if defined (DEFERRED_PASS)
+        buff.gbuffer0.rgb = Al;
+        buff.gbuffer0.a = Oc;
 
-    return col;
+        buff.gbuffer1.rgb = Sp;
+        buff.gbuffer1.a = Sm;
+        buff.gbuffer2 = float4(No * 0.5+ 0.5,1);
+        buff.gbuffer3 = float4(1,0,1,1);
+    #else
+        buff.color = float4(0,1,0,1);//col;
+    #endif
+    return buff;
 }
 #endif

@@ -39,6 +39,33 @@ Shader "Custom/Multi" {
         #include "Shadow.cginc"
         ENDCG
     }
+
+    Pass
+    {
+        Tags
+        {
+            "LightMode" = "Deferred"
+        }
+        CGPROGRAM
+
+        #pragma shader_feature _ _RENDERING_CUTOUT
+        #pragma shader_feature _ _EMISSION_MAP
+        #pragma shader_feature _ _METALIC_MAP
+        #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALIC
+        #pragma shader_feature _ _OCCLUSIONMAP
+        #pragma shader_feature _ _DETAIL_MASK
+        #pragma shader_feature _ _DETAIL_ALBEDO
+        #pragma shader_feature _ _DETAIL_NORMAL
+        #pragma multi_compile _ VERTEXLIGHT_ON
+
+        #define DEFERRED_PASS
+        #pragma vertex vert
+        #pragma fragment frag
+        #include "Lighting.cginc"
+        ENDCG 
+
+    }
+
     Pass 
     {
         Tags
