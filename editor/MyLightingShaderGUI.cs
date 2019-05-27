@@ -114,7 +114,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		return mode;
 	}
 
-	void DoAlpha()
+	void DoClip()
 	{
 		MaterialProperty clipped = FindProperty("_Cutoff");
 	    editor.ShaderProperty(clipped, "clip range");
@@ -226,19 +226,34 @@ public class MyLightingShaderGUI : ShaderGUI {
 		}
 	}
 
+	void DoShadowTransparency()
+	{
+		EditorGUI.BeginChangeCheck();
+		string myLabel = "translucent shadow";
+		bool translucentShadow = EditorGUILayout.Toggle(myLabel,IsKeywordEnable("_TRANSLUCENT_SHADOW"));
+		if(EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_TRANSLUCENT_SHADOW" ,translucentShadow);
+		}
+	}
+
 	void DoMain() 
 	{
 		RenderingMode m = DoRenderMode();
+		 if (m == RenderingMode.Cutout)
+	    {
+	    	DoClip();
+	    }
+	    else if ( m == RenderingMode.Fade ||m == RenderingMode.Transparent)
+	    {
+	    	DoShadowTransparency();	
+	    }
+
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
 
 		MaterialProperty albedo = FindProperty("_Albedo");
 		MaterialProperty tint =  FindProperty("_Tint");
 	    editor.TexturePropertySingleLine(MakeLabel(albedo , "albedo (RGB)"), albedo, tint);
-
-	    if (m == RenderingMode.Cutout)
-	    {
-	    	DoAlpha();
-	    }
 
 		DoNormals();
 		DoMetalic();

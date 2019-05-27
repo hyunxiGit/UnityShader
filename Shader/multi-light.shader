@@ -31,7 +31,8 @@ Shader "Custom/Multi" {
         }
         CGPROGRAM
         #pragma target 3.0
-        #pragma shader_feature _ _RENDERING_CUTOUT
+        #pragma shader_feature _ _RENDERING_CUTOUT _RENDERING_FADE _RENDERING_TRANSPARENT 
+        #pragma shader_feature _TRANSLUCENT_SHADOW
         #pragma shader_feature _ _SMOOTHNESS_ALBEDO
         #pragma multi_compile_shadowcaster
         #pragma vertex vert
