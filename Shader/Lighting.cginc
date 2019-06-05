@@ -289,6 +289,9 @@ FOUT frag(VOUT IN)
         buff.gbuffer1.a = Sm;
         buff.gbuffer2 = float4(No *0.5+0.5 ,1);
         buff.gbuffer3 = col;
+        #if !defined(_UNITY_HDR_ON)
+            col.rgb = exp2(-col.rgb);
+        #endif 
     #else
         buff.color = col;
     #endif

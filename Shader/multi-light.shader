@@ -48,7 +48,8 @@ Shader "Custom/Multi" {
             "LightMode" = "Deferred"
         }
         CGPROGRAM
-
+        #pragma target 3.0
+        #pragma exclude_renderers nomrt
         #pragma shader_feature _ _RENDERING_CUTOUT
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
@@ -58,7 +59,6 @@ Shader "Custom/Multi" {
         #pragma shader_feature _ _DETAIL_ALBEDO
         #pragma shader_feature _ _DETAIL_NORMAL
         #pragma multi_compile _ VERTEXLIGHT_ON
-        #pragma multi_compile _ UNITY_HDR_ON
 
         #define DEFERRED_PASS
         #pragma vertex vert
