@@ -50,6 +50,7 @@ Shader "Custom/Multi" {
         CGPROGRAM
         #pragma target 3.0
         #pragma exclude_renderers nomrt
+        #pragma multi_compile _ _UNITY_HDR_ON
         #pragma shader_feature _ _RENDERING_CUTOUT
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
@@ -89,6 +90,7 @@ Shader "Custom/Multi" {
         #pragma shader_feature _ _DETAIL_NORMAL
         #pragma multi_compile _ VERTEXLIGHT_ON
         #pragma multi_compile _ SHADOWS_SCREEN
+        #pragma multi_compile_fog
         #define FORWARD_BASE_PASS
         #pragma vertex vert
         #pragma fragment frag
@@ -113,6 +115,7 @@ Shader "Custom/Multi" {
         #pragma shader_feature _ _DETAIL_MASK
         #pragma shader_feature _ _DETAIL_ALBEDO
         #pragma shader_feature _ _DETAIL_NORMAL
+        #pragma multi_compile_fog
         #pragma vertex vert
         #pragma fragment frag
         #include "Lighting.cginc"

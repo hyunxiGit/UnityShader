@@ -104,13 +104,14 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
 {
     UnityIndirect l;
     l.diffuse = 0;
+    l.specular = 0;
     #if defined (VERTEXLIGHT_ON)
         l.diffuse += IN.Vc;
     #endif
     #if defined (FORWARD_BASE_PASS) || defined (DEFERRED_PASS)
         l.diffuse += ShadeSH9 (half4(IN.nor,1));
     
-        //l.specular = 0;
+        
         Unity_GlossyEnvironmentData envData;
         envData.roughness = Ro;
         envData.reflUVW = BoxProjectedCubemapDirection (Rd, IN.pos_w, unity_SpecCube0_ProbePosition, unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax);
@@ -236,6 +237,11 @@ half getAlpha(float2 uv)
     return a;
 }
 
+void addFog(inout half4 col , VOUT IN)
+{
+    col = col + half4(1,0,0,1);
+}
+
 FOUT frag(VOUT IN)
 {
     FOUT buff;
@@ -298,7 +304,9 @@ FOUT frag(VOUT IN)
         #endif 
     #else
         buff.color = col;
+        addFog(buff.color , IN);
     #endif
+
     return buff;
 }
 #endif

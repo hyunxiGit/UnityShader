@@ -202,6 +202,11 @@ PrefabInstance:
       propertyPath: far clip plane
       value: 50
       objectReference: {fileID: 0}
+    - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_AllowDynamicResolution
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2504555172291673807, guid: b55d926c18bbb5b49ba67d5d9da49d11,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -248,6 +253,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 4e540c5d39c1ada418de9e66866d6be9, type: 2}
     - target: {fileID: 5014304604768913552, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 4e540c5d39c1ada418de9e66866d6be9, type: 2}
+    - target: {fileID: 3338518020164111122, guid: b55d926c18bbb5b49ba67d5d9da49d11,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
