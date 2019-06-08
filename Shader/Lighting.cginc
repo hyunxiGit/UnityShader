@@ -4,6 +4,13 @@
 #include "UnityPBSLighting.cginc"
 #include "AutoLight.cginc"
 
+#if defined(FOG_LINEAR)||defined(FOG_EXP)||defined(FOG_EXP2)
+    #define FOG_ON
+    #if !defined(FOG_DIS)
+        #define FOG_DEPTh
+    #endif
+#endif
+
 sampler2D _Albedo;
 sampler2D _Normal;
 sampler2D _MetalicMap;
@@ -34,7 +41,11 @@ struct VOUT
     float4 pos : SV_POSITION ;
     float3 nor : NORMAL;
     float2 uv : TEXCOORD0 ;
-    float3 pos_w : TEXCOORD1;
+    #if defined (FOG_DEPTh)
+        float4 pos_w : TEXCOORD1;
+    #else
+        float3 pos_w : TEXCOORD1;
+    #endif
     float3 tan : TEXCOORD2;
     float3 bi  : TEXCOORD3;
     SHADOW_COORDS(4)
@@ -74,6 +85,9 @@ VOUT vert(VIN v)
     OUT.nor = UnityObjectToWorldNormal(v.nor);
     OUT.uv = v.uv;
     OUT.pos_w = mul(unity_ObjectToWorld , v.vertex);
+    #if defined (FOG_DEPTh)
+         OUT.pos_w.w = OUT.pos.z;
+    #endif
     OUT.tan = UnityObjectToWorldDir(v.tan.xyz); 
     OUT.bi = normalize(cross(OUT.nor , OUT.tan.xyz) * v.tan.w * unity_WorldTransformParams.w); 
     TRANSFER_SHADOW(OUT);
@@ -93,7 +107,7 @@ UnityLight dLight(VOUT IN)
         #if defined(SPOT)|| defined(POINT)
             l.dir = normalize(l.dir - IN.pos_w);
         #endif
-        UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w);
+        UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w.xyz);
         //l.ndotl = DotClamped(IN.nor , l.dir);
         l.color = _LightColor0 * attenuation;
     #endif
@@ -240,9 +254,19 @@ half getAlpha(float2 uv)
 void addFog(inout half4 col , VOUT IN)
 {
     half fogScale;
-    float viewDistance = length( _WorldSpaceCameraPos - IN.pos_w);
-    UNITY_CALC_FOG_FACTOR_RAW(viewDistance);
-    col.rgb = lerp (unity_FogColor, col.rgb, saturate(unityFogFactor));
+    float fogCoord;
+    half3 collor = unity_FogColor;
+    #if defined (FOG_ON)
+        #if defined (FOG_DEPTh)
+            fogCoord = UNITY_Z_0_FAR_FROM_CLIPSPACE(IN.pos_w.w);
+            //fogCoord = IN.pos.w;
+            //collor = half3(1,1,1);
+        #else
+            fogCoord = length( _WorldSpaceCameraPos - IN.pos_w);
+        #endif
+        UNITY_CALC_FOG_FACTOR_RAW(fogCoord);
+        col.rgb = lerp (collor, col.rgb, saturate(unityFogFactor));
+    #endif
 }
 
 FOUT frag(VOUT IN)

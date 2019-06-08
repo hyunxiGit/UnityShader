@@ -115,7 +115,7 @@ Shader "Custom/Multi" {
         #pragma shader_feature _ _DETAIL_MASK
         #pragma shader_feature _ _DETAIL_ALBEDO
         #pragma shader_feature _ _DETAIL_NORMAL
-        #pragma multi_compile_fog
+        //#pragma multi_compile_fog
         #pragma vertex vert
         #pragma fragment frag
         #include "Lighting.cginc"
