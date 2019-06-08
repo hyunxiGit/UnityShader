@@ -239,7 +239,10 @@ half getAlpha(float2 uv)
 
 void addFog(inout half4 col , VOUT IN)
 {
-    col = col + half4(1,0,0,1);
+    half fogScale;
+    float viewDistance = length( _WorldSpaceCameraPos - IN.pos_w);
+    UNITY_CALC_FOG_FACTOR_RAW(viewDistance);
+    col.rgb = lerp (unity_FogColor, col.rgb, saturate(unityFogFactor));
 }
 
 FOUT frag(VOUT IN)
