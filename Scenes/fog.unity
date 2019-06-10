@@ -18,8 +18,8 @@ RenderSettings:
   m_FogColor: {r: 1, g: 0, b: 0, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.1
-  m_LinearFogStart: 0
-  m_LinearFogEnd: 22
+  m_LinearFogStart: 4.23
+  m_LinearFogEnd: 20.1
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
@@ -333,5 +333,44 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 0.23
       objectReference: {fileID: 0}
+    - target: {fileID: 3409494767479230789, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3409494767479230789, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.47
+      objectReference: {fileID: 0}
+    - target: {fileID: 4262443739344455983, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4262443739344455983, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.435564
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b55d926c18bbb5b49ba67d5d9da49d11, type: 3}
+--- !u!1 &1079819311143950575 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9025814614663735184, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+    type: 3}
+  m_PrefabInstance: {fileID: 1079819311143950574}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1079819311143950576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1079819311143950575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8802390377f9dea41a4745bbd1109148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deferedFogShader: {fileID: 4800000, guid: 909fee5ced4a5e24cbc125ac7ba4655f, type: 3}
