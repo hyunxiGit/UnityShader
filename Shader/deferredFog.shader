@@ -2,8 +2,7 @@
 {
     Properties
     {
-        //the texture will be fileed in automatically by Camera script
-        _MainTex("main texture" , 2d) = "white"{}
+        _MainTex("source" , 2D) = "white"{}
     }
     SubShader
     {
@@ -17,7 +16,10 @@
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
+            //the texture will be fileed in automatically by Camera script
             sampler2D _MainTex;
+            sampler2D _CameraDepthTexture;
+            float3 _FrustumCorners[4];
 
             struct vIn
             {
@@ -41,6 +43,10 @@
             float4 frag(pIn IN):SV_TARGET
             {
                 float4 col = tex2D(_MainTex , IN.uv);
+                float depth = tex2D(_CameraDepthTexture , IN.uv);
+                depth = Linear01Depth(depth);
+                float fogCoord =  _ProjectionParams.z * depth;
+                col = float4(1,1,0,1);//lerp(unity_FogColor , col , unityFogFactor);
                 return col ;
             }
             ENDCG
