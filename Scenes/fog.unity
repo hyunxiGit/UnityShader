@@ -291,12 +291,32 @@ PrefabInstance:
     - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
         type: 3}
       propertyPath: far clip plane
-      value: 50
+      value: 19.7
       objectReference: {fileID: 0}
     - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
         type: 3}
       propertyPath: m_AllowDynamicResolution
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_AllowMSAA
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: near clip plane
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 2381321529267435462, guid: b55d926c18bbb5b49ba67d5d9da49d11,
+        type: 3}
+      propertyPath: m_OcclusionCulling
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2504555172291673807, guid: b55d926c18bbb5b49ba67d5d9da49d11,
         type: 3}
@@ -386,7 +406,7 @@ PrefabInstance:
     - target: {fileID: 376418762758310788, guid: b55d926c18bbb5b49ba67d5d9da49d11,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b55d926c18bbb5b49ba67d5d9da49d11, type: 3}
