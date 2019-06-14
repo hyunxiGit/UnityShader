@@ -21,6 +21,7 @@
             #pragma target 3.0
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile_fog 
 
             //the texture will be fileed in automatically by Camera script
             sampler2D _MainTex;
@@ -53,10 +54,10 @@
                 depth = Linear01Depth(depth);
                 float fogCoord = _ProjectionParams.z * depth;
                 UNITY_CALC_FOG_FACTOR_RAW(fogCoord);
-                float fogFactor =(fogCoord) * unity_FogParams.z + unity_FogParams.w;
-                //col = fogCoord;
-                //lerp(float4(1,0,0,1) , col , unityFogFactor);
-                return unityFogFactor;
+                
+
+                col.rgb = lerp(unity_FogColor.rgb, col.rgb, unityFogFactor);
+                return col;
             }
             ENDCG
         }
