@@ -16,7 +16,7 @@ public class deferredFog : MonoBehaviour
     [NonSerialized]
     Vector4[] vectorArray;
 
-    //[ImageEffectOpaque]
+    [ImageEffectOpaque]
 	void OnRenderImage (RenderTexture src, RenderTexture dest)
 	{
         if (deferedFogShader != null)

@@ -25,6 +25,7 @@
             //multi compile for all fog case
             #pragma multi_compile_fog 
             #define FOG_DISTANCE
+            #define FOGSKYBOX
 
             //the texture will be fileed in automatically by Camera script
             sampler2D _MainTex;
@@ -60,7 +61,9 @@
             {
                 float4 col = tex2D(_MainTex, IN.uv);
                 float depth = tex2D(_CameraDepthTexture, IN.uv);
+
                 depth = Linear01Depth(depth);
+
 
                 
                 float fogCoord = _ProjectionParams.z * depth;
@@ -69,7 +72,14 @@
                 #endif
 
                 UNITY_CALC_FOG_FACTOR_RAW(fogCoord);
-                
+
+                #if !defined(FOGSKYBOX)
+                    if(depth >0.99)
+                    {
+                        unityFogFactor = 1;
+                    }
+                #endif
+
                 col.rgb = lerp(unity_FogColor.rgb, col.rgb, unityFogFactor);
                 return col;
             }
