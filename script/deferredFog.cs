@@ -5,7 +5,7 @@ using System;
 public class deferredFog : MonoBehaviour
 {
     [NonSerialized]
-	Material mat;
+	public Material mat;
     public Shader deferedFogShader;
 	//Shader vfxShader;
 	//called when render image is finished
@@ -39,7 +39,6 @@ public class deferredFog : MonoBehaviour
                 Graphics.Blit(src,dest,mat);
             }
         }
-        
 	}
     // Start is called before the first frame update
     void Start()

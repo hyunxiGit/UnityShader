@@ -50,7 +50,7 @@ Shader "Custom/Multi" {
         CGPROGRAM
         #pragma target 3.0
         #pragma exclude_renderers nomrt
-        #pragma multi_compile _ _UNITY_HDR_ON
+        #pragma multi_compile _ UNITY_HDR_ON
         #pragma shader_feature _ _RENDERING_CUTOUT
         #pragma shader_feature _ _EMISSION_MAP
         #pragma shader_feature _ _METALIC_MAP
