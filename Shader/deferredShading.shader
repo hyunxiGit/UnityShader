@@ -17,37 +17,10 @@
             #pragma target 3.0
             #pragma vertex vert
             #pragma fragment frag
-
-
-            struct Vin
-            {
-                float4 pos : POSITION;
-            };
-
-            struct Vout
-            {
-                float4 pos : SV_POSITION;
-            };
-            struct Fout
-            {
-                float4 col : SV_Target;
-            };
-     
-            Vout vert (Vin IN)
-            {
-                Vout OUT;
-                OUT.pos = UnityObjectToClipPos(IN.pos);
-                return OUT;
-            }
-
-            Fout frag (Vout IN)
-            {
-                Fout OUT;
-                OUT.col = half4(0,0,0,0);
-                return OUT;
-            }
+            #include "incDeferLight.cginc"
             ENDCG
         }
+
         Pass
         {
 
@@ -97,7 +70,6 @@
             {
                 Fout OUT;
                 float4 lightBuff = tex2D(_LightBuffer , IN.uv);
-                
                 OUT.col = -log2(lightBuff );
                 return OUT;
             }
