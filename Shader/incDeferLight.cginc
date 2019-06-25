@@ -40,7 +40,7 @@ UnityLight dLight ()
 {
 	UnityLight l;
 	l.dir = _WorldSpaceLightPos0;
-	l.color = 0;
+	l.color = _LightColor0;
 	return l;
 }
 

@@ -9,6 +9,7 @@
 
         Pass
         {
+            Blend One One
             Cull Off
             ZTest Always
             ZWrite Off
