@@ -9,6 +9,7 @@ sampler2D _CameraGBufferTexture0;
 sampler2D _CameraGBufferTexture1;
 sampler2D _CameraGBufferTexture2;
 sampler2D _CameraGBufferTexture3;
+sampler2D _ShadowMapTexture;
 
 struct Vin
 {
@@ -36,11 +37,14 @@ Vout vert (Vin IN)
     return OUT;
 }
 
-UnityLight dLight ()
+UnityLight dLight (float2 uv)
 {
 	UnityLight l;
 	l.dir = _WorldSpaceLightPos0;
 	l.color = _LightColor0;
+	#if defined (SHADOWS_SCREEN)
+		l.color = _LightColor0 * tex2D(_ShadowMapTexture , uv);
+	#endif
 	return l;
 }
 
@@ -70,12 +74,13 @@ Fout frag (Vout IN)
     float3 No = tex2D(_CameraGBufferTexture2,uv).rgb *2-1;
 
     float3 Vd = normalize(_WorldSpaceCameraPos - pos_w);
-    UnityLight dL = dLight();
+    UnityLight dL = dLight(uv);
 	UnityIndirect iL = iLight();
 
 	half Omr = 1 - SpecularStrength(Sp);
     OUT.col = half4(No,1);
     OUT.col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL);
+
     return OUT;
 }
 #endif

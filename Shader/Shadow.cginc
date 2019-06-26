@@ -7,6 +7,7 @@
 
 #if defined(_RENDERING_CUTOUT)||defined (_RENDERING_FADE) || defined (_RENDERING_TRANSPARENT)
 	#if !defined(_SMOOTHNESS_ALBEDO)
+		//This shadow UV is only here for sampling the alpha.
 		#define SHADOW_UV
 	#endif
 #endif
@@ -85,6 +86,8 @@ struct InterpolateFrag
 
 	half4 frag (InterpolateFrag IN) : SV_TARGET 
 	{
+		//shadow pass' frag is not return any value, the shadow should be set in the _ShadowMapTexture
+		//translucenggt shadow clip away some pixel on the texture using dither
 		#if defined (SHADOW_UV)
 			half Alpha = tex2D(_Albedo , IN.uv).a;
 			#if defined(SHADOW_TRANSLUCENT)

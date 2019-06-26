@@ -16,6 +16,7 @@
 
             CGPROGRAM
             #pragma target 3.0
+            #pragma multi_compile_lightpass
             #pragma vertex vert
             #pragma fragment frag
             #include "incDeferLight.cginc"
