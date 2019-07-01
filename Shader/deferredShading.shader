@@ -73,6 +73,7 @@
                 Fout OUT;
                 float4 lightBuff = tex2D(_LightBuffer , IN.uv);
                 OUT.col = -log2(lightBuff );
+                
                 return OUT;
             }
             ENDCG

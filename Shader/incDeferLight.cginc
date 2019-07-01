@@ -37,14 +37,20 @@ Vout vert (Vin IN)
     return OUT;
 }
 
-UnityLight dLight (float2 uv)
+UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 {
 	UnityLight l;
 	l.dir = _WorldSpaceLightPos0;
 	l.color = _LightColor0;
+	float shadowAtt = 1;
 	#if defined (SHADOWS_SCREEN)
-		l.color = _LightColor0 * tex2D(_ShadowMapTexture , uv);
+		shadowAtt = tex2D(_ShadowMapTexture , uv);
+		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
+		float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
+		shadowAtt = saturate (shadowAtt + shadowFade);
+		l.color = _LightColor0 * shadowFade;
 	#endif
+	//l.color = _LightColor0 * shadowAtt;
 	return l;
 }
 
@@ -74,12 +80,14 @@ Fout frag (Vout IN)
     float3 No = tex2D(_CameraGBufferTexture2,uv).rgb *2-1;
 
     float3 Vd = normalize(_WorldSpaceCameraPos - pos_w);
-    UnityLight dL = dLight(uv);
+    UnityLight dL = dLight(uv ,pos_w , pos_v.z);
 	UnityIndirect iL = iLight();
 
 	half Omr = 1 - SpecularStrength(Sp);
     OUT.col = half4(No,1);
     OUT.col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL);
+ 	
+	half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , pos_v.z);
 
     return OUT;
 }
