@@ -11,6 +11,9 @@ sampler2D _CameraGBufferTexture2;
 sampler2D _CameraGBufferTexture3;
 sampler2D _ShadowMapTexture;
 
+sampler2D _LightTexture0;
+float4x4 unity_WorldToLight;
+
 struct Vin
 {
     float4 pos : POSITION;
@@ -50,6 +53,12 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		shadowAtt = saturate (shadowAtt + shadowFade);
 		l.color = _LightColor0 * shadowFade;
 	#endif
+	//#if defined (DIRECTIONAL_COOKIE)
+		float2 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1)).xy;
+		l.color = float3(saturate(uvCookie.x),saturate(uvCookie.y),0);
+		float4 co = mul(unity_WorldToLight, float4(pos_w, 1));
+		l.color = co.xyz;
+	//#endif
 	//l.color = _LightColor0 * shadowAtt;
 	return l;
 }
