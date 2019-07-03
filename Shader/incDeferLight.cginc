@@ -46,6 +46,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	l.dir = _WorldSpaceLightPos0;
 	l.color = _LightColor0;
 	float shadowAtt = 1;
+	float cookieAtt = 1;
 	#if defined (SHADOWS_SCREEN)
 		shadowAtt = tex2D(_ShadowMapTexture , uv);
 		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
@@ -53,13 +54,13 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		shadowAtt = saturate (shadowAtt + shadowFade);
 		l.color = _LightColor0 * shadowFade;
 	#endif
-	//#if defined (DIRECTIONAL_COOKIE)
+	#if defined (DIRECTIONAL_COOKIE)
 		float2 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1)).xy;
 		l.color = float3(saturate(uvCookie.x),saturate(uvCookie.y),0);
-		float4 co = mul(unity_WorldToLight, float4(pos_w, 1));
-		l.color = co.xyz;
-	//#endif
-	//l.color = _LightColor0 * shadowAtt;
+		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
+		cookieAtt = tex2D(_LightTexture0 , pos_l.xy);
+	#endif
+	l.color = _LightColor0 * shadowAtt * cookieAtt;
 	return l;
 }
 

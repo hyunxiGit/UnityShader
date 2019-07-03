@@ -244,7 +244,7 @@ Light:
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize: 5.96
   m_Shadows:
     m_Type: 1
     m_Resolution: -1
@@ -271,7 +271,7 @@ Light:
       e32: 0
       e33: 1
     m_UseCullingMatrixOverride: 0
-  m_Cookie: {fileID: 0}
+  m_Cookie: {fileID: 2800000, guid: 48d1824bff11bb64997bb45bf520e699, type: 3}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
   m_RenderMode: 0
@@ -297,7 +297,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 302572653}
   m_LocalRotation: {x: 0.16796426, y: -0.60367864, z: 0.2461582, w: 0.73943657}
-  m_LocalPosition: {x: -2.704661, y: 10.111671, z: 3.3943996}
+  m_LocalPosition: {x: 9.2, y: 10.111671, z: 9.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -365,7 +365,7 @@ Camera:
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
-  m_HDR: 1
+  m_HDR: 0
   m_AllowMSAA: 1
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
@@ -380,7 +380,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 865790494}
   m_LocalRotation: {x: 0.23894776, y: -0, z: -0, w: 0.97103244}
-  m_LocalPosition: {x: 0, y: 8.4, z: -14.9}
+  m_LocalPosition: {x: 0, y: 10, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
