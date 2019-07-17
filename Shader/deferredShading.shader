@@ -9,7 +9,8 @@
 
         Pass
         {
-            Blend One One
+            Blend [_SrcBlend] [_DstBlend]
+            //Blend One One
             Cull Off
             ZTest Always
             ZWrite Off
@@ -17,6 +18,7 @@
             CGPROGRAM
             #pragma target 3.0
             #pragma multi_compile_lightpass
+            #pragma multi_compile _ UNITY_HDR_ON
             #pragma vertex vert
             #pragma fragment frag
             #include "incDeferLight.cginc"
@@ -39,6 +41,7 @@
 
             CGPROGRAM
             #pragma target 3.0
+            #pragma multi_compile _ UNITY_HDR_ON
             #pragma vertex vert
             #pragma fragment frag
 
@@ -72,7 +75,10 @@
             {
                 Fout OUT;
                 float4 lightBuff = tex2D(_LightBuffer , IN.uv);
-                OUT.col = -log2(lightBuff );
+                OUT.col =lightBuff;
+                #if !defined(UNITY_HDR_ON)
+                    OUT.col = -log2(lightBuff);
+                #endif
                 
                 return OUT;
             }

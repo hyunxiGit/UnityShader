@@ -98,6 +98,9 @@ Fout frag (Vout IN)
     OUT.col = UNITY_BRDF_PBS(Di, Sp, Omr, Sm ,No , Vd, dL, iL);
  	
 	half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , pos_v.z);
+	#if !defined(UNITY_HDR_ON)
+		OUT.col.rgb = exp2(-OUT.col.rgb);
+	#endif
 
     return OUT;
 }
