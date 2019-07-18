@@ -11,8 +11,8 @@
         {
             Blend [_SrcBlend] [_DstBlend]
             //Blend One One
-            Cull Off
-            ZTest Always
+            //Cull Off
+            //ZTest Always
             ZWrite Off
 
             CGPROGRAM

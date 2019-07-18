@@ -14,6 +14,8 @@ sampler2D _ShadowMapTexture;
 sampler2D _LightTexture0;
 float4x4 unity_WorldToLight;
 
+float4 _LightColor, _LightDir, _LightPos;
+
 struct Vin
 {
     float4 pos : POSITION;
@@ -43,8 +45,8 @@ Vout vert (Vin IN)
 UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 {
 	UnityLight l;
-	l.dir = _WorldSpaceLightPos0;
-	l.color = _LightColor0;
+	l.dir = -_LightDir;
+	l.color = _LightColor;
 	float shadowAtt = 1;
 	float cookieAtt = 1;
 	#if defined (SHADOWS_SCREEN)
@@ -52,7 +54,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
 		float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
 		shadowAtt = saturate (shadowAtt + shadowFade);
-		l.color = _LightColor0 * shadowFade;
+		l.color = _LightColor * shadowFade;
 	#endif
 	#if defined (DIRECTIONAL_COOKIE)
 		float2 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1)).xy;
@@ -60,7 +62,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
 		cookieAtt = tex2D(_LightTexture0 , pos_l.xy);
 	#endif
-	l.color = _LightColor0 * shadowAtt * cookieAtt;
+	l.color = _LightColor * shadowAtt * cookieAtt;
 	return l;
 }
 
@@ -101,7 +103,6 @@ Fout frag (Vout IN)
 	#if !defined(UNITY_HDR_ON)
 		OUT.col.rgb = exp2(-OUT.col.rgb);
 	#endif
-
     return OUT;
 }
 #endif
