@@ -12,7 +12,7 @@
             Blend [_SrcBlend] [_DstBlend]
             //Blend One One
             //Cull Off
-            //ZTest Always
+            ZTest Always
             ZWrite Off
 
             CGPROGRAM

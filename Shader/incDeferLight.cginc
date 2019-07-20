@@ -1,7 +1,6 @@
 #if !defined (INC_DEFER_LIGHT)
 #define INC_DEFER_LIGHT
 #include "UnityPBSLighting.cginc"
-#include "UnityShaderVariables.cginc"
 
 UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
 
@@ -13,6 +12,7 @@ sampler2D _ShadowMapTexture;
 
 sampler2D _LightTexture0;
 float4x4 unity_WorldToLight;
+float _LightAsQuad;
 
 float4 _LightColor, _LightDir, _LightPos;
 
@@ -38,7 +38,8 @@ Vout vert (Vin IN)
     Vout OUT;
     OUT.pos = UnityObjectToClipPos(IN.pos);
     OUT.uv = ComputeScreenPos(OUT.pos);
-    OUT.ray_n = IN.nor;
+    OUT.ray_n = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,-1) , IN.nor ,_LightAsQuad);
+    //OUT.ray_n = IN.nor;
     return OUT;
 }
 
@@ -57,12 +58,18 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		l.color = _LightColor * shadowFade;
 	#endif
 	#if defined (DIRECTIONAL_COOKIE)
-		float2 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1)).xy;
-		l.color = float3(saturate(uvCookie.x),saturate(uvCookie.y),0);
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
 		cookieAtt = tex2D(_LightTexture0 , pos_l.xy);
 	#endif
+	#if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
+		l.dir = -_LightDir;
+	#else
+		// l.dir = normalize(_LightPos - pos_w);
+		l.dir = pos_w;
+	#endif
+	
 	l.color = _LightColor * shadowAtt * cookieAtt;
+
 	return l;
 }
 
@@ -82,8 +89,10 @@ Fout frag (Vout IN)
     float depth = Linear01Depth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv.xy));
     
     float3 ray_f = IN.ray_n * _ProjectionParams.z /_ProjectionParams.y;
+
     
     float3 pos_v = depth * ray_f;
+
     float3 pos_w = mul(unity_CameraToWorld , float4(pos_v,1));
 
     half3 Di = tex2D(_CameraGBufferTexture0,uv).rgb;
