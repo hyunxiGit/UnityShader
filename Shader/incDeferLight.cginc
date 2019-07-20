@@ -1,6 +1,7 @@
 #if !defined (INC_DEFER_LIGHT)
 #define INC_DEFER_LIGHT
 #include "UnityPBSLighting.cginc"
+#include "incDeferLight.cginc"
 
 UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
 
@@ -26,7 +27,7 @@ struct Vout
 {
     float4 pos : SV_POSITION;
     float4 uv : TEXCOORD0;
-    float3 ray_n : TEXCOORD1;
+    float3 ray : TEXCOORD1;
 };
 struct Fout
 {
@@ -38,8 +39,11 @@ Vout vert (Vin IN)
     Vout OUT;
     OUT.pos = UnityObjectToClipPos(IN.pos);
     OUT.uv = ComputeScreenPos(OUT.pos);
-    OUT.ray_n = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,-1) , IN.nor ,_LightAsQuad);
-    //OUT.ray_n = IN.nor;
+    //reconstruct the far plane ray 1
+    //the OUT.ray here:
+    //dir : the ray to fullscreen quad vertex
+    //other : the ray to light volume vertex.
+    OUT.ray = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,-1) , IN.nor ,_LightAsQuad);
     return OUT;
 }
 
@@ -50,6 +54,14 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	l.color = _LightColor;
 	float shadowAtt = 1;
 	float cookieAtt = 1;
+    #if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
+        l.dir = -_LightDir;
+    #else
+
+                // l.dir = normalize(_LightPos - pos_w);
+        l.dir = _LightPos - pos_w;
+    #endif
+
 	#if defined (SHADOWS_SCREEN)
 		shadowAtt = tex2D(_ShadowMapTexture , uv);
 		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
@@ -61,12 +73,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
 		cookieAtt = tex2D(_LightTexture0 , pos_l.xy);
 	#endif
-	#if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
-		l.dir = -_LightDir;
-	#else
-		// l.dir = normalize(_LightPos - pos_w);
-		l.dir = pos_w;
-	#endif
+
 	
 	l.color = _LightColor * shadowAtt * cookieAtt;
 
@@ -87,10 +94,9 @@ Fout frag (Vout IN)
     float2 uv = IN.uv.xy/IN.uv.w;
 
     float depth = Linear01Depth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv.xy));
-    
-    float3 ray_f = IN.ray_n * _ProjectionParams.z /_ProjectionParams.y;
-
-    
+    //reconstruct the far plane ray 2
+    //scale up the ray until it reach far plane._ProjectionParams.z = camera far plane
+    float3 ray_f = IN.ray * _ProjectionParams.z /IN.ray.z;
     float3 pos_v = depth * ray_f;
 
     float3 pos_w = mul(unity_CameraToWorld , float4(pos_v,1));
