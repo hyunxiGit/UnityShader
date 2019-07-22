@@ -43,9 +43,11 @@ Vout vert (Vin IN)
     //the OUT.ray here:
     //dir : the ray to fullscreen quad vertex
     //other : the ray to light volume vertex.
-    OUT.ray = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,-1) , IN.nor ,_LightAsQuad);
+    OUT.ray = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,1) , IN.nor ,_LightAsQuad);
     return OUT;
 }
+
+
 
 UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 {
@@ -54,12 +56,12 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	l.color = _LightColor;
 	float shadowAtt = 1;
 	float cookieAtt = 1;
+	float lightAtt = 1;
     #if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
         l.dir = -_LightDir;
     #else
+        l.dir = normalize(_LightPos - pos_w);
 
-                // l.dir = normalize(_LightPos - pos_w);
-        l.dir = _LightPos - pos_w;
     #endif
 
 	#if defined (SHADOWS_SCREEN)
@@ -71,11 +73,15 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	#endif
 	#if defined (DIRECTIONAL_COOKIE)
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
-		cookieAtt = tex2D(_LightTexture0 , pos_l.xy);
+		cookieAtt = tex2Dbias(_LightTexture0 , float4(pos_l.xy , 0,-8));
 	#endif
-
-	
-	l.color = _LightColor * shadowAtt * cookieAtt;
+	#if defined (SPOT)
+		//spot cookie attenuation
+		float4 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1));
+		uvCookie.xy /= uvCookie.w;
+		cookieAtt *= tex2Dbias(_LightTexture0, float4(uvCookie.xy, 0, -8)).w;
+	#endif
+	l.color = _LightColor * shadowAtt * cookieAtt ;
 
 	return l;
 }
