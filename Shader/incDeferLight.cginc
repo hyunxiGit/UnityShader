@@ -12,6 +12,7 @@ sampler2D _CameraGBufferTexture3;
 sampler2D _ShadowMapTexture;
 
 sampler2D _LightTexture0;
+sampler2D _LightTextureB0;
 float4x4 unity_WorldToLight;
 float _LightAsQuad;
 
@@ -43,6 +44,8 @@ Vout vert (Vin IN)
     //the OUT.ray here:
     //dir : the ray to fullscreen quad vertex
     //other : the ray to light volume vertex.
+
+    //?????I don't quite understand the float3(-1,-1,1) where x y got inverted however the z is the same, why the ray is inverted , I think viewspace coord should be (pos_w - pos_camera)
     OUT.ray = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,1) , IN.nor ,_LightAsQuad);
     return OUT;
 }
@@ -54,14 +57,16 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	UnityLight l;
 	l.dir = -_LightDir;
 	l.color = _LightColor;
+	float3 lightVec ;
 	float shadowAtt = 1;
 	float cookieAtt = 1;
 	float lightAtt = 1;
     #if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
         l.dir = -_LightDir;
+        lightVec = -_LightDir;
     #else
-        l.dir = normalize(_LightPos - pos_w);
-
+        lightVec = _LightPos - pos_w;
+        l.dir = normalize(lightVec);
     #endif
 
 	#if defined (SHADOWS_SCREEN)
@@ -80,6 +85,9 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		float4 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1));
 		uvCookie.xy /= uvCookie.w;
 		cookieAtt *= tex2Dbias(_LightTexture0, float4(uvCookie.xy, 0, -8)).w;
+		cookieAtt *= uvCookie.w<0;
+		//the distance attenuation
+		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 	#endif
 	l.color = _LightColor * shadowAtt * cookieAtt ;
 
