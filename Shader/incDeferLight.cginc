@@ -9,7 +9,9 @@ sampler2D _CameraGBufferTexture0;
 sampler2D _CameraGBufferTexture1;
 sampler2D _CameraGBufferTexture2;
 sampler2D _CameraGBufferTexture3;
-sampler2D _ShadowMapTexture;
+#if defined (SHADOWS_SCREEN)
+	sampler2D _ShadowMapTexture;
+#endif
 
 sampler2D _LightTexture0;
 sampler2D _LightTextureB0;
@@ -74,7 +76,6 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
 		float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
 		shadowAtt = saturate (shadowAtt + shadowFade);
-		l.color = _LightColor * shadowFade;
 	#endif
 	#if defined (DIRECTIONAL_COOKIE)
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
@@ -90,7 +91,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 	#endif
 	l.color = _LightColor * shadowAtt * cookieAtt ;
-
+	
 	return l;
 }
 

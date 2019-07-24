@@ -66,6 +66,7 @@ UnityLight DirectLight(VOUT IN )
     #if defined(POINT)|| defined (SPOT)
         l.dir = normalize(l.dir - IN.pos_w);
     #endif
+    // this is included in "AutoLight.cginc" it calculate the attenuation of a light oncluding the shadow
     UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w);
     l.color = _LightColor0 * attenuation;
     l.ndotl = DotClamped(IN.nor , l.dir);
