@@ -63,23 +63,20 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	float shadowAtt = 1;
 	float cookieAtt = 1;
 	float lightAtt = 1;
+	//directional light
     #if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
         l.dir = -_LightDir;
-        lightVec = -_LightDir;
-    #else
-        lightVec = _LightPos - pos_w;
-        l.dir = normalize(lightVec);
+        lightVec = -_LightDir;      
     #endif
-
-	#if defined (SHADOWS_SCREEN)
-		shadowAtt = tex2D(_ShadowMapTexture , uv);
-		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
-		float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
-		shadowAtt = saturate (shadowAtt + shadowFade);
-	#endif
 	#if defined (DIRECTIONAL_COOKIE)
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
 		cookieAtt = tex2Dbias(_LightTexture0 , float4(pos_l.xy , 0,-8));
+	#endif
+
+	//spot and point light vector
+	#if defined (SPOT) || defined (POINT) 
+		lightVec = _LightPos - pos_w;
+        l.dir = normalize(lightVec);
 	#endif
 	#if defined (SPOT)
 		//spot cookie attenuation
@@ -89,6 +86,28 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		cookieAtt *= uvCookie.w<0;
 		//the distance attenuation
 		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
+	#endif
+	
+	#if defined(POINT)
+		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
+	#endif
+
+	//shadows
+	//direct lightshadow
+	#if defined (SHADOWS_SCREEN)
+		shadowAtt = tex2D(_ShadowMapTexture , uv);
+		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
+		float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
+		shadowAtt = saturate (shadowAtt + shadowFade);
+	#endif
+	// spot light shadow
+	#if defined (SHADOWS_DEPTH)
+		//UnitySampleShadowmap can not be found in the doc, it takes care of sampling the shadow for a deferred spotlight , the parameter passed in is pos in shadow coordinate
+		shadowAtt = UnitySampleShadowmap(mul(unity_WorldToShadow[0] , float4(pos_w,1)));
+	#endif
+	//point light shadow
+	#if defined (SHADOWS_CUBE)
+		shadowAtt = UnitySampleShadowmap (-lightVec);
 	#endif
 	l.color = _LightColor * shadowAtt * cookieAtt ;
 	
