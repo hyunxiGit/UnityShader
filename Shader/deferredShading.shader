@@ -1,4 +1,4 @@
-﻿Shader "Custom/deferredShading"
+Shader "Custom/deferredShading"
 {
     Properties
     {
@@ -12,7 +12,7 @@
             Blend [_SrcBlend] [_DstBlend]
             //Blend One One
             //Cull Off
-            ZTest Always
+            //ZTest Always
             ZWrite Off
 
             CGPROGRAM
@@ -58,10 +58,6 @@
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
             };
-            struct Fout
-            {
-                float4 col : SV_Target;
-            };
      
             Vout vert (Vin IN)
             {
@@ -71,16 +67,9 @@
                 return OUT;
             }
 
-            Fout frag (Vout IN)
+            float4 frag (Vout IN): SV_Target
             {
-                Fout OUT;
-                float4 lightBuff = tex2D(_LightBuffer , IN.uv);
-                OUT.col =lightBuff;
-                #if !defined(UNITY_HDR_ON)
-                    OUT.col = -log2(lightBuff);
-                #endif
-                
-                return OUT;
+                return -log2(tex2D(_LightBuffer, IN.uv));
             }
             ENDCG
         }

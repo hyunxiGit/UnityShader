@@ -42,10 +42,11 @@ Vout vert (Vin IN)
     Vout OUT;
     OUT.pos = UnityObjectToClipPos(IN.pos);
     OUT.uv = ComputeScreenPos(OUT.pos);
+    
     //reconstruct the far plane ray 1
     //the OUT.ray here:
-    //dir : the ray to fullscreen quad vertex
-    //other : the ray to light volume vertex.
+    //IN.nor : the ray to fullscreen quad vertex, the ray is written in normal
+    //UnityObjectToViewPos(IN.pos) : the ray to light volume vertex.
 
     //?????I don't quite understand the float3(-1,-1,1) where x y got inverted however the z is the same, why the ray is inverted , I think viewspace coord should be (pos_w - pos_camera)
     OUT.ray = lerp(UnityObjectToViewPos(IN.pos) * float3(-1,-1,1) , IN.nor ,_LightAsQuad);
@@ -66,7 +67,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	//directional light
     #if defined(DIRECTIONAL) || defined (DIRECTIONAL_COOKIE)
         l.dir = -_LightDir;
-        lightVec = -_LightDir;      
+        lightVec = -_LightDir;
     #endif
 	#if defined (DIRECTIONAL_COOKIE)
 		float4 pos_l = mul(unity_WorldToLight, float4(pos_w, 1));
