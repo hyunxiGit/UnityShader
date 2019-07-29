@@ -13,7 +13,12 @@ sampler2D _CameraGBufferTexture3;
 	sampler2D _ShadowMapTexture;
 #endif
 
-sampler2D _LightTexture0;
+#if defined (POINT_COOKIE)
+	samplerCUBE _LightTexture0;
+#else
+	sampler2D _LightTexture0;
+#endif
+
 sampler2D _LightTextureB0;
 float4x4 unity_WorldToLight;
 float _LightAsQuad;
@@ -75,7 +80,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	#endif
 
 	//spot and point light vector
-	#if defined (SPOT) || defined (POINT) 
+	#if defined (SPOT) || defined (POINT) ||(POINT_COOKIE)
 		lightVec = _LightPos - pos_w;
         l.dir = normalize(lightVec);
 	#endif
@@ -88,8 +93,14 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		//the distance attenuation
 		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 	#endif
+
+	//todo : point light cookie still not working. Using the default deferred lighting cause Unity assertation failed
 	
 	#if defined(POINT)
+		#if defined (POINT_COOKIE)
+			float3 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1)).xyz;
+			cookieAtt *= texCUBEbias(_LightTexture0,float4(uvCookie , -8)).w;
+		#endif
 		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 	#endif
 
@@ -110,7 +121,7 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	#if defined (SHADOWS_CUBE)
 		shadowAtt = UnitySampleShadowmap (-lightVec);
 	#endif
-	l.color = _LightColor * shadowAtt * cookieAtt ;
+	l.color = /*_LightColor * shadowAtt */ cookieAtt ;
 	
 	return l;
 }

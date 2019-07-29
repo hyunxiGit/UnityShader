@@ -22,6 +22,7 @@ Shader "Custom/deferredShading"
             #pragma vertex vert
             #pragma fragment frag
             #include "incDeferLight.cginc"
+            
             ENDCG
         }
 
