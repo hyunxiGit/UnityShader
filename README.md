@@ -11,6 +11,9 @@ https://catlikecoding.com/unity/tutorials/rendering/
 
 My version is a little bit different from place to place as these are my way of understanding the rendering.
 
+To use this package,
+create a Unity project in your local drive, clone the repository and overwrite the asset folder with the repository.
+
 Also, along the process of writiting these shader I write a Unity rendering cookbook. 
 This cookbook provide a quick reference for solving a common problem like:
 how to create vertex light
