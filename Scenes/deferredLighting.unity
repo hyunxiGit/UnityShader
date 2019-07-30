@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0.45112467, g: 0.50091755, b: 0.5739791, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -228,7 +228,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!108 &302572654
 Light:
   m_ObjectHideFlags: 0
@@ -495,7 +495,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!108 &1441009525
 Light:
   m_ObjectHideFlags: 0
@@ -538,7 +538,7 @@ Light:
       e32: 0
       e33: 1
     m_UseCullingMatrixOverride: 0
-  m_Cookie: {fileID: 0}
+  m_Cookie: {fileID: 8900000, guid: 92409455c81509248bd70ff1941d071c, type: 3}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
   m_RenderMode: 0
@@ -691,9 +691,9 @@ Light:
   m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 6.65
-  m_Range: 82.3
-  m_SpotAngle: 69.2
-  m_InnerSpotAngle: 51.390106
+  m_Range: 151.16
+  m_SpotAngle: 64.5
+  m_InnerSpotAngle: 40.1
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -721,7 +721,7 @@ Light:
       e32: 0
       e33: 1
     m_UseCullingMatrixOverride: 0
-  m_Cookie: {fileID: 0}
+  m_Cookie: {fileID: 2800000, guid: c7e0bf2ad060db947aa76fae6dcacfb2, type: 3}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
   m_RenderMode: 0

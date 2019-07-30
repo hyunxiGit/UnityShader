@@ -94,14 +94,14 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 	#endif
 
-	//todo : point light cookie still not working. Using the default deferred lighting cause Unity assertation failed
-	
-	#if defined(POINT)
+	//POINT and POINT_COOKIE are seperate branches
+	#if defined(POINT) || defined (POINT_COOKIE)
+		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 		#if defined (POINT_COOKIE)
+			//use light direction as sample
 			float3 uvCookie = mul(unity_WorldToLight, float4(pos_w, 1)).xyz;
 			cookieAtt *= texCUBEbias(_LightTexture0,float4(uvCookie , -8)).w;
 		#endif
-		cookieAtt *= tex2D(_LightTextureB0 , (dot(lightVec,lightVec)*_LightPos.w).xx).UNITY_ATTEN_CHANNEL;
 	#endif
 
 	//shadows
@@ -121,8 +121,8 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	#if defined (SHADOWS_CUBE)
 		shadowAtt = UnitySampleShadowmap (-lightVec);
 	#endif
-	l.color = /*_LightColor * shadowAtt */ cookieAtt ;
-	
+	l.color = _LightColor * shadowAtt * cookieAtt ;
+
 	return l;
 }
 
