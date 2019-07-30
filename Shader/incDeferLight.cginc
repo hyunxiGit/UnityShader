@@ -108,19 +108,32 @@ UnityLight dLight (float2 uv, float3 pos_w , float viewZ)
 	//direct lightshadow
 	#if defined (SHADOWS_SCREEN)
 		shadowAtt = tex2D(_ShadowMapTexture , uv);
-		half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
-		float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
-		shadowAtt = saturate (shadowAtt + shadowFade);
+		
 	#endif
 	// spot light shadow
 	#if defined (SHADOWS_DEPTH)
 		//UnitySampleShadowmap can not be found in the doc, it takes care of sampling the shadow for a deferred spotlight , the parameter passed in is pos in shadow coordinate
 		shadowAtt = UnitySampleShadowmap(mul(unity_WorldToShadow[0] , float4(pos_w,1)));
+
 	#endif
 	//point light shadow
 	#if defined (SHADOWS_CUBE)
 		shadowAtt = UnitySampleShadowmap (-lightVec);
 	#endif
+	
+	//shadow fade
+	half shadowFadeDistance = UnityComputeShadowFadeDistance(pos_w , viewZ);
+	float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
+	shadowAtt = saturate (shadowAtt + shadowFade);
+	#if defined(UNITY_FAST_COHERENT_DYNAMIC_BRANCHING) && defined(SHADOWS_SOFT)
+		UNITY_BRANCH
+		if (shadowFade > 0.99) {
+		shadowAtt = 1;
+		}
+	#endif
+		
+	
+
 	l.color = _LightColor * shadowAtt * cookieAtt ;
 
 	return l;
