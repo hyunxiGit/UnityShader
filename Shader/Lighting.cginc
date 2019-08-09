@@ -34,6 +34,9 @@ struct VIN
     float3 nor : NORMAL;
     float4 tan : TANGENT;
     float2 uv : TEXCOORD0 ; 
+    #if defined (LIGHTMAP_ON)
+        float2 uv1 : TEXCOORD1;
+    #endif
 };
 
 struct VOUT
@@ -51,6 +54,9 @@ struct VOUT
     SHADOW_COORDS(4)
     #if defined(VERTEXLIGHT_ON)
         float3 Vc : TEXCOORD5 ;
+    #endif
+    #if defined (LIGHTMAP_ON)
+        float2 uv1 : TEXCOORD6;
     #endif
 };
 
@@ -84,6 +90,9 @@ VOUT vert(VIN v)
     OUT.pos = UnityObjectToClipPos(v.vertex);
     OUT.nor = UnityObjectToWorldNormal(v.nor);
     OUT.uv = v.uv;
+    #if defined (LIGHTMAP_ON)
+        OUT.uv1 = v.uv1 * unity_LightmapST.xy + unity_LightmapST.zw;
+    #endif
     OUT.pos_w = mul(unity_ObjectToWorld , v.vertex);
     #if defined (FOG_DEPTh)
          OUT.pos_w.w = OUT.pos.z;
@@ -125,7 +134,10 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
     #if defined (FORWARD_BASE_PASS) || defined (DEFERRED_PASS)
         l.diffuse += ShadeSH9 (half4(IN.nor,1));
     
-        
+        #if defined (LIGHTMAP_ON)
+            l.diffuse = DecodeLightmap (UNITY_SAMPLE_TEX2D (unity_Lightmap,IN.uv1));
+        #endif
+
         Unity_GlossyEnvironmentData envData;
         envData.roughness = Ro;
         envData.reflUVW = BoxProjectedCubemapDirection (Rd, IN.pos_w, unity_SpecCube0_ProbePosition, unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax);
@@ -152,6 +164,7 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
 
         l.diffuse *= Oc;
         l.specular *= Oc;
+
         #if defined(DEFERRED_PASS) && UNITY_ENABLE_REFLECTION_BUFFERS
                 l.specular = 0;
         #endif
