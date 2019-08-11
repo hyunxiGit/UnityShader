@@ -20,6 +20,7 @@ sampler2D _DetailAlbedoMap;
 sampler2D _DetailMaskMap;
 sampler2D _DetailNormalMap;
 
+half4 _Color;
 float _Cutoff;
 float4 _Emission;
 float4 _Albedo_ST;
@@ -259,7 +260,7 @@ half getAlpha(float2 uv)
 {
     half a = 1;
     #if !defined(_SMOOTHNESS_ALBEDO)
-        a = tex2D(_Albedo, uv).a;
+        a = tex2D(_Albedo, uv).a * _Color.a;
     #endif
     return a;
 }

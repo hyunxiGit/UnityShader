@@ -5,7 +5,7 @@ Shader "Custom/Multi" {
     [HideInInspector]_DstBlend("desty blend" , float) = 0
     [HideInInspector]_ZWri("ZWrite control" , float) = 0
     _Albedo("albedo" , 2d) = "white" {}
-    _Tint("tint" , color) = (1,1,1,1)
+    _Color("tint" , color) = (1,1,1,1)
     _Cutoff("clip range", range(0,1)) = 0.5
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
     [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
