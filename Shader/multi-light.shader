@@ -1,12 +1,13 @@
-Shader "Custom/Multi" {
+Shader "Custom/Multi (Transparent)" {
   Properties
   {
     [HideInInspector]_ScrBlend("screen blend" , float) = 1
     [HideInInspector]_DstBlend("desty blend" , float) = 0
     [HideInInspector]_ZWri("ZWrite control" , float) = 0
-    _Albedo("albedo" , 2d) = "white" {}
+    _MainTex("albedo" , 2d) = "white" {}
     _Color("tint" , color) = (1,1,1,1)
-    _Cutoff("clip range", range(0,1)) = 0.5
+    _Cutoff("clip range", range(0,1)) = 1.0
+
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
     [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
     [noscaleoffset]_EmissionMap("emission map" , 2d) = "white"{}

@@ -251,7 +251,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 
 		GUILayout.Label("Main Maps",EditorStyles.boldLabel);
 
-		MaterialProperty albedo = FindProperty("_Albedo");
+		MaterialProperty albedo = FindProperty("_MainTex");
 		MaterialProperty tint =  FindProperty("_Color");
 	    editor.TexturePropertySingleLine(MakeLabel(albedo , "albedo (RGB)"), albedo, tint);
 

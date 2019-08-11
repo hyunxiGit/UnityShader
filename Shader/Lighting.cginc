@@ -11,7 +11,7 @@
     #endif
 #endif
 
-sampler2D _Albedo;
+sampler2D _MainTex;
 sampler2D _Normal;
 sampler2D _MetalicMap;
 sampler2D _EmissionMap;
@@ -23,7 +23,7 @@ sampler2D _DetailNormalMap;
 half4 _Color;
 float _Cutoff;
 float4 _Emission;
-float4 _Albedo_ST;
+float4 _MainTex_ST;
 float4 _DetailAlbedoMap_ST;
 float _Metalic;
 float _Smoothness;
@@ -203,7 +203,7 @@ half getSmooth(float2 uv0)
     half Sm = _Smoothness;
     
     #if defined (_SMOOTHNESS_ALBEDO)
-       Sm = tex2D(_Albedo, uv0).a;
+       Sm = tex2D(_MainTex, uv0).a;
     #elif defined (_SMOOTHNESS_METALIC)
        Sm = tex2D(_MetalicMap, uv0).a;
     #endif
@@ -235,7 +235,7 @@ half getDetailMask(float2 uv)
 
 half3 getAlbedo( float2 uv0 , float2 uv1)
 {
-    half3 Al = tex2D(_Albedo, uv0);
+    half3 Al = tex2D(_MainTex, uv0);
     #if defined (_DETAIL_ALBEDO)
         half3 AlDe = Al * tex2D(_DetailAlbedoMap , uv1);
         Al = lerp(Al ,AlDe , getDetailMask(uv0));
@@ -260,7 +260,7 @@ half getAlpha(float2 uv)
 {
     half a = 1;
     #if !defined(_SMOOTHNESS_ALBEDO)
-        a = tex2D(_Albedo, uv).a * _Color.a;
+        a = tex2D(_MainTex, uv).a * _Color.a;
     #endif
     return a;
 }
@@ -288,17 +288,17 @@ FOUT frag(VOUT IN)
     FOUT buff;
     half4 col;
 
-    float2 uv0 = TRANSFORM_TEX(IN.uv, _Albedo);
+    float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
     half Alpha = getAlpha(uv0);
 
+
     #if defined(_RENDERING_CUTOUT)
         clip(Alpha - _Cutoff);
     #endif
-
-        
+    _Cutoff = 1;
     half3 No = getnormal(uv0 , uv1 , IN);
     float3 Ntemp = No;
     IN.nor = No;

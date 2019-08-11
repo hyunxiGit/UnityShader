@@ -19,8 +19,8 @@
 #endif
 
 float _Cutoff;
-sampler2D _Albedo;
-float4 _Albedo_ST;
+sampler2D _MainTex;
+float4 _MainTex_ST;
 sampler3D _DitherMaskLOD;
 
 struct VertexData 
@@ -76,7 +76,7 @@ struct InterpolateFrag
 	{
 		InterpolateVertex OUT;
 		#if defined (SHADOW_UV)
-			OUT.uv = TRANSFORM_TEX(IN.uv, _Albedo);
+			OUT.uv = TRANSFORM_TEX(IN.uv, _MainTex);
 		#endif
 		float4 position = UnityClipSpaceShadowCasterPos(IN.position.xyz, IN.normal);
 		OUT.pos = UnityApplyLinearShadowBias(position);
@@ -88,8 +88,9 @@ struct InterpolateFrag
 	{
 		//shadow pass' frag is not return any value, the shadow should be set in the _ShadowMapTexture
 		//translucenggt shadow clip away some pixel on the texture using dither
+		_Cutoff = 1;
 		#if defined (SHADOW_UV)
-			half Alpha = tex2D(_Albedo , IN.uv).a;
+			half Alpha = tex2D(_MainTex , IN.uv).a;
 			#if defined(SHADOW_TRANSLUCENT)
 				float Dither = tex3D(_DitherMaskLOD, float3(IN.vpos.xy*0.25, 0.9375 * Alpha)).a;
 				clip(Dither-0.01);

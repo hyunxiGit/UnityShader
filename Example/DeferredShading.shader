@@ -7,7 +7,6 @@
 
 		Pass {
 			Blend [_SrcBlend] [_DstBlend]
-			//Blend One One
 			ZWrite Off
 
 			CGPROGRAM
