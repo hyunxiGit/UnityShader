@@ -60,7 +60,8 @@ Shader "Custom/Multi (Transparent)" {
         #pragma shader_feature _ _DETAIL_MASK
         #pragma shader_feature _ _DETAIL_ALBEDO
         #pragma shader_feature _ _DETAIL_NORMAL
-        #pragma multi_compile _ VERTEXLIGHT_ON LIGHTMAP_ON
+        // #pragma multi_compile _ VERTEXLIGHT_ON LIGHTMAP_ON
+        #pragma multi_compile_prepassfinal
 
         #define DEFERRED_PASS
         #pragma vertex vert
@@ -89,8 +90,9 @@ Shader "Custom/Multi (Transparent)" {
         #pragma shader_feature _ _DETAIL_MASK
         #pragma shader_feature _ _DETAIL_ALBEDO
         #pragma shader_feature _ _DETAIL_NORMAL
-        #pragma multi_compile _ VERTEXLIGHT_ON LIGHTMAP_ON
-        #pragma multi_compile _ SHADOWS_SCREEN
+        // #pragma multi_compile _ VERTEXLIGHT_ON LIGHTMAP_ON
+        // #pragma multi_compile _ SHADOWS_SCREEN
+        #pragma multi_compile_fwdbase
         #pragma multi_compile_fog
         #define FORWARD_BASE_PASS
         #pragma vertex vert

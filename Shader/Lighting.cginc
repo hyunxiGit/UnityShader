@@ -137,6 +137,10 @@ UnityIndirect iLight(VOUT IN , half3 Rd, float Ro , half Oc)
     
         #if defined (LIGHTMAP_ON)
             l.diffuse = DecodeLightmap (UNITY_SAMPLE_TEX2D (unity_Lightmap,IN.uv1));
+            #if defined (DIRLIGHTMAP_COMBINED)
+                float4 lightmapDirection = UNITY_SAMPLE_TEX2D_SAMPLER(unity_LightmapInd,unity_Lightmap,IN.uv1);
+                l.diffuse = DecodeDirectionalLightmap(l.diffuse , lightmapDirection , IN.nor);
+            #endif
         #endif
 
         Unity_GlossyEnvironmentData envData;
