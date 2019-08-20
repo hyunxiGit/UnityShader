@@ -106,6 +106,18 @@ VOUT vert(VIN v)
     return OUT;
 } 
 
+float FadeShadow(VOUT IN, float lightAtt)
+{
+    #if HANDLE_SHADOWS_BLENDING_IN_GI
+    // UNITY_LIGHT_ATTENUATION doesn't fade shadows for us.
+    float viewZ = dot(_WorldSpaceCameraPos - IN.pos_w , UNITY_MATRIX_V[2].xyz);
+    half shadowFadeDistance = UnityComputeShadowFadeDistance(IN.pos_w , viewZ);
+    float shadowFade = UnityComputeShadowFade(shadowFadeDistance);
+    lightAtt = saturate (lightAtt + shadowFade);
+    #endif
+    return lightAtt;
+}
+
 UnityLight dLight(VOUT IN)
 {
     UnityLight l;
@@ -119,6 +131,7 @@ UnityLight dLight(VOUT IN)
             l.dir = normalize(l.dir - IN.pos_w);
         #endif
         UNITY_LIGHT_ATTENUATION(attenuation , IN , IN.pos_w.xyz);
+        attenuation = FadeShadow (IN,attenuation);
         //l.ndotl = DotClamped(IN.nor , l.dir);
         l.color = _LightColor0 * attenuation;
     #endif
