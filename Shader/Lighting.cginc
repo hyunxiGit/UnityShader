@@ -52,7 +52,7 @@ struct VOUT
     #endif
     float3 tan : TEXCOORD2;
     float3 bi  : TEXCOORD3;
-    SHADOW_COORDS(4)
+    UNITY_SHADOW_COORDS(4)
     #if defined(VERTEXLIGHT_ON)
         float3 Vc : TEXCOORD5 ;
     #endif
@@ -88,6 +88,7 @@ void vertexLight(inout VOUT IN)
 VOUT vert(VIN v)
 {
     VOUT OUT;
+    UNITY_INITIALIZE_OUTPUT(VOUT, OUT);
     OUT.pos = UnityObjectToClipPos(v.vertex);
     OUT.nor = UnityObjectToWorldNormal(v.nor);
     OUT.uv = v.uv;
@@ -100,7 +101,7 @@ VOUT vert(VIN v)
     #endif
     OUT.tan = UnityObjectToWorldDir(v.tan.xyz); 
     OUT.bi = normalize(cross(OUT.nor , OUT.tan.xyz) * v.tan.w * unity_WorldTransformParams.w); 
-    TRANSFER_SHADOW(OUT);
+    UNITY_TRANSFER_SHADOW(OUT, uv1);
     vertexLight (OUT);
     return OUT;
 } 
@@ -239,7 +240,7 @@ half getDetailMask(float2 uv)
 
 half3 getAlbedo( float2 uv0 , float2 uv1)
 {
-    half3 Al = tex2D(_MainTex, uv0);
+    half3 Al = tex2D(_MainTex, uv0) * _Color.xyz;
     #if defined (_DETAIL_ALBEDO)
         half3 AlDe = Al * tex2D(_DetailAlbedoMap , uv1);
         Al = lerp(Al ,AlDe , getDetailMask(uv0));

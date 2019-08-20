@@ -1,4 +1,4 @@
-Shader "Custom/Multi (Transparent)" {
+Shader "Custom/Multi" {
   Properties
   {
     [HideInInspector]_ScrBlend("screen blend" , float) = 1
@@ -124,6 +124,29 @@ Shader "Custom/Multi (Transparent)" {
         #include "Lighting.cginc"
         ENDCG
     }
+
+    Pass {
+            Tags {
+                "LightMode" = "Meta"
+            }
+
+            Cull Off
+
+            CGPROGRAM
+
+            #pragma vertex MyLightmappingVertexProgram
+            #pragma fragment MyLightmappingFragmentProgram
+
+            #pragma shader_feature _METALLIC_MAP
+            #pragma shader_feature _ _SMOOTHNESS_ALBEDO _SMOOTHNESS_METALLIC
+            #pragma shader_feature _EMISSION_MAP
+            #pragma shader_feature _DETAIL_MASK
+            #pragma shader_feature _DETAIL_ALBEDO_MAP
+
+            #include "Meta.cginc"
+
+            ENDCG
+        }
   }
   
   CustomEditor "MyLightingShaderGUI"
