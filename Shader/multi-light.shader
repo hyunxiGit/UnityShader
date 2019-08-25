@@ -7,11 +7,13 @@ Shader "Custom/Multi" {
     _MainTex("albedo" , 2d) = "white" {}
     _Color("tint" , color) = (1,1,1,1)
     _Cutoff("clip range", range(0,1)) = 1.0
+    _displacementStrength("displacement strength", range(0,1)) = 1.0
 
     [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
     [noscaleoffset]_MetalicMap("metalic map" , 2d) = "white" {}
     [noscaleoffset]_EmissionMap("emission map" , 2d) = "white"{}
     [noscaleoffset]_OcclusionMap("occlusion map" , 2d) = "white"{}
+    [noscaleoffset]_DisplacementMap("displacement map" , 2d) = "white"{}
     
     _DetailAlbedoMap("detail abedo" , 2d) = "white" {}
     [noscaleoffset]_DetailNormalMap("detail normal" , 2d) = "normal" {}

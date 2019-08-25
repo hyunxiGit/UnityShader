@@ -206,6 +206,17 @@ public class MyLightingShaderGUI : ShaderGUI {
 			SetKeyword("_OCCLUSIONMAP ", OcMapPro.textureValue);
 		}
 	}
+	void DoDisplacement()
+	{
+		EditorGUI.BeginChangeCheck();
+		MaterialProperty DisMapPro = FindProperty("_DisplacementMap");
+		MaterialProperty DisStrPro = FindProperty("_displacementStrength");
+		editor.TexturePropertySingleLine(MakeLabel(DisMapPro), DisMapPro, DisMapPro.textureValue?DisStrPro : null);
+		if (EditorGUI.EndChangeCheck())
+		{
+			SetKeyword("_PARALLAXMAP ", DisMapPro.textureValue);
+		}
+	}
 
 	void DoDetail()
 	{
@@ -260,6 +271,7 @@ public class MyLightingShaderGUI : ShaderGUI {
 		DoSmoothness();
 		DoEmission();
 		editor.TextureScaleOffsetProperty(albedo);
+		DoDisplacement();
 
 		GUILayout.Label("detail map" , EditorStyles.boldLabel);
 		DoOcclusion();
