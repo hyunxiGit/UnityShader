@@ -20,6 +20,9 @@ sampler2D _DetailAlbedoMap;
 sampler2D _DetailMaskMap;
 sampler2D _DetailNormalMap;
 
+sampler2D _DisplacementMap;
+float _displacementStrength;
+
 half4 _Color;
 float _Cutoff;
 float4 _Emission;
@@ -283,6 +286,28 @@ half getAlpha(float2 uv)
     return a;
 }
 
+void applyDisplace(inout float2 uv0 , inout float2 uv1 , inout half3 Vd, VOUT IN)
+{   
+    
+    half maxScale = 0.5f;
+    half scale = tex2D(_DisplacementMap, uv0).r * _displacementStrength * maxScale;
+    //C cam pos
+    //A original spot
+    //M scale to spot
+    half3 CA = normalize(Vd);
+    half3 MA = CA*scale;
+    //(M is real place we need to sacmple)
+    half3 CM = CA - MA;
+    //update view vector
+    Vd = normalize(CM);
+    //create matrix convert world to tangent
+    float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
+    //convert MA to tangent space
+    MA = mul(WtT,MA);
+    uv0 += MA;
+    //uv1 += MA;
+}
+
 void addFog(inout half4 col , VOUT IN)
 {
     half fogScale;
@@ -308,6 +333,11 @@ FOUT frag(VOUT IN)
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
+    //half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
+    half3 Vd = _WorldSpaceCameraPos - IN.pos_w;
+
+    applyDisplace(uv0,uv1 , Vd, IN);
+
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
     half Alpha = getAlpha(uv0);
@@ -319,7 +349,7 @@ FOUT frag(VOUT IN)
     _Cutoff = 1;
     half3 No = getnormal(uv0 , uv1 , IN);
     float3 Ntemp = No;
-    IN.nor = No;
+    IN.nor = No*4;
 
     float Me;
     half Oc;
@@ -329,7 +359,7 @@ FOUT frag(VOUT IN)
     half Ro = 1-Sm;   
 
     Me = getMetalic(uv0);
-    half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
+    
     half3 Rd = reflect(-Vd , No);
 
     Oc = getOcclusion(uv0);
