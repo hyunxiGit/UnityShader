@@ -93,6 +93,7 @@ VOUT vert(VIN v)
     VOUT OUT;
     UNITY_INITIALIZE_OUTPUT(VOUT, OUT);
     OUT.pos = UnityObjectToClipPos(v.vertex);
+    //OUT.pos = UnityObjectToClipPos(float4(v.vertex.x,v.vertex.y,v.vertex.z +_displacementStrength,v.vertex.z);
     OUT.nor = UnityObjectToWorldNormal(v.nor);
     OUT.uv = v.uv;
     #if defined (LIGHTMAP_ON)
@@ -301,11 +302,12 @@ void applyDisplace(inout float2 uv0 , inout float2 uv1 , inout half3 Vd, VOUT IN
     //update view vector
     Vd = normalize(CM);
     //create matrix convert world to tangent
+    //float3x3 WtT= transpose (float3x3(IN.tan ,  IN.bi ,IN.nor)) ;
     float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
     //convert MA to tangent space
     MA = mul(WtT,MA);
     uv0 += MA;
-    //uv1 += MA;
+    uv1 += MA;
 }
 
 void addFog(inout half4 col , VOUT IN)
@@ -332,11 +334,10 @@ FOUT frag(VOUT IN)
     half4 col;
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
-    float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
-    //half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Vd = _WorldSpaceCameraPos - IN.pos_w;
-
+    float2 uv1 = IN.uv;
     applyDisplace(uv0,uv1 , Vd, IN);
+    uv1 = TRANSFORM_TEX(uv1, _DetailAlbedoMap);
 
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
