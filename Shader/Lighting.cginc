@@ -301,9 +301,12 @@ void applyDisplace(inout float2 uv0 , inout float2 uv1 , inout half3 Vd, VOUT IN
     //update view vector
     Vd = normalize(CM);
     //create matrix convert world to tangent
-    float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
-    //convert MA to tangent space
-    MA = mul(WtT,MA);
+    float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+    MA = mul(MA,WtT);
+    //or we can use colume major mul(M,v) instead, then we don't need to transpose
+    //because the colume major will transpose the matrix for us
+    //float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
+    //MA = mul(WtT,MA);
     uv0 += MA;
     //uv1 += MA;
 }
