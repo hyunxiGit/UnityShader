@@ -286,11 +286,11 @@ half getAlpha(float2 uv)
     return a;
 }
 
-void applyDisplace(inout float2 uv0 , inout float2 uv1 , inout half3 Vd, VOUT IN)
+void applyDisplace(inout float2 uv ,  inout half3 Vd, VOUT IN)
 {   
     
     half maxScale = 0.5f;
-    half scale = tex2D(_DisplacementMap, uv0).r * _displacementStrength * maxScale;
+    half scale = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
     //C cam pos
     //A original spot
     //M scale to spot
@@ -307,9 +307,10 @@ void applyDisplace(inout float2 uv0 , inout float2 uv1 , inout half3 Vd, VOUT IN
     //because the colume major will transpose the matrix for us
     //float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
     //MA = mul(WtT,MA);
-    uv0 += MA;
+    uv += MA;
     //uv1 += MA;
 }
+
 
 void addFog(inout half4 col , VOUT IN)
 {
@@ -334,12 +335,14 @@ FOUT frag(VOUT IN)
     FOUT buff;
     half4 col;
 
-    float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
-    float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
+
     //half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Vd = _WorldSpaceCameraPos - IN.pos_w;
 
-    applyDisplace(uv0,uv1 , Vd, IN);
+    applyDisplace(IN.uv , Vd, IN);
+
+    float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
+    float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
 
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
