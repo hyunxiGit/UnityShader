@@ -34,4 +34,4 @@ The cook book is still WIP so there might be some inaccuracy.
 -ray marching displacement
 If you want to embed images, this is how you do it:
 
-![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
+![Image of Yaktocat](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/raymarchingDis.gif)
