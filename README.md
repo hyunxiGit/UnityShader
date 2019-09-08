@@ -32,6 +32,5 @@ https://docs.google.com/document/d/1e8QrC7O2QIXjDiG8zIQbFDn7qBQOmDhwqsVZnDHhrRU/
 The cook book is still WIP so there might be some inaccuracy.
 
 -ray marching displacement
-If you want to embed images, this is how you do it:
 
-![Image of Yaktocat](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/raymarchingDis.gif)
+![Image of raymatching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/raymarchingDis.gif)
