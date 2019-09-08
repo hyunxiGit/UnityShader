@@ -286,16 +286,51 @@ half getAlpha(float2 uv)
     return a;
 }
 
+float getDisMap (float2 uv)
+{
+    return tex2D(_DisplacementMap, uv).r;
+}
+
+void applyRayMatchingDisplace(inout float2 uv ,  inout half3 CA, VOUT IN)
+{   
+    
+    half maxScale = 0.1f;
+    //half scale = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
+    //C cam pos
+    //A original spot
+    //M scale to spot
+    //tMax max hight to displace 
+    int step = 10;
+    half tMax = _displacementStrength * maxScale;
+    half3 HA = CA*tMax;
+    float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+    HA = mul(HA,WtT);
+    
+    float t = 0;
+    float texValue = getDisMap(uv);
+    float3 MA;
+    while ((t<texValue)&&(t<1.0))
+    {
+        t+=0.1;
+        MA = HA *t;
+        uv+=MA.xy;
+        texValue = getDisMap(uv);       
+    }
+    
+    half3 CM = CA - MA;
+    CA = normalize(CM);
+}
+
 void applyDisplace(inout float2 uv ,  inout half3 Vd, VOUT IN)
 {   
     
     half maxScale = 0.5f;
-    half scale = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
+    half t = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
     //C cam pos
     //A original spot
     //M scale to spot
     half3 CA = normalize(Vd);
-    half3 MA = CA*scale;
+    half3 MA = CA*t;
     //(M is real place we need to sacmple)
     half3 CM = CA - MA;
     //update view vector
@@ -339,7 +374,8 @@ FOUT frag(VOUT IN)
     //half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Vd = _WorldSpaceCameraPos - IN.pos_w;
 
-    applyDisplace(IN.uv , Vd, IN);
+    //applyDisplace(IN.uv , Vd, IN);
+    applyRayMatchingDisplace(IN.uv , Vd, IN);
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
