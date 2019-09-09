@@ -93,7 +93,6 @@ VOUT vert(VIN v)
     VOUT OUT;
     UNITY_INITIALIZE_OUTPUT(VOUT, OUT);
     OUT.pos = UnityObjectToClipPos(v.vertex);
-    //OUT.pos = UnityObjectToClipPos(float4(v.vertex.x,v.vertex.y,v.vertex.z +_displacementStrength,v.vertex.z);
     OUT.nor = UnityObjectToWorldNormal(v.nor);
     OUT.uv = v.uv;
     #if defined (LIGHTMAP_ON)
@@ -287,28 +286,66 @@ half getAlpha(float2 uv)
     return a;
 }
 
-void applyDisplace(inout float2 uv0 , inout float2 uv1 , inout half3 Vd, VOUT IN)
+float getDisMap (float2 uv)
+{
+    return tex2D(_DisplacementMap, uv).r;
+}
+
+void applyRayMatchingDisplace(inout float2 uv ,  inout half3 CA, VOUT IN)
+{   
+    
+    half maxScale = 0.1f;
+    //half scale = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
+    //C cam pos
+    //A original spot
+    //M scale to spot
+    //tMax max hight to displace 
+    int step = 10;
+    half tMax = _displacementStrength * maxScale;
+    half3 HA = CA*tMax;
+    float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+    HA = mul(HA,WtT);
+    
+    float t = 0;
+    float texValue = getDisMap(uv);
+    float3 MA;
+    while ((t<texValue)&&(t<1.0))
+    {
+        t+=0.1;
+        MA = HA *t;
+        uv+=MA.xy;
+        texValue = getDisMap(uv);       
+    }
+    
+    half3 CM = CA - MA;
+    CA = normalize(CM);
+}
+
+void applyDisplace(inout float2 uv ,  inout half3 Vd, VOUT IN)
 {   
     
     half maxScale = 0.5f;
-    half scale = tex2D(_DisplacementMap, uv0).r * _displacementStrength * maxScale;
+    half t = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
     //C cam pos
     //A original spot
     //M scale to spot
     half3 CA = normalize(Vd);
-    half3 MA = CA*scale;
+    half3 MA = CA*t;
     //(M is real place we need to sacmple)
     half3 CM = CA - MA;
     //update view vector
     Vd = normalize(CM);
     //create matrix convert world to tangent
-    //float3x3 WtT= transpose (float3x3(IN.tan ,  IN.bi ,IN.nor)) ;
-    float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
-    //convert MA to tangent space
-    MA = mul(WtT,MA);
-    uv0 += MA;
-    uv1 += MA;
+    float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+    MA = mul(MA,WtT);
+    //or we can use colume major mul(M,v) instead, then we don't need to transpose
+    //because the colume major will transpose the matrix for us
+    //float3x3 WtT= float3x3(IN.tan ,  IN.bi ,IN.nor);
+    //MA = mul(WtT,MA);
+    uv += MA;
+    //uv1 += MA;
 }
+
 
 void addFog(inout half4 col , VOUT IN)
 {
@@ -333,11 +370,15 @@ FOUT frag(VOUT IN)
     FOUT buff;
     half4 col;
 
-    float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
+
+    //half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Vd = _WorldSpaceCameraPos - IN.pos_w;
-    float2 uv1 = IN.uv;
-    applyDisplace(uv0,uv1 , Vd, IN);
-    uv1 = TRANSFORM_TEX(uv1, _DetailAlbedoMap);
+
+    //applyDisplace(IN.uv , Vd, IN);
+    applyRayMatchingDisplace(IN.uv , Vd, IN);
+
+    float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
+    float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
 
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
