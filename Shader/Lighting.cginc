@@ -341,14 +341,31 @@ void applyRayMatchingDisplaceTwoPointInterpolate(inout float2 uv ,  inout half3 
     float texValue = getDisMapValue(uv);
     //MA is newUV
     float3 MA;
+    float heightgap0 = 0;
+    float heightgap1 = 0;
+    //the uv used in loop
+    float2 uv0 = uv;
+    //the value need to be return is CA & uv 
+    //CA & uv rely on t value
+    //so the loop should output the correct t value
     while ((t<texValue)&&(t<1.0))
     {
         t += step;
         MA = HA *t;
-        uv+=HA * step;
+        uv0+=HA * step;
         //wrapp the texture sampling in a function to avoid warning
-        texValue = getDisMapValue(uv);       
+        texValue = getDisMapValue(uv0);       
+        heightgap0 = heightgap1;
+        heightgap1 = texValue-t;
     }
+
+    heightgap0 = abs(heightgap0);
+    heightgap1 = abs(heightgap1);
+    float scale = heightgap1/(heightgap0 + heightgap1);
+    t -= step*scale;
+
+    MA = HA *t;
+    uv += MA.xy;
     
     half3 CM = CA - MA;
     CA = normalize(CM);
@@ -403,13 +420,12 @@ FOUT frag(VOUT IN)
     FOUT buff;
     half4 col;
 
-
     //half3 Vd = normalize(_WorldSpaceCameraPos - IN.pos_w);
     half3 Vd = _WorldSpaceCameraPos - IN.pos_w;
 
     //applyDisplace(IN.uv , Vd, IN);
-    applyRayMatchingDisplace(IN.uv , Vd, IN);
-    //applyRayMatchingDisplaceTwoPointInterpolate(IN.uv , Vd, IN);
+    //applyRayMatchingDisplace(IN.uv , Vd, IN);
+    applyRayMatchingDisplaceTwoPointInterpolate(IN.uv , Vd, IN);
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
@@ -417,7 +433,6 @@ FOUT frag(VOUT IN)
     half4 Em = getEmissive(uv0);
     half3 Al = getAlbedo(uv0,uv1);
     half Alpha = getAlpha(uv0);
-
 
     #if defined(_RENDERING_CUTOUT)
         clip(Alpha - _Cutoff);
