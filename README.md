@@ -10,6 +10,7 @@ catLikeCoding
 https://catlikecoding.com/unity/tutorials/rendering/
 
 My version is a little bit different from place to place as these are my way of understanding the rendering.
+My implementation aims to give a clear idea the meaning of each steps. Optimization is avoid as detailed optimization shadows the original algorithm and math meaning.
 
 To use this package,
 create a Unity project in your local drive, clone the repository and overwrite the asset folder with the repository.
