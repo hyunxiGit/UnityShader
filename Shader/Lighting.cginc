@@ -286,12 +286,43 @@ half getAlpha(float2 uv)
     return a;
 }
 
-float getDisMap (float2 uv)
+float getDisMapValue (float2 uv)
 {
     return tex2D(_DisplacementMap, uv).r;
 }
 
 void applyRayMatchingDisplace(inout float2 uv ,  inout half3 CA, VOUT IN)
+{   
+    half maxScale = 0.1f;
+    //half scale = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
+    //C cam pos
+    //A original spot
+    //M scale to spot
+    //tMax max hight to displace 
+    float step = 0.1;
+    half tMax = _displacementStrength * maxScale;
+    half3 HA = normalize(CA)*tMax;
+    float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+    HA = mul(HA,WtT);
+
+    float t = 0;
+    float texValue = getDisMapValue(uv);
+    //MA is newUV
+    float3 MA;
+    while ((t<texValue)&&(t<1.0))
+    {
+        t += step;
+        MA = HA *t;
+        uv+=HA * step;
+        //wrapp the texture sampling in a function to avoid warning
+        texValue = getDisMapValue(uv);       
+    }
+    
+    half3 CM = CA - MA;
+    CA = normalize(CM);
+}
+
+void applyRayMatchingDisplaceTwoPointInterpolate(inout float2 uv ,  inout half3 CA, VOUT IN)
 {   
     
     half maxScale = 0.1f;
@@ -300,21 +331,23 @@ void applyRayMatchingDisplace(inout float2 uv ,  inout half3 CA, VOUT IN)
     //A original spot
     //M scale to spot
     //tMax max hight to displace 
-    int step = 10;
+    float step = 0.1;
     half tMax = _displacementStrength * maxScale;
-    half3 HA = CA*tMax;
+    half3 HA = normalize(CA)*tMax;
     float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
     HA = mul(HA,WtT);
-    
+
     float t = 0;
-    float texValue = getDisMap(uv);
+    float texValue = getDisMapValue(uv);
+    //MA is newUV
     float3 MA;
     while ((t<texValue)&&(t<1.0))
     {
-        t+=0.1;
+        t += step;
         MA = HA *t;
-        uv+=MA.xy;
-        texValue = getDisMap(uv);       
+        uv+=HA * step;
+        //wrapp the texture sampling in a function to avoid warning
+        texValue = getDisMapValue(uv);       
     }
     
     half3 CM = CA - MA;
@@ -376,6 +409,7 @@ FOUT frag(VOUT IN)
 
     //applyDisplace(IN.uv , Vd, IN);
     applyRayMatchingDisplace(IN.uv , Vd, IN);
+    //applyRayMatchingDisplaceTwoPointInterpolate(IN.uv , Vd, IN);
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
