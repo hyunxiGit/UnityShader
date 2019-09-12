@@ -371,6 +371,78 @@ void applyRayMatchingDisplaceTwoPointInterpolate(inout float2 uv ,  inout half3 
     CA = normalize(CM);
 }
 
+
+
+void applyRayMatchingDisplaceBinarySearch(inout float2 uv ,  inout half3 CA, VOUT IN)
+{   
+    
+    half maxScale = 0.1f;
+    //half scale = tex2D(_DisplacementMap, uv).r * _displacementStrength * maxScale;
+    //C cam pos
+    //A original spot
+    //M scale to spot
+    //tMax max hight to displace 
+    float step = 0.1;
+    half tMax = _displacementStrength * maxScale;
+    half3 HA = normalize(CA)*tMax;
+    float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+    HA = mul(HA,WtT);
+
+    float t = 0;
+    //2 point interpolation
+    float t0 = 0;
+    float t1 = 1;
+    float texValue = getDisMapValue(uv);
+    //MA is newUV
+    float3 MA;
+
+    float heightgap0 = 0;
+    float heightgap1 = 0;
+    //the uv used in loop
+    float2 uv0 = uv;
+    //the value need to be return is CA & uv 
+    //CA & uv rely on t value
+    //so the loop should output the correct t value
+    //ray marching loop, after look t0 is last t point, t1 is current t point
+    while ((t<texValue)&&(t<1.0))
+    {
+        //t0 is last t point
+        t0 = t;
+        t += step;
+        uv0+=HA * step;
+        //wrapp the texture sampling in a function to avoid warning
+        texValue = getDisMapValue(uv0);       
+    }
+    t1 = t;
+
+    //binary search loop
+    int biSearchStep = 4;
+    while (biSearchStep!=0)
+    {
+        t = (t0 + t1)/2;
+        MA = HA *t;
+        uv += MA.xy;
+        texValue = getDisMapValue(uv);
+        //search down
+        if (t>texValue)
+        {
+            t1 = t;
+        }
+        //search up
+        else
+        {
+            t0 = t;
+        }
+        biSearchStep-=1;
+    }
+
+    MA = HA *t;
+    uv += MA.xy;
+    
+    half3 CM = CA - MA;
+    CA = normalize(CM);
+}
+
 void applyDisplace(inout float2 uv ,  inout half3 Vd, VOUT IN)
 {   
     
@@ -425,7 +497,8 @@ FOUT frag(VOUT IN)
 
     //applyDisplace(IN.uv , Vd, IN);
     //applyRayMatchingDisplace(IN.uv , Vd, IN);
-    applyRayMatchingDisplaceTwoPointInterpolate(IN.uv , Vd, IN);
+    //applyRayMatchingDisplaceTwoPointInterpolate(IN.uv , Vd, IN);
+    applyRayMatchingDisplaceBinarySearch(IN.uv , Vd, IN);
 
     float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
     float2 uv1 = TRANSFORM_TEX(IN.uv, _DetailAlbedoMap);
