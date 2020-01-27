@@ -4,11 +4,52 @@
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
+float Width;
+float Height;
+sampler2D Input;
+float3 sample_col[16];
+short sample_id[16]
+int fill_index = -1;
+
+
+void updateColor(float4 sample_color)
+{
+
+	bool exist = false;
+	for (int i = 0; i<16; i++)
+	{
+		if (sample_color.x == sample_col[i].x && sample_color.y == sample_col[i].y && sample_color.z == sample_col[i].z )
+		{
+			exist =true;
+		}
+	}
+
+	if (!exist)
+	{
+		fill_index++;
+		const int id = fill_index;
+		//sample_col[fill_index] = sample_color.xyz;
+		sample_col[id] = float3(0,1,0);
+		fill_index++;
+	}
+
+}
 
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // TODO: insert actual code here!
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+	
+    float2 position = float2(id.x/Width, id.y/Height);
+    float2 pixelSize = float2(1.0 / Width, 1.0 / Height);
+
+    float4 currentPixel = tex2Dlod(Input, float4(position.x, position.y, 0, 0));
+	//float4 neighborPixels = tex2Dlod(Input, float4(position.x + pixelSize.x, position.y + pixelSize.y, 0, 0));
+
+    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    updateColor(currentPixel);
+
+    //Result[id.xy] = float4(position.x,position.x,position.x,1);
+    Result[id.xy] = float4(sample_col[floor(id.x/16)],1);
 }
