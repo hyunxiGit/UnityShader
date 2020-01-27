@@ -92,7 +92,7 @@ Material:
     - _UVSec: 0
     - _ZWri: 1
     - _ZWrite: 1
-    - _displacementStrength: 0.114
+    - _displacementStrength: 0.088
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Emission: {r: 0, g: 0, b: 0, a: 0}
