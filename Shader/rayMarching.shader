@@ -103,9 +103,12 @@
 
             void reverseHeightMapTrace( inout float2 uv , float3 march_vector , int steps)
             {
-                
+                //apply displacement height by scale the trace vector, height map, height_plane position
+                 float height_plane = 1.0 * _displacementStrength;
                 //(x,y,1)
-                march_vector = march_vector/abs(march_vector.z)*_displacementStrength;
+                march_vector = march_vector/abs(march_vector.z); //[z: 0 ~ 1]
+                march_vector *= _displacementStrength; //[z: 0 ~ _displacementStrength]
+                
                 float step_scale = 1.0/float(steps);
                 float cur_scale = 0.0;
                 float last_scaleh =0.0;
@@ -120,8 +123,8 @@
                     float3 cur_march_vector = march_vector* cur_scale;
                     uv_delta = cur_march_vector.xy;
                     trace_height = cur_march_vector.z;
-                    
-                    reverse_map_height = tex2D(_DisplacementMap, uv + uv_delta).x-1;
+                    //[height: 0 ~ _displacementStrength] - _displacementStrength
+                    reverse_map_height = tex2D(_DisplacementMap, uv + uv_delta).x *_displacementStrength - height_plane;
                     cur_scale += step_scale;
                 }
                 //interpolate to the middle point
@@ -174,8 +177,9 @@
 
                 //trace from eye to world position in tangent space, x and z will be u and v, y is normal
                 float3 trace_vector_t =  mul(normalize(IN.pos_w -_WorldSpaceCameraPos), WtT);
-                //normalize height field to 1
-                //trace_vector_t = trace_vector_t/trace_vector_t.z;
+
+                //this step enable _displacementStrength easy to control on GUI
+                _displacementStrength *=0.1; 
 
                 reverseHeightMapTrace( IN.uv , trace_vector_t , 100 );
 
