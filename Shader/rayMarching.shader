@@ -8,6 +8,9 @@
         [HideInInspector]_ZWri("ZWrite control" , float) = 0
         _MainTex("Albedo texture",2D) = "White"{}
         [noscaleoffset]_GridTex("grid texture",2D) = "White"{}
+        _GridStrength("grid strength", range(0,1)) = 1.0
+        [noscaleoffset]_Normal("normal" , 2d) = "normal"{}
+        _NormalStrength("normal strength", range(0,1)) = 1.0
         [noscaleoffset]_DisplacementMap("displacement map" , 2d) = "white"{}
         _displacementStrength("displacement strength", range(0,1)) = 1.0
     }
@@ -36,7 +39,10 @@
             sampler2D _GridTex;
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            sampler2D _Normal;
             float _displacementStrength;
+            float _NormalStrength;
+            float _GridStrength;
 
             struct VIN
             {
@@ -69,8 +75,18 @@
 
             float4 getAlbedo(float2 uv)
             {
-                float4 col = tex2D(_MainTex, uv) * tex2D(_GridTex, uv);
+                float4 grid = float4(lerp(float3(1,1,1), tex2D(_GridTex, uv).xyz ,_GridStrength),1);
+                float4 col = tex2D(_MainTex, uv) * grid;
                 return col;
+            }
+
+            half3 getnormal(VOUT IN)
+            {
+                half3 Nm = UnpackScaleNormal(tex2D(_Normal, IN.uv), 0.5).xzy;
+                half3 flat_normal = float3(1,1,1);
+                Nm = lerp(flat_normal, Nm, _NormalStrength);
+                half3 No = normalize(IN.nor * Nm.y + IN.tan * Nm.x + IN.bi * Nm.z);
+                return No;
             }
 
             float getDisplacement(float2 uv)
@@ -131,46 +147,19 @@
                 float use_scale = (last_scaleh + cur_scale) * 0.5;
                 float3 cur_march_vector = march_vector* use_scale;
                 uv_delta = cur_march_vector.xy;
-                uv = uv + uv_delta;      
+                uv = uv + uv_delta;    
+
+                //start shadow  
             }
-
-
-            // float raymarch_shadow( float3 march_vector , int steps ,float uv0, float3x3 WtT)
-            // {
-            //     //retuurn the scale of result point / full height
-            //     float shadow_att = 1;
-            //     int cur_step = 0;
-            //     int last_step = 0;
-
-            //     float start_height = tex2D(_DisplacementMap, uv0).x;
-            //     float max_height_map_gap = 1- start_height;
-
-            //     float increment = 0.01;
-            //     float ac_value = 0;
-
-            //     while(ac_value <1)
-            //     {
-            //             ac_value +=increment;
-            //             float3 ac_vector = march_vector * ac_value;
-            //             float2 uv1 = uv0 + mul(ac_vector, WtT).xy *_displacementStrength *0.1;
-            //             //uv1 = uv0 - float2(0.01,0.01)*ac_value;
-            //             float height_map_value_gap = (tex2D(_DisplacementMap, uv1).x - start_height)/max_height_map_gap;
-            //             float trace_height_map_gap = ac_value;
-            //             if(trace_height_map_gap < height_map_value_gap)
-            //             {
-            //                 ac_value = 1;
-            //                 shadow_att = 0;
-            //             }
-            //     }
-            //     return 1;
-            //     // return shadow_att;
-            // }
 
 
             float4 frag(VOUT IN):SV_TARGET
             {
+                float4 col;
+
                 float3 Vd = _WorldSpaceCameraPos - IN.pos_w ;
                 float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
+                float3 ld =_WorldSpaceLightPos0;
 
                 //world to tangent
                 float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
@@ -185,10 +174,11 @@
 
 
                 float4 albedo = getAlbedo(IN.uv);
+                float3 nm = getnormal(IN);
+                float lightness = DotClamped(nm, ld);
                
 
-                float4 col;
-                col = float4(albedo.rgb,1) ;
+                col = float4(lightness,lightness,lightness,1)*albedo ;
                 
                 return col;
             }
