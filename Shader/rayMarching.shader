@@ -227,7 +227,7 @@
                 float3 trace_vector_l =  mul(normalize(ld), WtT);   
                 reverseHeightMapTraceShadow(IN.uv , dis_data,trace_vector_l , 30 );
 
-                float4 albedo = getAlbedo(IN.uv);
+                float4 albedo = getAlbedo(IN.uv)*2;
                 float3 nm = getnormal(IN);
                 float lightness = DotClamped(nm, ld) * dis_data.shadow_att;               
 
