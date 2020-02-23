@@ -61,6 +61,13 @@
                 float3 bi  : TEXCOORD3;
             };
 
+            struct DIS_DATA
+            {
+                float3 cur_view_dir;
+                float cur_view_scale;
+                float shadow_att;
+            };
+
             VOUT vert(VIN IN)
             {
                 VOUT OUT;
@@ -117,7 +124,7 @@
 
 
 
-            void reverseHeightMapTrace( inout float2 uv , float3 march_vector , int steps)
+            void reverseHeightMapTrace( inout float2 uv , inout DIS_DATA dis_data, float3 march_vector , int steps)
             {
                 //apply displacement height by scale the trace vector, height map, height_plane position
                  float height_plane = 1.0 * _displacementStrength;
@@ -149,7 +156,50 @@
                 uv_delta = cur_march_vector.xy;
                 uv = uv + uv_delta;    
 
+                dis_data.cur_view_dir = cur_march_vector;
+                dis_data.cur_view_scale = use_scale;
+                dis_data.shadow_att = 1;
                 //start shadow  
+            }
+
+            void reverseHeightMapTraceShadow( inout float2 uv , inout DIS_DATA dis_data, float3 march_vector , int steps)
+            {
+                //apply displacement height by scale the trace vector, height map, height_plane position
+                 float height_plane = 1.0 * _displacementStrength;
+                //(x,y,1)
+                march_vector = march_vector/abs(march_vector.z); //[z: 0 ~ 1]
+                march_vector *= _displacementStrength; //[z: 0 ~ _displacementStrength]
+
+                //sclae the light vector to sudo height
+                march_vector *= dis_data.cur_view_scale;
+                //sclae the steps to sudo height
+                steps *=dis_data.cur_view_scale;
+                
+                float step_scale = 1.0/float(steps);
+                float cur_scale = 0.0;
+                float last_scaleh =0.0;
+ 
+                
+                float trace_height = 0;
+                float reverse_map_height = -1;
+                float2 uv_delta = float2(0,0);
+
+                while ((cur_scale < dis_data.cur_view_scale )&&(trace_height>reverse_map_height))
+                {
+                    last_scaleh = cur_scale;
+                    //start check step 1
+                    cur_scale += step_scale;
+                    float3 cur_march_vector = march_vector* cur_scale;
+                    uv_delta = cur_march_vector.xy;
+                    trace_height = (dis_data.cur_view_dir + cur_march_vector).z;
+                    //[height: 0 ~ _displacementStrength] - _displacementStrength
+                    reverse_map_height = tex2D(_DisplacementMap, uv + uv_delta).x *_displacementStrength - height_plane;
+
+                    if ( trace_height <reverse_map_height)
+                    {
+                        dis_data.shadow_att = 0.5;
+                    }
+                }
             }
 
 
@@ -161,22 +211,25 @@
                 float2 uv0 = TRANSFORM_TEX(IN.uv, _MainTex);
                 float3 ld =_WorldSpaceLightPos0;
 
-                //world to tangent
-                float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
 
-                //trace from eye to world position in tangent space, x and z will be u and v, y is normal
-                float3 trace_vector_t =  mul(normalize(IN.pos_w -_WorldSpaceCameraPos), WtT);
-
+                //data pass between view and light trace
+                DIS_DATA dis_data;
                 //this step enable _displacementStrength easy to control on GUI
                 _displacementStrength *=0.1; 
 
-                reverseHeightMapTrace( IN.uv , trace_vector_t , 100 );
-
+                //world to tangent
+                float3x3 WtT= transpose(float3x3(IN.tan ,  IN.bi ,IN.nor));
+                //trace from eye to world position in tangent space, x and z will be u and v, y is normal
+                float3 trace_vector_v =  mul(normalize(IN.pos_w -_WorldSpaceCameraPos), WtT);
+                //start view trace
+                reverseHeightMapTrace( IN.uv , dis_data,trace_vector_v , 100 );
+                //convert light vector to tangent
+                float3 trace_vector_l =  mul(normalize(ld), WtT);   
+                reverseHeightMapTraceShadow(IN.uv , dis_data,trace_vector_l , 30 );
 
                 float4 albedo = getAlbedo(IN.uv);
                 float3 nm = getnormal(IN);
-                float lightness = DotClamped(nm, ld);
-               
+                float lightness = DotClamped(nm, ld) * dis_data.shadow_att;               
 
                 col = float4(lightness,lightness,lightness,1)*albedo ;
                 
