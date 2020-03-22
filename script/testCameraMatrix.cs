@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿//testCamera matrix example : script
+using System.Collections;
 using System.Collections;
 using UnityEngine;
 

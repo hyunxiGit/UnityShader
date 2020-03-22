@@ -1,4 +1,7 @@
-﻿using System.Collections;
+//capture screen depth and save as a texture : script
+//render target example
+//post process backbon , pass cam frustrum to shader and build 3d pos
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;

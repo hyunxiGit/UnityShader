@@ -1,5 +1,6 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
+﻿//capture screen depth and save as a texture : shader
+//render target example
+//post process backbon , pass cam frustrum to shader and build 3d pos
 Shader "Custom/RenderDepth"
  {
      Properties
@@ -86,9 +87,8 @@ Shader "Custom/RenderDepth"
             {
                 float depth = getDepth(IN.uv);
                 float3 pos_v = depth * IN.Ray;
-                //float3 pos_w = mul(unity_CameraToWorld , float4(pos_v,1));
-                float3 pos_w = mul(_InverseViewMatrix, mul(_InverseProjectionMatrix,float4(pos_v,1)));
-                return float4(pos_w,1);
+
+                return float4(pos_v,1);
             }
 
 
