@@ -86,7 +86,8 @@ Shader "Custom/RenderDepth"
             {
                 float depth = getDepth(IN.uv);
                 float3 pos_v = depth * IN.Ray;
-                float3 pos_w = mul(unity_CameraToWorld , float4(pos_v,1));
+                //float3 pos_w = mul(unity_CameraToWorld , float4(pos_v,1));
+                float3 pos_w = mul(_InverseViewMatrix, mul(_InverseProjectionMatrix,float4(pos_v,1)));
                 return float4(pos_w,1);
             }
 
