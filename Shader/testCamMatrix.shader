@@ -1,4 +1,4 @@
-﻿Shader "Custom/testCamMatrix"
+﻿Shader "Hidden/testCamMatrix"
 {
     Properties 
     {
@@ -56,13 +56,13 @@
                 I don't know how to get the correct projection that is same as UNITY_MATRIX_P
 
                 */
-                // o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = UnityObjectToClipPos(v.vertex);
 
                 
   
-                o.vertex = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0));
-                o.vertex = mul(UNITY_MATRIX_V, o.vertex);
-                o.vertex = mul(_ProjectionMatrix,o.vertex); 
+                // o.vertex = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0));
+                // o.vertex = mul(UNITY_MATRIX_V, o.vertex);
+                // o.vertex = mul(_ProjectionMatrix,o.vertex); 
 
 
                  //o.vertex = mul(_WorldToCameraMatrix, o.vertex);

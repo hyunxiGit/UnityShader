@@ -1,7 +1,7 @@
 ﻿//capture screen depth and save as a texture : shader
 //render target example
 //post process backbon , pass cam frustrum to shader and build 3d pos
-Shader "Custom/RenderDepth"
+Shader "Hidden/RenderDepth"
  {
      Properties
      {
