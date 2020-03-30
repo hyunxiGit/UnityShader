@@ -55,6 +55,16 @@
                 return pos_w;
             }
 
+            float4 getFogColor(float3 pos, float3 ray)
+            {
+                //convert campos to local position xyz
+                //use xyz to sample 3d texture
+                float n = pos.z/ ray.z;
+
+                float4 fc = lerp (float4(1,0,0,1), float4(0,1,0,1),n);
+                return fc;
+            }
+
             float4 rayMarch(v2f IN)
             {
                 float max_stept = 32;   
@@ -64,11 +74,13 @@
                 int my_max_step = floor(max_stept * depth);
 
                 float3 step_vector = IN.ray / max_stept;
+                float3 cur_pos = float3(0,0,0);
 
                 float4 fog_col = float4(0,0,0,0) ;
                 for(int i = 0 ; i< my_max_step; i++)
                 {
-                    fog_col += float4(1,0,0,1)*step_scale;
+                    fog_col += getFogColor(cur_pos , IN.ray)*step_scale;
+                    cur_pos += step_vector;
                 }
 
                 return pow(fog_col,1);

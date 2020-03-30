@@ -66,8 +66,8 @@ Shader "Custom/sudou3dTexture"
                 
 
                 //need scale the uv to half size, center and make padding
-
-                float4 c = float4(1,0,0,1);
+                //fog color
+                float4 c = float4(1,1,1,1);
                 c.a = tex2D(tex, uv).x;
 
 

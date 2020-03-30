@@ -14,7 +14,7 @@ public class cameraDepth : MonoBehaviour
 	private Shader _shader;
     private Shader shader
     {
-         get { return _shader != null ? _shader : (_shader = Shader.Find("Hide/RenderDepth")); }
+         get { return _shader != null ? _shader : (_shader = Shader.Find("Hidden/RenderDepth")); }
     }
 
     private Material _material;
