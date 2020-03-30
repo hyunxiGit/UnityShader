@@ -55,10 +55,23 @@
                 return pos_w;
             }
 
-            float4 rayMarch()
+            float4 rayMarch(v2f IN)
             {
-                float4 col = float4 (0,0.5,1,1);
-                return col;
+                float max_stept = 32;   
+                float step_scale = 1/max_stept;     
+
+                float depth = Linear01Depth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, IN.uv));
+                int my_max_step = floor(max_stept * depth);
+
+                float3 step_vector = IN.ray / max_stept;
+
+                float4 fog_col = float4(0,0,0,0) ;
+                for(int i = 0 ; i< my_max_step; i++)
+                {
+                    fog_col += float4(1,0,0,1)*step_scale;
+                }
+
+                return pow(fog_col,1);
             }
 
 
@@ -68,8 +81,9 @@
             {
                 fixed4 col = tex2D(_MainTex, IN.uv);
                 float4 pos_w = calculateCamPosFromCameraFrustrum(IN);
+                col = rayMarch(IN);
                 // just invert the colors
-                col.rgb = 1 - col.rgb;
+                //col.rgb = 1 - col.rgb;
                 return col;
             }
             ENDCG
