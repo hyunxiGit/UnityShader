@@ -16,6 +16,7 @@
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
+            #include "UnityPBSLighting.cginc"
 
             struct appdata
             {
@@ -43,7 +44,7 @@
             }
 
             // these define works because in the loop / condition shader can only handle constance
-            #define steps 64
+            #define steps 128
             #define step_size 0.01
 
             bool inSphere(float3 pos, float3 center,float radius)
@@ -53,31 +54,47 @@
                 else
                     return false;
             }
-            float r = 0.4;
-            float4 rayMartch(float3 rayVec, float3 pos )
+
+            float3 rayMartch(float3 rayVec, float3 pos, float3 center)
             {
 
                 for(int i = 0; i<steps;i++)
                 {
                     
-                    if (inSphere(pos, float3(0,0,0), 0.5))
+                    if (inSphere(pos, center, 0.5))
                     {
-                        return float4(1,0,0,1);
+                        return pos;
                     } 
                     pos += rayVec*step_size;
                 }
 
-                return float4(0,0,0,0);
+                return float3(0,0,0);
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 col;
+                //should get from script
+                float3 center = float3(0,0,0);
 
                 float3 rayVec = normalize (i.pos_w-_WorldSpaceCameraPos);
-                float4 march_pos = rayMartch(rayVec, i.pos_w);
+                float3 pos_ray = rayMartch(rayVec, i.pos_w,center);
+                float depth = length(pos_ray);
+                if (depth == 0)
+                    {col = float4(0,0,0,0);                }
+                else
+                {
+                    //col = float4(pos_ray,1);
+                    float3 normal = normalize(pos_ray-center);
+                    float3 l_dir = _WorldSpaceLightPos0;
+                    float c = DotClamped(l_dir,normal);
+                    col = float4(c,c,c,1);
+                }
+                //lighting 
+               
 
-                return march_pos;
+
+                return col;
             }
             ENDCG
         }
