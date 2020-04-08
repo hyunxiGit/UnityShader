@@ -23,8 +23,31 @@ namespace VolumeRendering
 
         void OnEnable()
         {
-            inputPath = "Assets/MRI.256x256x256.raw";
-            outputPath = "Assets/MRI.asset";
+            inputPath = "Assets/texture/T_Volume_Wisp_01.tga";
+            outputPath = "Assets/T_Volume_Wisp_01.asset";
+
+            //Load a Texture (Assets/Resources/Textures/texture01.png)
+            var texture = Resources.Load<Texture2D>("T_Volume_Wisp_01");
+            Debug.Log("texture load:" + texture);
+            if (texture == null)
+            {
+                Debug.Log("failed!");
+
+            }
+            else
+            {
+                Debug.Log("OK");
+                for(int i = 0 ; i<texture.width; i++)
+                {
+                    for(int j = 0 ; j<texture.height; j++)
+                    {
+                        Color pixel = texture.GetPixel(i,j);
+                        Debug.Log("pixel =" + pixel);
+                    }   
+                }
+            }
+
+
         }
 
         void OnGUI()
