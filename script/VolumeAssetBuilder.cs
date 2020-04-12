@@ -79,12 +79,18 @@ namespace VolumeRendering
                 d2c.y = -1;
             }
 
-            int main_index = d3c.z * this.d3_w * this.d3_h + d3c.y * this.d3_w + d3c.x;
-            d2c.x = main_index % this.d2_w;
-            d2c.y = main_index / this.d2_w; 
-            // Debug.Log("main_index  :" + main_index );
-            // Debug.Log("d2c.x :" + d2c.x);
-            // Debug.Log("d2c.y :" + d2c.y);
+            //target tile x and y index
+            int ix = d3c.z % this.d2_c;
+            int iy = d3c.z / this.d2_r;
+
+            //target tile corrd on (0,0)
+            int coord_x = ix *this.d3_w;
+            int coord_y = iy *this.d3_h;
+
+            //coord x y offset inside target tile
+            d2c.x = coord_x + d3c.x;
+            d2c.y = coord_y + d3c.y;
+
         }
     }
 
@@ -98,42 +104,18 @@ namespace VolumeRendering
         }
 
         string inputPath, outputPath;
-        int row = 12, column = 12;
+        int row = 4, column = 4;
         Object source_texture;
 
         void OnEnable()
         {
-            inputPath = "Assets/texture/T_Volume_Wisp_01.tga";
-            outputPath = "Assets/T_Volume_Wisp_01.asset";
-
-            //Load a Texture (Assets/Resources/Textures/texture01.png)
-            // var texture = Resources.Load<Texture2D>("T_Volume_Wisp_01");
-            // Debug.Log("texture load:" + texture);
-            // if (texture == null)
-            // {
-            //     Debug.Log("failed!");
-
-            // }
-            // else
-            // {
-            //     Debug.Log("OK");
-                // for(int i = 0 ; i<texture.width; i++)
-                // {
-                //     for(int j = 0 ; j<texture.height; j++)
-                //     {
-                //         Color pixel = texture.GetPixel(i,j);
-                //         Debug.Log("pixel =" + pixel);
-                //     }   
-                // }
-            //}
-
-
+            inputPath = "Assets/texture/T_Volume_Wisp_01.png";
+            outputPath = "Assets/no_track_git/T_Volume_Wisp_01.asset";
         }
 
         void OnGUI()
         {
             const float headerSize = 120f;
-            
             using(new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.Label("Input Image", GUILayout.Width(headerSize));
@@ -141,30 +123,23 @@ namespace VolumeRendering
                 inputPath = AssetDatabase.GetAssetPath(source_texture);
             }
 
-            // using(new EditorGUILayout.HorizontalScope())
-            // {
-            //     GUILayout.Label("Width", GUILayout.Width(headerSize));
-            //     width = EditorGUILayout.IntField(width);
-            // }
+            using(new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Row", GUILayout.Width(headerSize));
+                row = EditorGUILayout.IntField(row);
+            }
 
-            // using(new EditorGUILayout.HorizontalScope())
-            // {
-            //     GUILayout.Label("Height", GUILayout.Width(headerSize));
-            //     height = EditorGUILayout.IntField(height);
-            // }
-
-            // using(new EditorGUILayout.HorizontalScope())
-            // {
-            //     GUILayout.Label("Depth", GUILayout.Width(headerSize));
-            //     depth = EditorGUILayout.IntField(depth);
-            // }
+            using(new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Column", GUILayout.Width(headerSize));
+                column = EditorGUILayout.IntField(column);
+            }
 
             using(new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.Label("Output path", GUILayout.Width(headerSize));
                 outputPath = EditorGUILayout.TextField(outputPath);
             }
-
             if(GUILayout.Button("Build"))
             {
                 Build(source_texture, outputPath);
@@ -180,23 +155,15 @@ namespace VolumeRendering
             }
             source_texture = EditorGUILayout.ObjectField(source_texture, typeof(Object), true);
             Texture2D myTexture = (Texture2D)source_texture;
-
             var volume = Build(myTexture, row,column);
             AssetDatabase.CreateAsset(volume, outputPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
-
-
-
         public static Texture3D Build(Texture2D myTexture,int row, int column)
         {
             d3_d2_volumn_info v_info = new d3_d2_volumn_info (myTexture.width, myTexture.height, row, column);
-            Debug.Log("v_info.d3_w :" + v_info.d3_w);
-            Debug.Log("v_info.d3_h :" + v_info.d3_h);
-            Debug.Log("v_info.d3_d :" + v_info.d3_d);
-
             var tex  = new Texture3D(v_info.d3_w, v_info.d3_h, v_info.d3_d, TextureFormat.RGBA32, false);
             tex.wrapMode = TextureWrapMode.Clamp;
             tex.filterMode = FilterMode.Bilinear;
@@ -218,19 +185,19 @@ namespace VolumeRendering
 
                         v_info.d3_to_d2_pix_cood(d3c, ref d2c);                         
                         
-                        // if (z == 15)
+                        // if (z == 5)
                         // {
-                        //     Debug.Log("d2c : "+"x=" + d2c.x+ ", y=" + d2c.y);
                         //     Debug.Log("d3c : "+"x=" + d3c.x+ ", y=" + d3c.y + ", z=" + d3c.z);
+                        //     Debug.Log("d2c : "+"x=" + d2c.x+ ", y=" + d2c.y);    
+                        //     Debug.Log("2d color : " + myTexture.GetPixel(d2c.x,d2c.y));
+                        //     Debug.Log("3d color : "+colors[z* v_info.d3_w *v_info.d3_h + y * v_info.d3_w +x]);
                         // }
-                        
                         colors[z* v_info.d3_w *v_info.d3_h + y * v_info.d3_w +x] = myTexture.GetPixel(d2c.x,d2c.y);
                     }
                 }   
             }
 
             tex.SetPixels(colors);
-            Debug.Log("colors");
             tex.Apply();
 
             return tex;
