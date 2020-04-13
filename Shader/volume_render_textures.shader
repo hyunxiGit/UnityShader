@@ -1,8 +1,8 @@
-﻿Shader "Custom/volume_render"
+﻿Shader "Custom/volume_render_texture"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _Volume ("Volume", 3D) = "" {}
     }
     SubShader
     {
@@ -31,14 +31,12 @@
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+            sampler3D _Volume;
 
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.pos_w = mul(unity_ObjectToWorld,v.vertex);
                 return o;
             }
@@ -57,7 +55,6 @@
 
             float3 rayMartch(float3 rayVec, float3 pos, float3 center)
             {
-
                 for(int i = 0; i<steps;i++)
                 {
                     
@@ -65,7 +62,9 @@
                     {
                         return pos;
                     } 
-                    pos += rayVec*step_size;
+                    pos += rayVec*step_size; 
+                    //accumulate the v_texture according to pos
+                    //need to convert the pos into local cube pos
                 }
 
                 return float3(0,0,0);
@@ -91,8 +90,6 @@
                     col = float4(c,c,c,1);
                 }
                 //lighting 
-               
-
 
                 return col;
             }
