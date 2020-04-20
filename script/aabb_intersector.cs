@@ -207,10 +207,11 @@ public class aabb_intersector : MonoBehaviour
             z_scale_max = t; 
         }
 
-
         z_min = _ray.PA.position + z_scale_min * ray_full;
         z_max = _ray.PA.position + z_scale_max * ray_full;
 
+        float min_scale = Mathf.Max(Mathf.Max(x_scale_min ,y_scale_min),z_scale_min);
+        float max_scale = Mathf.Min(Mathf.Min(x_scale_max ,y_scale_max),z_scale_max);
 
         Vector3 min_inter =_ray.PA.position +   Mathf.Max(Mathf.Max(x_scale_min ,y_scale_min),z_scale_min) *ray_full;
         Vector3 max_inter =_ray.PA.position +   Mathf.Min(Mathf.Min(x_scale_max ,y_scale_max),z_scale_max) *ray_full;
@@ -227,6 +228,30 @@ public class aabb_intersector : MonoBehaviour
 
         cube_in1.transform.position = min_inter;
         cube_in2.transform.position = max_inter;
+
+        if (min_scale < 0 || min_scale >1 || min_scale > max_scale)
+        {
+            print ("inside by min");
+            print ("z_scale_min :" + min_inter);
+            cube_in1.GetComponent<Renderer>().enabled = false;
+            //only one point out
+        }
+        else
+        {
+            cube_in1.GetComponent<Renderer>().enabled = true;
+        }
+
+        if (max_scale > 1 || max_scale <0)
+        {
+            print ("inside by max");
+            print ("max_scale :" + max_scale);
+            cube_in2.GetComponent<Renderer>().enabled = false;
+            //only one point in
+        }
+        else
+        {
+            cube_in2.GetComponent<Renderer>().enabled = true;
+        }
 
     }
 
