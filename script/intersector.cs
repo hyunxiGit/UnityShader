@@ -52,7 +52,7 @@ class OBB
         get
         { 
             Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
-            return new Vector3(o2w[0,0] ,o2w[1,0] , o2w[2,0]);
+            return Vector3.Normalize(new Vector3(o2w[0,0] ,o2w[1,0] , o2w[2,0]));
         }
     }
 
@@ -60,8 +60,8 @@ class OBB
     {
         get
         { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;        
-            return new Vector3(o2w[0,1] ,o2w[1,1] , o2w[2,1]);
+            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;       
+            return Vector3.Normalize(new Vector3(o2w[0,1] ,o2w[1,1] , o2w[2,1]));
         }
     }
     public Vector3 z_axis
@@ -69,7 +69,7 @@ class OBB
         get
         { 
             Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
-            return new Vector3(o2w[0,2] ,o2w[1,2] , o2w[2,2]);
+            return Vector3.Normalize(new Vector3(o2w[0,2] ,o2w[1,2] , o2w[2,2]));
         }
     }
     public Vector3 min
@@ -259,8 +259,24 @@ public class intersector : MonoBehaviour
         Vector3 min_inter , max_inter; // intersection point
         bool min_exist, max_exist;
 
-        // Vector3 ray_min = _box.min - _ray.PA.position;
-        // Vector3 ray_max = _box.max - _ray.PA.position;
+        Vector3 ray_min = _box.min - _ray.PA.position;
+        Vector3 ray_max = _box.max - _ray.PA.position;
+
+        Vector3 xyz_sclae_min;
+        Vector3 xyz_sclae_max;
+
+        Vector3 ray_projected = new Vector3( Vector3.Dot(_box.x_axis ,ray_full) , Vector3.Dot(_box.y_axis ,ray_full) , Vector3.Dot(_box.z_axis ,ray_full));
+        ray_projected.x = ray_projected.x == 0?0.0000001f : ray_projected.x;
+        ray_projected.y = ray_projected.y == 0?0.0000001f : ray_projected.y;
+        ray_projected.z = ray_projected.z == 0?0.0000001f : ray_projected.z;
+
+        float _x1 = Vector3.Dot(_box.x_axis , ray_min ) / Vector3.Dot(_box.x_axis ,ray_full);
+        float _x2 =  Vector3.Dot(_box.x_axis ,ray_max) /Vector3.Dot(_box.x_axis , ray_full);
+
+        xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
+        xyz_sclae_max.x =  _x1 > _x2 ? _x1 : _x2;
+
+
 
         // float scale_min = ray_min.magnitude / ray_full.magnitude;
         // float scale_max = ray_max.magnitude / ray_full.magnitude;
@@ -347,6 +363,9 @@ public class intersector : MonoBehaviour
         
         // draw aabb
         // aabb_intersection(ab_ray , aabb);
+
+        //oobb
+        obb_intersection(ab_ray , obb);
 
         //draw obb
         Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
