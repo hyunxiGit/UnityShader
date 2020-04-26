@@ -44,6 +44,11 @@ class OBB
     {
         get{ return this.cube.transform.position;}
     }
+
+    public Matrix4x4 w2o
+    {
+        get{ return this.cube.transform.worldToLocalMatrix;}
+    }
     public Matrix4x4 o2w
     {
         get{ return this.cube.transform.localToWorldMatrix;}
@@ -89,6 +94,22 @@ class OBB
             return o2w.MultiplyPoint3x4(new Vector3(0.5f,0.5f,0.5f));
         }
     }
+    public Vector3 min_o
+    {
+        get
+        { 
+            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
+            return new Vector3(-0.5f,-0.5f,-0.5f);
+        }
+    }
+    public Vector3 max_o
+    {
+        get
+        { 
+            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
+            return new Vector3(0.5f,0.5f,0.5f);
+        }
+    }
 
 }
 
@@ -110,6 +131,7 @@ public class intersector : MonoBehaviour
     public GameObject test_cube;
     public bool is_aabb;
     Camera cam;
+    Vector3 cam_cube_pos;
     List <Ray> cam_rays;
     GameObject cube_x1 , cube_x2 , cube_y1 , cube_y2 , cube_z1, cube_z2 , cube_in1 , cube_in2;
     Transform my_transform, pa_transform , pb_transform, aabb_transform;
@@ -268,7 +290,7 @@ public class intersector : MonoBehaviour
         display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
     }
 
-     void obb_intersection(AB_RAY _ray, OBB _box)
+    void obb_intersection(AB_RAY _ray, OBB _box)
     {
         Vector3 ray_full = _ray.PB.position -_ray.PA.position;
         Vector3 min_inter , max_inter; // intersection point
@@ -326,6 +348,80 @@ public class intersector : MonoBehaviour
         display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
     }
 
+    void obb_intersection_cube(AB_RAY _ray, OBB _box)
+    {
+        Vector3 _PA_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PA.position);
+        Vector3 _PB_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PB.position);
+
+        //object space
+        Vector3 ray_full = _PB_pos_cube -_PA_pos_cube;
+        Vector3 min_inter , max_inter; // intersection point
+        bool min_exist, max_exist;
+
+        Vector3 ray_min = _box.min_o - _PA_pos_cube;
+        Vector3 ray_max = _box.max_o - _PA_pos_cube;
+
+        // Debug.DrawLine(_box.o2w.MultiplyPoint3x4(_PA_pos_cube),_box.o2w.MultiplyPoint3x4( _box.min_o) , Color.red);
+        // Debug.DrawLine(_box.o2w.MultiplyPoint3x4(_PA_pos_cube),_box.o2w.MultiplyPoint3x4( _box.max_o) , Color.green);
+
+        Vector3 xyz_sclae_min;
+        Vector3 xyz_sclae_max;
+
+        //full ray on x , y , z value
+        Vector3 ray_projected = new Vector3( ray_full.x , ray_full.y , ray_full.z);
+        ray_projected.x = ray_projected.x == 0?0.0000001f : ray_projected.x;
+        ray_projected.y = ray_projected.y == 0?0.0000001f : ray_projected.y;
+        ray_projected.z = ray_projected.z == 0?0.0000001f : ray_projected.z;
+
+        float _x1 = ray_min.x / ray_projected.x;
+        float _x2 = ray_max.x / ray_projected.x;
+
+        xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
+        xyz_sclae_max.x = _x1 > _x2 ? _x1 : _x2;
+
+        float _y1 = ray_min.y / ray_projected.y;
+        float _y2 = ray_max.y / ray_projected.y;
+
+        xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
+        xyz_sclae_max.y = _y1 > _y2 ? _y1 : _y2;
+
+        float _z1 = ray_min.z / ray_projected.z;
+        float _z2 = ray_max.z / ray_projected.z;
+
+        xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
+        xyz_sclae_max.z = _z1 > _z2 ? _z1 : _z2;
+
+        float min_scale = Mathf.Max(Mathf.Max(xyz_sclae_min.x ,xyz_sclae_min.y),xyz_sclae_min.z);
+        float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
+
+        //two intersect point in object space
+        Vector3 p0 =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
+        Vector3 p1 =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
+         p0 = _box.o2w.MultiplyPoint3x4(p0);
+         p1 = _box.o2w.MultiplyPoint3x4(p1);
+
+        min_exist=false;
+        max_exist=false;
+
+        if ( min_scale < max_scale)
+        {
+            if (min_scale > 0 && min_scale <1)
+            {
+                min_exist=true;
+            }
+
+            if(max_scale > 0 && max_scale <1 )
+            {
+                max_exist=true;
+            }
+        }
+
+        display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
+
+        cube_in1.transform.position =p0;
+        cube_in2.transform.position =p1;
+    }
+
 
     void Start()
     {
@@ -350,10 +446,14 @@ public class intersector : MonoBehaviour
         {
             obb = new OBB(test_cube);
             create_obb_cubes(obb);
+            // cam_cube_pos = obb.w2o.MultiplyPoint3x4(cam.transform.position);
+
         }
+
         //create ray
         my_transform = GetComponent<Transform>();
         ab_ray = new AB_RAY(cam.transform, my_transform.Find("point_b"));
+
 
         //create test cube
         create_test_cubes();
@@ -364,14 +464,14 @@ public class intersector : MonoBehaviour
     {
         //draw debug ray
     	Debug.DrawLine(ab_ray.PA.position, ab_ray.PB.position, Color.white);
-        for (int i = 0; i <10 ;i++)
-        {
-            for (int j = 0; j <10 ;j++)
-            {
-                Ray _ray = cam_rays[i *10 + j];
-                Debug.DrawLine (_ray.origin , _ray.origin + _ray.direction *10 , Color.grey );
-            }   
-        }
+        // for (int i = 0; i <10 ;i++)
+        // {
+        //     for (int j = 0; j <10 ;j++)
+        //     {
+        //         Ray _ray = cam_rays[i *10 + j];
+        //         Debug.DrawLine (_ray.origin , _ray.origin + _ray.direction *10 , Color.grey );
+        //     }   
+        // }
         
         // draw aabb
         if (is_aabb)
@@ -380,7 +480,8 @@ public class intersector : MonoBehaviour
         }
         else
         {
-            obb_intersection(ab_ray , obb);
+            // obb_intersection(ab_ray , obb);
+            obb_intersection_cube(ab_ray , obb);
             // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
             // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
             // Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);
