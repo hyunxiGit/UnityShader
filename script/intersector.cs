@@ -109,6 +109,8 @@ public class intersector : MonoBehaviour
     // Start is called before the first frame update
     public GameObject test_cube;
     public bool is_aabb;
+    Camera cam;
+    List <Ray> cam_rays;
     GameObject cube_x1 , cube_x2 , cube_y1 , cube_y2 , cube_z1, cube_z2 , cube_in1 , cube_in2;
     Transform my_transform, pa_transform , pb_transform, aabb_transform;
     AB_RAY ab_ray;
@@ -327,6 +329,18 @@ public class intersector : MonoBehaviour
 
     void Start()
     {
+        cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;
+
+        cam_rays = new List<Ray>();
+        for (int i = 0; i <10 ;i++)
+        {
+            for (int j = 0; j <10 ;j++)
+            {
+                Ray myRay = cam.ViewportPointToRay(new Vector3(0.1F*j, 0.1F*i, 0));
+                cam_rays.Add(myRay);
+            }   
+        }
+
         //test the cube is a obb or aabb
         if (is_aabb)
         {
@@ -337,10 +351,10 @@ public class intersector : MonoBehaviour
             obb = new OBB(test_cube);
             create_obb_cubes(obb);
         }
-        
         //create ray
         my_transform = GetComponent<Transform>();
-        ab_ray = new AB_RAY(my_transform.Find("point_a"), my_transform.Find("point_b"));
+        ab_ray = new AB_RAY(cam.transform, my_transform.Find("point_b"));
+
         //create test cube
         create_test_cubes();
     }
@@ -350,6 +364,14 @@ public class intersector : MonoBehaviour
     {
         //draw debug ray
     	Debug.DrawLine(ab_ray.PA.position, ab_ray.PB.position, Color.white);
+        for (int i = 0; i <10 ;i++)
+        {
+            for (int j = 0; j <10 ;j++)
+            {
+                Ray _ray = cam_rays[i *10 + j];
+                Debug.DrawLine (_ray.origin , _ray.origin + _ray.direction *10 , Color.grey );
+            }   
+        }
         
         // draw aabb
         if (is_aabb)
@@ -359,9 +381,9 @@ public class intersector : MonoBehaviour
         else
         {
             obb_intersection(ab_ray , obb);
-            Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
-            Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
-            Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);
+            // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
+            // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
+            // Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);
         }
     }
 }
