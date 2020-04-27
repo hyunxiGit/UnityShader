@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -110,6 +110,14 @@ class OBB
             return new Vector3(0.5f,0.5f,0.5f);
         }
     }
+    public float diagonal
+    {
+        get
+        { 
+            Vector3 _scale = this.cube.transform.lossyScale;
+            return  Mathf.Sqrt(_scale.x *_scale.x + _scale.y * _scale.y + _scale.z *_scale.z );
+        }
+    }
 
 }
 
@@ -133,6 +141,8 @@ public class intersector : MonoBehaviour
     Camera cam;
     Vector3 cam_cube_pos;
     List <Ray> cam_rays;
+    int w_rays ;
+    int h_rays ;
     GameObject cube_x1 , cube_x2 , cube_y1 , cube_y2 , cube_z1, cube_z2 , cube_in1 , cube_in2;
     Transform my_transform, pa_transform , pb_transform, aabb_transform;
     AB_RAY ab_ray;
@@ -355,7 +365,7 @@ public class intersector : MonoBehaviour
 
         //object space
         Vector3 ray_full = _PB_pos_cube -_PA_pos_cube;
-        Vector3 min_inter , max_inter; // intersection point
+        Vector3 p0 , p1; // intersection point
         bool min_exist, max_exist;
 
         Vector3 ray_min = _box.min_o - _PA_pos_cube;
@@ -368,25 +378,24 @@ public class intersector : MonoBehaviour
         Vector3 xyz_sclae_max;
 
         //full ray on x , y , z value
-        Vector3 ray_projected = new Vector3( ray_full.x , ray_full.y , ray_full.z);
-        ray_projected.x = ray_projected.x == 0?0.0000001f : ray_projected.x;
-        ray_projected.y = ray_projected.y == 0?0.0000001f : ray_projected.y;
-        ray_projected.z = ray_projected.z == 0?0.0000001f : ray_projected.z;
+        ray_full.x = ray_full.x == 0?0.0000001f : ray_full.x;
+        ray_full.y = ray_full.y == 0?0.0000001f : ray_full.y;
+        ray_full.z = ray_full.z == 0?0.0000001f : ray_full.z;
 
-        float _x1 = ray_min.x / ray_projected.x;
-        float _x2 = ray_max.x / ray_projected.x;
+        float _x1 = ray_min.x / ray_full.x;
+        float _x2 = ray_max.x / ray_full.x;
 
         xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
         xyz_sclae_max.x = _x1 > _x2 ? _x1 : _x2;
 
-        float _y1 = ray_min.y / ray_projected.y;
-        float _y2 = ray_max.y / ray_projected.y;
+        float _y1 = ray_min.y / ray_full.y;
+        float _y2 = ray_max.y / ray_full.y;
 
         xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
         xyz_sclae_max.y = _y1 > _y2 ? _y1 : _y2;
 
-        float _z1 = ray_min.z / ray_projected.z;
-        float _z2 = ray_max.z / ray_projected.z;
+        float _z1 = ray_min.z / ray_full.z;
+        float _z2 = ray_max.z / ray_full.z;
 
         xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
         xyz_sclae_max.z = _z1 > _z2 ? _z1 : _z2;
@@ -395,8 +404,10 @@ public class intersector : MonoBehaviour
         float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
 
         //two intersect point in object space
-        Vector3 p0 =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
-        Vector3 p1 =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
+        p0 =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
+        p1 =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
+         
+         //position in object space
          p0 = _box.o2w.MultiplyPoint3x4(p0);
          p1 = _box.o2w.MultiplyPoint3x4(p1);
 
@@ -418,21 +429,27 @@ public class intersector : MonoBehaviour
 
         display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
 
-        cube_in1.transform.position =p0;
-        cube_in2.transform.position =p1;
+        // cube_in1.transform.position =p0;
+        // cube_in2.transform.position =p1;
     }
 
 
     void Start()
     {
+        //camera rays
         cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;
+        print("near : " + cam.nearClipPlane);
+        print("far : " + cam.farClipPlane);
+
+        w_rays = 10;
+        h_rays = (int)((float)w_rays / cam.pixelWidth* cam.pixelHeight);
 
         cam_rays = new List<Ray>();
-        for (int i = 0; i <10 ;i++)
+        for (int i = 0; i <h_rays ;i++)
         {
-            for (int j = 0; j <10 ;j++)
+            for (int j = 0; j <w_rays ;j++)
             {
-                Ray myRay = cam.ViewportPointToRay(new Vector3(0.1F*j, 0.1F*i, 0));
+                Ray myRay = cam.ViewportPointToRay(new Vector3((1.0f/w_rays)*j, (1.0f/h_rays)*i, 0));
                 cam_rays.Add(myRay);
             }   
         }
@@ -446,7 +463,9 @@ public class intersector : MonoBehaviour
         {
             obb = new OBB(test_cube);
             create_obb_cubes(obb);
-            // cam_cube_pos = obb.w2o.MultiplyPoint3x4(cam.transform.position);
+            //get furtherest point's z depth
+            float d = obb.diagonal;
+            print ("d : " + d);
 
         }
 
@@ -464,14 +483,15 @@ public class intersector : MonoBehaviour
     {
         //draw debug ray
     	Debug.DrawLine(ab_ray.PA.position, ab_ray.PB.position, Color.white);
-        // for (int i = 0; i <10 ;i++)
-        // {
-        //     for (int j = 0; j <10 ;j++)
-        //     {
-        //         Ray _ray = cam_rays[i *10 + j];
-        //         Debug.DrawLine (_ray.origin , _ray.origin + _ray.direction *10 , Color.grey );
-        //     }   
-        // }
+
+        for (int i = 0; i <h_rays ;i++)
+        {
+            for (int j = 0; j <w_rays ;j++)
+            {
+                Ray _ray = cam_rays[i *10 + j];
+                Debug.DrawLine (_ray.origin , _ray.origin + _ray.direction *10 , Color.grey );
+            }   
+        }
         
         // draw aabb
         if (is_aabb)
