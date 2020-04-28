@@ -140,7 +140,7 @@ public class intersector : MonoBehaviour
     public bool is_aabb;
     Camera cam;
     Vector3 cam_cube_pos;
-    List <Ray> cam_rays;
+    List <AB_RAY> cam_rays;
     int w_rays ;
     int h_rays ;
     GameObject cube_x1 , cube_x2 , cube_y1 , cube_y2 , cube_z1, cube_z2 , cube_in1 , cube_in2;
@@ -444,13 +444,25 @@ public class intersector : MonoBehaviour
         w_rays = 10;
         h_rays = (int)((float)w_rays / cam.pixelWidth* cam.pixelHeight);
 
-        cam_rays = new List<Ray>();
+        cam_rays = new List<AB_RAY>();
         for (int i = 0; i <h_rays ;i++)
         {
             for (int j = 0; j <w_rays ;j++)
             {
                 Ray myRay = cam.ViewportPointToRay(new Vector3((1.0f/w_rays)*j, (1.0f/h_rays)*i, 0));
-                cam_rays.Add(myRay);
+                float _z = myRay.direction.z == 0 ? 0.000001f : myRay.direction.z;
+                float scale = (cam.farClipPlane - myRay.origin.z) / _z;
+                Vector3 B = myRay.origin + myRay.direction * scale;
+
+                GameObject t_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                create_cube(ref t_cube, "test_far" , B, cube_size, new Color(0.5f,0f,0f));  
+                t_cube.GetComponent<MeshRenderer>().enabled = true;
+                t_cube.transform.parent = cam.transform;
+
+                AB_RAY cam_ab_ray = new AB_RAY(cam.transform, t_cube.transform);
+                print ("ab_ray : " +  cam_ab_ray + " , " + cam.transform + " , " + t_cube.transform);
+                cam_rays.Add(cam_ab_ray);
+
             }   
         }
 
@@ -488,8 +500,8 @@ public class intersector : MonoBehaviour
         {
             for (int j = 0; j <w_rays ;j++)
             {
-                Ray _ray = cam_rays[i *10 + j];
-                Debug.DrawLine (_ray.origin , _ray.origin + _ray.direction *10 , Color.grey );
+                AB_RAY _ray = cam_rays[i *w_rays + j];
+                Debug.DrawLine(_ray.PA.position, _ray.PB.position, Color.white);
             }   
         }
         
