@@ -138,6 +138,7 @@ public class intersector : MonoBehaviour
     // Start is called before the first frame update
     public GameObject test_cube;
     public bool is_aabb;
+    public int max_steps = 100;
     Camera cam;
     Vector3 cam_cube_pos;
     List <AB_RAY> cam_rays;
@@ -451,16 +452,30 @@ public class intersector : MonoBehaviour
             {
                 Ray myRay = cam.ViewportPointToRay(new Vector3((1.0f/w_rays)*j, (1.0f/h_rays)*i, 0));
                 float _z = myRay.direction.z == 0 ? 0.000001f : myRay.direction.z;
-                float scale = (cam.farClipPlane - myRay.origin.z) / _z;
-                Vector3 B = myRay.origin + myRay.direction * scale;
+                
 
-                GameObject t_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                create_cube(ref t_cube, "test_far" , B, cube_size, new Color(0.5f,0f,0f));  
-                t_cube.GetComponent<MeshRenderer>().enabled = true;
-                t_cube.transform.parent = cam.transform;
+                //todo : the near far plane is not accurate now
+                print ("cam.farClipPlane : " + cam.farClipPlane );
+                print ("cam.nearClipPlane : " + cam.nearClipPlane );
+                //float s_f = (cam.farClipPlane - myRay.origin.z ) / _z;
+                float s_f = myRay.direction.z/cam.farClipPlane ; 
+                // Vector3 B = myRay.origin + myRay.direction * s_f;
+                Vector3 B = myRay.origin + myRay.direction * cam.farClipPlane / myRay.direction.z;
 
-                AB_RAY cam_ab_ray = new AB_RAY(cam.transform, t_cube.transform);
-                print ("ab_ray : " +  cam_ab_ray + " , " + cam.transform + " , " + t_cube.transform);
+                float s_n = (cam.nearClipPlane - myRay.origin.z) / _z;
+                Vector3 A = myRay.origin + myRay.direction * s_n;
+
+                GameObject f_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                create_cube(ref f_cube, "test_far" , B, cube_size, new Color(0.5f,0f,0f));
+                f_cube.GetComponent<MeshRenderer>().enabled = true;
+                f_cube.transform.parent = cam.transform;
+
+                GameObject n_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                create_cube(ref n_cube, "near_far" , A, cube_size, new Color(0.5f,0f,0f));  
+                n_cube.GetComponent<MeshRenderer>().enabled = true;
+                n_cube.transform.parent = cam.transform;
+
+                AB_RAY cam_ab_ray = new AB_RAY(cam.transform, f_cube.transform);
                 cam_rays.Add(cam_ab_ray);
 
             }   
