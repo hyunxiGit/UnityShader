@@ -452,15 +452,17 @@ public class intersector : MonoBehaviour
             {
                 Ray myRay = cam.ViewportPointToRay(new Vector3((1.0f/w_rays)*j, (1.0f/h_rays)*i, 0));
                 float _z = myRay.direction.z == 0 ? 0.000001f : myRay.direction.z;
+                print ("myRay.direction" + myRay.direction);
+                print ("myRay.origin" + myRay.origin);
+                print ("cam.transform.position" + cam.transform.position);
                 
 
                 //todo : the near far plane is not accurate now
-                print ("cam.farClipPlane : " + cam.farClipPlane );
-                print ("cam.nearClipPlane : " + cam.nearClipPlane );
+
                 //float s_f = (cam.farClipPlane - myRay.origin.z ) / _z;
                 float s_f = myRay.direction.z/cam.farClipPlane ; 
                 // Vector3 B = myRay.origin + myRay.direction * s_f;
-                Vector3 B = myRay.origin + myRay.direction * cam.farClipPlane / myRay.direction.z;
+                Vector3 B = (myRay.origin - cam.transform.position)* cam.farClipPlane / cam.nearClipPlane + cam.transform.position;
 
                 float s_n = (cam.nearClipPlane - myRay.origin.z) / _z;
                 Vector3 A = myRay.origin + myRay.direction * s_n;
@@ -471,7 +473,7 @@ public class intersector : MonoBehaviour
                 f_cube.transform.parent = cam.transform;
 
                 GameObject n_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                create_cube(ref n_cube, "near_far" , A, cube_size, new Color(0.5f,0f,0f));  
+                create_cube(ref n_cube, "near_far" , myRay.origin, cube_size, new Color(0.5f,0f,0f));  
                 n_cube.GetComponent<MeshRenderer>().enabled = true;
                 n_cube.transform.parent = cam.transform;
 
