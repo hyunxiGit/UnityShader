@@ -443,29 +443,18 @@ public class intersector : MonoBehaviour
         print("far : " + cam.farClipPlane);
 
         w_rays = 10;
-        h_rays = (int)((float)w_rays / cam.pixelWidth* cam.pixelHeight);
+        h_rays = (int)((float)w_rays * cam.pixelHeight / cam.pixelWidth );
 
         cam_rays = new List<AB_RAY>();
         for (int i = 0; i <h_rays ;i++)
         {
+            //need to create the last ray at right edge
             for (int j = 0; j <w_rays ;j++)
             {
-                Ray myRay = cam.ViewportPointToRay(new Vector3((1.0f/w_rays)*j, (1.0f/h_rays)*i, 0));
+                Ray myRay = cam.ViewportPointToRay(new Vector3(1.0f/(w_rays-1)*j, 1.0f/(h_rays-1)*i, 0));
                 float _z = myRay.direction.z == 0 ? 0.000001f : myRay.direction.z;
-                print ("myRay.direction" + myRay.direction);
-                print ("myRay.origin" + myRay.origin);
-                print ("cam.transform.position" + cam.transform.position);
-                
 
-                //todo : the near far plane is not accurate now
-
-                //float s_f = (cam.farClipPlane - myRay.origin.z ) / _z;
-                float s_f = myRay.direction.z/cam.farClipPlane ; 
-                // Vector3 B = myRay.origin + myRay.direction * s_f;
                 Vector3 B = (myRay.origin - cam.transform.position)* cam.farClipPlane / cam.nearClipPlane + cam.transform.position;
-
-                float s_n = (cam.nearClipPlane - myRay.origin.z) / _z;
-                Vector3 A = myRay.origin + myRay.direction * s_n;
 
                 GameObject f_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 create_cube(ref f_cube, "test_far" , B, cube_size, new Color(0.5f,0f,0f));
