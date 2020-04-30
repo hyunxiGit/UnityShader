@@ -1,254 +1,52 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
-class AABB
+class DCube_Ray
 {
-    private GameObject cube;
-    public AABB (GameObject _cube)
+    private DCube_pool _pool;
+    public DCube p0 , p1 , x0, x1 ,y0 ,y1 ,z0,z1;
+    public DCube_Ray (DCube_pool p)
     {
-        this.cube = _cube;
-    }
-    public Vector3 pos
-    {
-        get{ return this.cube.transform.position;}
-    }
-
-    public Vector3 min
-    {
-        get
-        { 
-            return cube.transform.position - cube.transform.lossyScale/2;
-        }
-    }
-    public Vector3 max
-    {
-        get
-        { 
-            return cube.transform.position + cube.transform.lossyScale/2;
-        }
-    }
-}
-
-class DCube_pool
-{
-    private List <DCube> _pool;
-    public DCube_pool ()
-    {
-        this._pool =  new List<DCube>();
-        newDcube();
-    }  
-
-    DCube newDcube()
-    {
-        string n = "cube_" + (_pool.Count + 1).ToString();
-        DCube rcube = new DCube(n, 0.04f, new Vector3(0,0,0),  Color.gray);
-        _pool.Add(rcube);
-        return rcube;
-    } 
-
-    public DCube getDCube( int i = -1)
-    {   
-        DCube rcube = null;
-        //not search by index
-        if (i == -1)
-        {
-            foreach (DCube c in _pool)
-            {
-                if (c.used_state == false)
-                {
-                    rcube = c; 
-                    break;
-                }
-            }
-            if (rcube == null)
-            {
-                rcube = newDcube();
-            }
-        }
-        else
-        {
-
-            rcube = _pool.ElementAt(i);
-            // FindIndex(i);
-
-        }
-        
-        
-        rcube.position = new Vector3(0,0,0);
-        rcube.use();
-        return rcube;
-    }
-
-    public void killDcube(DCube c)
-    {
-        if (_pool.Contains (c))
-        {
-            c.release();
-        }
-    }
-}
-
-class DCube
-{
-    private GameObject _cube;
-    private bool _used;
-    public DCube(string n, float s, Vector3 p, Color c)
-    {
-        this._cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        this._cube.transform.position = p;
-        this._cube.transform.localScale = new Vector3(s,s,s);
-        this._cube.GetComponent<MeshRenderer>().material.color = c;
-        this._cube.GetComponent<MeshRenderer>().enabled = false;
-        this._cube.name = n;
-        this.release();
-    }
-    public Vector3 position
-    {
-        set{this._cube.transform.position = value;}
-    } 
-    public Color color
-    {
-        set{this._cube.GetComponent<MeshRenderer>().material.color = value;}
-    }
-    public Transform transform
-    {
-        get{return this._cube.transform;}
-    }
-    public GameObject cube
-    {
-        get{return this._cube;}
-    }
-    public bool used_state
-    {
-        get{return this._used;}
-    }
+        this._pool = p;
+        this.p0 = this._pool.getDCube();
+        this.p1 = this._pool.getDCube();
+        this.x0 = this._pool.getDCube();
+        this.x1 = this._pool.getDCube();
+        this.y0 = this._pool.getDCube();
+        this.y1 = this._pool.getDCube();
+        this.z0 = this._pool.getDCube();
+        this.z1 = this._pool.getDCube();
+        this.p0.color = new Color(0f, 2000f,2000f);
+        this.p1.color = new Color(0f, 1f,1f);
+        this.x0.color = new Color(2000f, 0f,0f);
+        this.x1.color = new Color(1f, 0f,0f);
+        this.y0.color = new Color(0f, 2000f,0f);
+        this.y1.color = new Color(0f, 1f,0f);
+        this.z0.color = new Color(0f, 0f,2000f);
+        this.z1.color = new Color(0f, 0f,1f);
+    }   
     public void use()
     {
-        this.show( true);
-        this._used = true;
+        this.p0.use();
+        this.p1.use();
+        this.x0.use();
+        this.x1.use();
+        this.y0.use();
+        this.y1.use();
+        this.z0.use();
+        this.z1.use();
     }
-    public void release()
+    public void release ()
     {
-        this.show(false);
-        this._used = false;
-    }
-    public void show(bool show)
-    {
-        this._cube.GetComponent<MeshRenderer>().enabled = show;
-    }
-    public void setParent (Transform p)
-    {
-        this._cube.transform.parent = p;
-    }
-}
-
-class OBB
-{
-    private GameObject cube;
-    //public Matrix4x4 worldInverse;
-
-    public OBB (GameObject _cube)
-    {
-        this.cube = _cube;
-    }
-
-    public Vector3 pos
-    {
-        get{ return this.cube.transform.position;}
-    }
-
-    public Matrix4x4 w2o
-    {
-        get{ return this.cube.transform.worldToLocalMatrix;}
-    }
-    public Matrix4x4 o2w
-    {
-        get{ return this.cube.transform.localToWorldMatrix;}
-    }
-    public Vector3 x_axis
-    {
-        get
-        { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
-            return Vector3.Normalize(new Vector3(o2w[0,0] ,o2w[1,0] , o2w[2,0]));
-        }
-    }
-
-    public Vector3 y_axis
-    {
-        get
-        { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;       
-            return Vector3.Normalize(new Vector3(o2w[0,1] ,o2w[1,1] , o2w[2,1]));
-        }
-    }
-    public Vector3 z_axis
-    {
-        get
-        { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
-            return Vector3.Normalize(new Vector3(o2w[0,2] ,o2w[1,2] , o2w[2,2]));
-        }
-    }
-    public Vector3 min
-    {
-        get
-        { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
-            return o2w.MultiplyPoint3x4(new Vector3(-0.5f,-0.5f,-0.5f));
-        }
-    }
-    public Vector3 max
-    {
-        get
-        { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
-            return o2w.MultiplyPoint3x4(new Vector3(0.5f,0.5f,0.5f));
-        }
-    }
-    public Vector3 min_o
-    {
-        get
-        { 
-            return new Vector3(-0.5f,-0.5f,-0.5f);
-        }
-    }
-    public Vector3 max_o
-    {
-        get
-        { 
-            return new Vector3(0.5f,0.5f,0.5f);
-        }
-    }
-    public float diagonal
-    {
-        get
-        { 
-            Vector3 _scale = this.cube.transform.lossyScale;
-            return  Mathf.Sqrt(_scale.x *_scale.x + _scale.y * _scale.y + _scale.z *_scale.z );
-        }
-    }
-
-}
-
-class AB_RAY
-{
-    public Transform PA;
-    public Transform PB;
-
-    public AB_RAY (Transform A , Transform B)
-    {
-        this.PA = A;
-        this.PB = B;
-    }
-    public Vector3 fullRay
-    {
-        get
-        { 
-            return  PB.position - PA.position;
-        }
+        this.p0.release();
+        this.p1.release();
+        this.x0.release();
+        this.x1.release();
+        this.y0.release();
+        this.y1.release();
+        this.z0.release();
+        this.z1.release();
     }
 }
 
@@ -256,165 +54,62 @@ public class intersector : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameObject test_cube;
-    List <GameObject> debugCubes;
+
     public bool is_aabb;
     public int max_steps = 100;
+
+    //debug cubes
     DCube_pool pool;
-    DCube int0;
-    DCube int1;
+    DCube_Ray dcubes;
+    List <DCube_Ray> dCube_rays;
+    
+    //DCube c_int1;
     Camera cam;
-    Vector3 cam_cube_pos;
     List <AB_RAY> cam_rays;
     int w_rays ;
     int h_rays ;
-    GameObject cube_x1 , cube_x2 , cube_y1 , cube_y2 , cube_z1, cube_z2 , cube_in1 , cube_in2;
-    Transform my_transform, pa_transform , pb_transform, aabb_transform;
+
     AB_RAY ab_ray;
     AABB aabb;
     OBB obb;
-    GameObject cube_obb_min , cube_obb_max;
-    float cube_size = 0.04f;
 
-    void create_cube(ref GameObject _cube, string _name , Vector3 _pos, float _size, Color _col)
-    {
-        _cube.transform.position = _pos;
-        _cube.transform.localScale = new Vector3(_size,_size,_size);
-        _cube.GetComponent<MeshRenderer>().material.color = _col;
-        _cube.GetComponent<MeshRenderer>().enabled = false;
-        _cube.name = _name;
-    }
-
-    void create_cube_in(out GameObject _cube, string _name , Vector3 _pos, float _size, Color _col)
-    {
-        _cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        _cube.transform.position = _pos;
-        _cube.transform.localScale = new Vector3(_size,_size,_size);
-        _cube.GetComponent<MeshRenderer>().material.color = _col;
-        _cube.GetComponent<MeshRenderer>().enabled = false;
-        _cube.name = _name;
-    }
-
-    void create_test_cubes()
-    {
-        cube_x1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_x1, "x_1" , new Vector3(0, 0, 0), cube_size, new Color(0.5f,0f,0f));
-        cube_x1.GetComponent<MeshRenderer>().enabled = true;
-
-        cube_x2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_x2, "x_2" , new Vector3(0, 0, 0), cube_size, new Color(2000f,0f,0f));
-        cube_x2.GetComponent<MeshRenderer>().enabled = true;
-
-        cube_y1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_y1, "y_1" , new Vector3(0, 0, 0), cube_size, new Color(0f,0.5f,0f));
-        cube_y1.GetComponent<MeshRenderer>().enabled = true;
-
-        cube_y2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_y2, "y_2" , new Vector3(0, 0, 0), cube_size, new Color(0f,2000f,0f));
-        cube_y2.GetComponent<MeshRenderer>().enabled = true;
-
-        cube_z1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_z1, "z_1" , new Vector3(0, 0, 0), cube_size, new Color(0f,0f,0.5f));
-        cube_z1.GetComponent<MeshRenderer>().enabled = true;
- 
-        cube_z2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_z2, "z_2" , new Vector3(0, 0, 0), cube_size, new Color(0f,0f,2000f));
-        cube_z2.GetComponent<MeshRenderer>().enabled = true;
-
-        cube_in1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_in1, "in_1" , new Vector3(0, 0, 0), cube_size, new Color(0,0.5f,0.5f));
-        cube_in1.GetComponent<MeshRenderer>().enabled = true;
-
-        cube_in2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_in2, "in_2" , new Vector3(0, 0, 0), cube_size, new Color(0,2000f,2000f));
-        cube_in2.GetComponent<MeshRenderer>().enabled = true;
-    }
-
-    void create_obb_cubes(OBB _obb)
-    {
-        this.cube_obb_min = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_obb_min, "obb_min" , _obb.min, cube_size, Color.white);
-        this.cube_obb_min.GetComponent<MeshRenderer>().enabled = true;
-
-        this.cube_obb_max = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        create_cube(ref cube_obb_max, "obb_max" , _obb.max, cube_size, Color.white);
-        this.cube_obb_max.GetComponent<MeshRenderer>().enabled = true;
-    }
-
-    void display_ref_cube(AB_RAY _ray, Vector3 xyz_sclae_min , Vector3 xyz_sclae_max, bool _display_ref ,  bool _display_int1, bool _display_int2)
-    {
-        cube_x1.transform.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
-        cube_x2.transform.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
-
-        cube_y1.transform.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
-        cube_y2.transform.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
-
-        cube_z1.transform.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
-        cube_z2.transform.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
-
-        cube_in1.transform.position =_ray.PA.position +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *_ray.fullRay;
-        cube_in2.transform.position =_ray.PA.position +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *_ray.fullRay;
-
-        cube_x1.GetComponent<Renderer>().enabled = _display_ref;
-        cube_x2.GetComponent<Renderer>().enabled = _display_ref;
-        cube_y1.GetComponent<Renderer>().enabled = _display_ref; 
-        cube_y2.GetComponent<Renderer>().enabled = _display_ref; 
-        cube_z1.GetComponent<Renderer>().enabled = _display_ref; 
-        cube_z2.GetComponent<Renderer>().enabled = _display_ref; 
-        cube_in1.GetComponent<Renderer>().enabled = _display_int1;
-        cube_in2.GetComponent<Renderer>().enabled = _display_int2;
-    }
-    
     void aabb_intersection(AB_RAY _ray, AABB _box)
     {
-        Vector3 min_inter , max_inter; // intersection point
         bool min_exist, max_exist;
 
         Vector3 ray_min = _box.min - _ray.PA.position;
         Vector3 ray_max = _box.max - _ray.PA.position;
 
-        float scale_min = ray_min.magnitude / _ray.fullRay.magnitude;
-        float scale_max = ray_max.magnitude / _ray.fullRay.magnitude;
+        Vector3 xyz_sclae_min ;
+        Vector3 xyz_sclae_max ;
 
-        Vector3 xyz_sclae_min = new Vector3 (scale_min , scale_min, scale_min);
-        Vector3 xyz_sclae_max = new Vector3 (scale_max , scale_max, scale_max);
+        Vector3 fullRay = new Vector3( _ray.fullRay.x == 0? 0.0001f : _ray.fullRay.x ,
+                                        _ray.fullRay.x == 0? 0.0001f : _ray.fullRay.y,
+                                        _ray.fullRay.x == 0? 0.0001f : _ray.fullRay.z);
 
-         if (_ray.fullRay.x != 0)
-         {
-            float _x1 = ray_min.x / _ray.fullRay.x;
-            float _x2 =  ray_max.x / _ray.fullRay.x;
+        float _x1 = ray_min.x / _ray.fullRay.x;
+        float _x2 =  ray_max.x / _ray.fullRay.x;
 
-            xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
-            xyz_sclae_max.x =  _x1 > _x2 ? _x1 : _x2;
-         }
+        xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
+        xyz_sclae_max.x =  _x1 > _x2 ? _x1 : _x2;
+        
+        float _y1 = ray_min.y / _ray.fullRay.y;
+        float _y2 =  ray_max.y / _ray.fullRay.y;
 
-         if (_ray.fullRay.y != 0)
-         {
-            float _y1 = ray_min.y / _ray.fullRay.y;
-            float _y2 =  ray_max.y / _ray.fullRay.y;
-
-            xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
-            xyz_sclae_max.y =  _y1 > _y2 ? _y1 : _y2;
-         }
-
-        if (_ray.fullRay.z != 0)
-        {
-           float _z1 = ray_min.z / _ray.fullRay.z;
-           float _z2 =  ray_max.z / _ray.fullRay.z;
-           xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
-           xyz_sclae_max.z =  _z1 > _z2 ? _z1 : _z2;
-        }
+        xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
+        xyz_sclae_max.y =  _y1 > _y2 ? _y1 : _y2;
+        
+       float _z1 = ray_min.z / _ray.fullRay.z;
+       float _z2 =  ray_max.z / _ray.fullRay.z;
+       xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
+       xyz_sclae_max.z =  _z1 > _z2 ? _z1 : _z2;
+        
 
         float min_scale = Mathf.Max(Mathf.Max(xyz_sclae_min.x ,xyz_sclae_min.y),xyz_sclae_min.z);
         float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
 
-        min_inter =_ray.PA.position +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *_ray.fullRay;
-        max_inter =_ray.PA.position +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *_ray.fullRay;
-
         min_exist=false;
         max_exist=false;
-
-        cube_in1.transform.position = min_inter;
-        cube_in2.transform.position = max_inter;
 
         if ( min_scale < max_scale)
         {
@@ -429,7 +124,17 @@ public class intersector : MonoBehaviour
             }
         }
 
-        display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
+        dcubes.p0.position = _ray.PA.position + min_scale * _ray.fullRay;
+        dcubes.p1.position = _ray.PA.position + max_scale * _ray.fullRay;
+        dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
+        dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
+        dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
+        dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
+        dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
+        dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
+        if (!min_exist)  { dcubes.p0.release(); } else{ dcubes.p0.use();  }
+        if (!max_exist)  { dcubes.p1.release(); } else{ dcubes.p1.use();  }
+
     }
 
     void obb_intersection(AB_RAY _ray, OBB _box)
@@ -486,17 +191,21 @@ public class intersector : MonoBehaviour
             }
         }
 
-        display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
+        //debug info display
+        dcubes.p0.position = _ray.PA.position + min_scale * _ray.fullRay;
+        dcubes.p1.position = _ray.PA.position + max_scale * _ray.fullRay;
+        dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
+        dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
+        dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
+        dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
+        dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
+        dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
+        if (!min_exist)  { dcubes.p0.release(); } else{ dcubes.p0.use();  }
+        if (!max_exist)  { dcubes.p1.release(); } else{ dcubes.p1.use();  }
     }
-
-
-
 
     void obb_intersection_cube(AB_RAY _ray, OBB _box)
     {
-        int0.release();
-        int1.release();
-
         Vector3 _PA_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PA.position);
         Vector3 _PB_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PB.position);
 
@@ -553,25 +262,25 @@ public class intersector : MonoBehaviour
             if (min_scale > 0 && min_scale <1)
             {
                 min_exist=true;
-                int0.position = p0;
-                int0.use();
             }
 
             if(max_scale > 0 && max_scale <1 )
             {
                 max_exist=true;
-                int1.position = p1;
-                int1.use();
             }
         }
 
-
-        // display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
-
-
-
-        // cube_in1.transform.position =p0;
-        // cube_in2.transform.position =p1;
+        //debug info display
+        dcubes.p0.position = p0;
+        dcubes.p1.position = p1;
+        dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
+        dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
+        dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
+        dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
+        dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
+        dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
+        if (!min_exist)  { dcubes.p0.release(); } else{ dcubes.p0.use();  }
+        if (!max_exist)  { dcubes.p1.release(); } else{ dcubes.p1.use();  }
     }
 
 
@@ -580,6 +289,7 @@ public class intersector : MonoBehaviour
     {
         //test cube pool
         pool = new DCube_pool();
+        dCube_rays = new List <DCube_Ray>();
         //camera rays
         cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;
 
@@ -587,7 +297,6 @@ public class intersector : MonoBehaviour
         h_rays = (int)((float)w_rays * cam.pixelHeight / cam.pixelWidth );
 
         cam_rays = new List<AB_RAY>();
-        debugCubes = new List<GameObject>();
         for (int i = 0; i <h_rays ;i++)
         {
             //need to create the last ray at right edge
@@ -616,26 +325,18 @@ public class intersector : MonoBehaviour
         if (is_aabb)
         {
             aabb = new AABB(test_cube);
+            dcubes = new DCube_Ray(pool);
         } 
         else
         {
             obb = new OBB(test_cube);
-            int0 = pool.getDCube();
-            int1 = pool.getDCube();
-            // create_obb_cubes(obb);
-            //get furtherest point's z depth
-            float d = obb.diagonal;
-            print ("d : " + d);
+            dcubes = new DCube_Ray(pool);
 
         }
 
         //create ray
-        my_transform = GetComponent<Transform>();
-        ab_ray = new AB_RAY(cam.transform, my_transform.Find("point_b"));
+        ab_ray = new AB_RAY(cam.transform, GetComponent<Transform>().Find("point_b"));
 
-
-        //create test cube
-        // create_test_cubes();
     }
 
 
@@ -662,9 +363,7 @@ public class intersector : MonoBehaviour
         }
         else
         {
-            // obb_intersection(ab_ray , obb);
-            Vector2 s0;
-            Vector2 s1;
+             // obb_intersection(ab_ray , obb);
 
             obb_intersection_cube(ab_ray , obb);
             // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
