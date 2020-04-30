@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 class AABB
 {
@@ -36,15 +37,56 @@ class DCube_pool
     public DCube_pool ()
     {
         this._pool =  new List<DCube>();
-    }   
-    DCube getDCube()
+        newDcube();
+    }  
+
+    DCube newDcube()
     {
-        //check list for unused Dcube
-        //get one unused Dcube and reutnr
+        string n = "cube_" + (_pool.Count + 1).ToString();
+        DCube rcube = new DCube(n, 0.04f, new Vector3(0,0,0),  Color.gray);
+        _pool.Add(rcube);
+        return rcube;
+    } 
+
+    public DCube getDCube( int i = -1)
+    {   
+        DCube rcube = null;
+        //not search by index
+        if (i == -1)
+        {
+            foreach (DCube c in _pool)
+            {
+                if (c.used_state == false)
+                {
+                    rcube = c; 
+                    break;
+                }
+            }
+            if (rcube == null)
+            {
+                rcube = newDcube();
+            }
+        }
+        else
+        {
+
+            rcube = _pool.ElementAt(i);
+            // FindIndex(i);
+
+        }
+        
+        
+        rcube.position = new Vector3(0,0,0);
+        rcube.use();
+        return rcube;
     }
-    void killDcube()
+
+    public void killDcube(DCube c)
     {
-        //set the reutnr Dcube as unused
+        if (_pool.Contains (c))
+        {
+            c.release();
+        }
     }
 }
 
@@ -60,6 +102,19 @@ class DCube
         this._cube.GetComponent<MeshRenderer>().material.color = c;
         this._cube.GetComponent<MeshRenderer>().enabled = false;
         this._cube.name = n;
+        this.release();
+    }
+    public Vector3 position
+    {
+        set{this._cube.transform.position = value;}
+    } 
+    public Color color
+    {
+        set{this._cube.GetComponent<MeshRenderer>().material.color = value;}
+    }
+    public Transform transform
+    {
+        get{return this._cube.transform;}
     }
     public GameObject cube
     {
@@ -157,7 +212,6 @@ class OBB
     {
         get
         { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
             return new Vector3(-0.5f,-0.5f,-0.5f);
         }
     }
@@ -165,7 +219,6 @@ class OBB
     {
         get
         { 
-            Matrix4x4 o2w =this.cube.transform.localToWorldMatrix;
             return new Vector3(0.5f,0.5f,0.5f);
         }
     }
@@ -206,6 +259,9 @@ public class intersector : MonoBehaviour
     List <GameObject> debugCubes;
     public bool is_aabb;
     public int max_steps = 100;
+    DCube_pool pool;
+    DCube int0;
+    DCube int1;
     Camera cam;
     Vector3 cam_cube_pos;
     List <AB_RAY> cam_rays;
@@ -433,45 +489,48 @@ public class intersector : MonoBehaviour
         display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
     }
 
-    void obb_intersection_cube(AB_RAY _ray, OBB _box, out Vector2 s0 , out Vector2 s1)
+
+
+
+    void obb_intersection_cube(AB_RAY _ray, OBB _box)
     {
+        int0.release();
+        int1.release();
+
         Vector3 _PA_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PA.position);
         Vector3 _PB_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PB.position);
 
         //object space
-        Vector3 p0 , p1; // intersection point
+        Vector3 ray_full = _PB_pos_cube -_PA_pos_cube;
+        Vector3 min_inter , max_inter; // intersection point
         bool min_exist, max_exist;
 
         Vector3 ray_min = _box.min_o - _PA_pos_cube;
         Vector3 ray_max = _box.max_o - _PA_pos_cube;
 
-        // Debug.DrawLine(_box.o2w.MultiplyPoint3x4(_PA_pos_cube),_box.o2w.MultiplyPoint3x4( _box.min_o) , Color.red);
-        // Debug.DrawLine(_box.o2w.MultiplyPoint3x4(_PA_pos_cube),_box.o2w.MultiplyPoint3x4( _box.max_o) , Color.green);
-
         Vector3 xyz_sclae_min;
         Vector3 xyz_sclae_max;
 
-        Vector3 fullRay = _ray.fullRay;
-
         //full ray on x , y , z value
-        fullRay.x = fullRay.x == 0?0.0000001f : fullRay.x;
-        fullRay.y = fullRay.y == 0?0.0000001f : fullRay.y;
-        fullRay.z = fullRay.z == 0?0.0000001f : fullRay.z;
+        Vector3 ray_projected = new Vector3( ray_full.x , ray_full.y , ray_full.z);
+        ray_projected.x = ray_projected.x == 0?0.0000001f : ray_projected.x;
+        ray_projected.y = ray_projected.y == 0?0.0000001f : ray_projected.y;
+        ray_projected.z = ray_projected.z == 0?0.0000001f : ray_projected.z;
 
-        float _x1 = ray_min.x / fullRay.x;
-        float _x2 = ray_max.x / fullRay.x;
+        float _x1 = ray_min.x / ray_projected.x;
+        float _x2 = ray_max.x / ray_projected.x;
 
         xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
         xyz_sclae_max.x = _x1 > _x2 ? _x1 : _x2;
 
-        float _y1 = ray_min.y / fullRay.y;
-        float _y2 = ray_max.y / fullRay.y;
+        float _y1 = ray_min.y / ray_projected.y;
+        float _y2 = ray_max.y / ray_projected.y;
 
         xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
         xyz_sclae_max.y = _y1 > _y2 ? _y1 : _y2;
 
-        float _z1 = ray_min.z / fullRay.z;
-        float _z2 = ray_max.z / fullRay.z;
+        float _z1 = ray_min.z / ray_projected.z;
+        float _z2 = ray_max.z / ray_projected.z;
 
         xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
         xyz_sclae_max.z = _z1 > _z2 ? _z1 : _z2;
@@ -479,16 +538,12 @@ public class intersector : MonoBehaviour
         float min_scale = Mathf.Max(Mathf.Max(xyz_sclae_min.x ,xyz_sclae_min.y),xyz_sclae_min.z);
         float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
 
-        s0.x = min_scale;
-        s1.x = max_scale;
-
-        //two intersect point in object space , this will need for ray marching
-        p0 =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *fullRay;
-        p1 =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *fullRay;
-         
-         //position in world space
-         p0 = _box.o2w.MultiplyPoint3x4(p0);
-         p1 = _box.o2w.MultiplyPoint3x4(p1);
+        //two intersect point in object space
+        Vector3 p0 =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
+        Vector3 p1 =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
+        //two intersect point in object space
+        p0 = _box.o2w.MultiplyPoint3x4(p0);
+        p1 = _box.o2w.MultiplyPoint3x4(p1);
 
         min_exist=false;
         max_exist=false;
@@ -498,33 +553,35 @@ public class intersector : MonoBehaviour
             if (min_scale > 0 && min_scale <1)
             {
                 min_exist=true;
+                int0.position = p0;
+                int0.use();
             }
 
             if(max_scale > 0 && max_scale <1 )
             {
                 max_exist=true;
+                int1.position = p1;
+                int1.use();
             }
         }
 
-        s0.y = min_exist ? 1:0;
-        s1.y = max_exist ? 1:0;
 
-        //debug function for displaying all the cubes on x y z bound, only support one ray
-        //display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
+        // display_ref_cube(_ray, xyz_sclae_min , xyz_sclae_max, false, min_exist, max_exist);
+
+
 
         // cube_in1.transform.position =p0;
         // cube_in2.transform.position =p1;
-
     }
 
 
 
     void Start()
     {
+        //test cube pool
+        pool = new DCube_pool();
         //camera rays
         cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;
-        print("near : " + cam.nearClipPlane);
-        print("far : " + cam.farClipPlane);
 
         w_rays = 10;
         h_rays = (int)((float)w_rays * cam.pixelHeight / cam.pixelWidth );
@@ -541,21 +598,15 @@ public class intersector : MonoBehaviour
 
                 Vector3 B = (myRay.origin - cam.transform.position)* cam.farClipPlane / cam.nearClipPlane + cam.transform.position;
 
-                GameObject f_cube ;
-                DCube fc = new DCube("test_far", cube_size, B, new Color(0.5f,0f,0f));
-                fc.use(true);
+                DCube fc = pool.getDCube();
+                fc.position = B;
                 fc.setParent(cam.transform);
 
-                //create_cube_in(out f_cube, "test_far" , B, cube_size, new Color(0.5f,0f,0f));
-                // f_cube.GetComponent<MeshRenderer>().enabled = true;
-                //f_cube.transform.parent = cam.transform;
+                DCube nc = pool.getDCube();
+                nc.position = myRay.origin;
+                nc.setParent(cam.transform);
 
-                GameObject n_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                create_cube(ref n_cube, "near_far" , myRay.origin, cube_size, new Color(0.5f,0f,0f));  
-                n_cube.GetComponent<MeshRenderer>().enabled = true;
-                n_cube.transform.parent = cam.transform;
-
-                AB_RAY cam_ab_ray = new AB_RAY(n_cube.transform, fc.cube.transform);
+                AB_RAY cam_ab_ray = new AB_RAY(nc.transform, fc.transform);
                 cam_rays.Add(cam_ab_ray);
 
             }   
@@ -569,7 +620,9 @@ public class intersector : MonoBehaviour
         else
         {
             obb = new OBB(test_cube);
-            create_obb_cubes(obb);
+            int0 = pool.getDCube();
+            int1 = pool.getDCube();
+            // create_obb_cubes(obb);
             //get furtherest point's z depth
             float d = obb.diagonal;
             print ("d : " + d);
@@ -582,36 +635,10 @@ public class intersector : MonoBehaviour
 
 
         //create test cube
-        create_test_cubes();
+        // create_test_cubes();
     }
 
-    void debug_cube(AB_RAY _ray,float s)
-    {
-        GameObject cube_x1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
-    }
-// void display_ref_cube(AB_RAY _ray, Vector3 xyz_sclae_min , Vector3 xyz_sclae_max, bool _display_ref ,  bool _display_int1, bool _display_int2)
-//     {
-//         cube_x1.transform.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
-//         cube_x2.transform.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
 
-//         cube_y1.transform.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
-//         cube_y2.transform.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
-
-//         cube_z1.transform.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
-//         cube_z2.transform.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
-
-//         cube_in1.transform.position =_ray.PA.position +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *_ray.fullRay;
-//         cube_in2.transform.position =_ray.PA.position +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *_ray.fullRay;
-
-//         cube_x1.GetComponent<Renderer>().enabled = _display_ref;
-//         cube_x2.GetComponent<Renderer>().enabled = _display_ref;
-//         cube_y1.GetComponent<Renderer>().enabled = _display_ref; 
-//         cube_y2.GetComponent<Renderer>().enabled = _display_ref; 
-//         cube_z1.GetComponent<Renderer>().enabled = _display_ref; 
-//         cube_z2.GetComponent<Renderer>().enabled = _display_ref; 
-//         cube_in1.GetComponent<Renderer>().enabled = _display_int1;
-//         cube_in2.GetComponent<Renderer>().enabled = _display_int2;
-//     }
     // Update is called once per frame
     void Update()
     {
@@ -622,7 +649,7 @@ public class intersector : MonoBehaviour
         {
             for (int j = 0; j <w_rays ;j++)
             {
-                AB_RAY _ray = cam_rays[i *w_rays + j];
+                // AB_RAY _ray = cam_rays[i *w_rays + j];
                 // Debug.DrawLine(_ray.PA.position, _ray.PB.position, Color.gray);
                 // obb_intersection_cube(_ray , obb);
             }   
@@ -638,7 +665,8 @@ public class intersector : MonoBehaviour
             // obb_intersection(ab_ray , obb);
             Vector2 s0;
             Vector2 s1;
-            obb_intersection_cube(ab_ray , obb , out s0 , out s1);
+
+            obb_intersection_cube(ab_ray , obb);
             // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
             // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
             // Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);
