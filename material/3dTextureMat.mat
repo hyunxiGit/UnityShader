@@ -85,7 +85,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     - _w: 0.5
-    - _zIndex: 0.602
+    - _zIndex: 0.87
     - mainIndex: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
