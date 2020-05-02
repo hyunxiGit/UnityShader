@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class AABB
+public class AABB
 {
     private GameObject cube;
     public AABB (GameObject _cube)
@@ -31,7 +31,7 @@ class AABB
 }
 
 
-class OBB
+public class OBB
 {
     private GameObject cube;
     //public Matrix4x4 worldInverse;

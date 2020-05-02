@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class AB_RAY
+public class AB_RAY
 {
     public Transform PA;
     public Transform PB;

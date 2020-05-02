@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-class DCube
+public class DCube
 {
     private GameObject _cube;
     private bool _used;
@@ -57,7 +57,7 @@ class DCube
     }
 }
 
-class DCube_pool
+public class DCube_pool
 {
     private List <DCube> _pool;
     public DCube_pool ()

@@ -1,8 +1,8 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-class DCube_Ray
+public class DCube_Ray
 {
     private DCube_pool _pool;
     public DCube p0 , p1 , x0, x1 ,y0 ,y1 ,z0,z1;
@@ -49,31 +49,14 @@ class DCube_Ray
         this.z1.release();
     }
 }
-
-public class intersector : MonoBehaviour
+public class intersector
 {
-    // Start is called before the first frame update
-    public GameObject test_cube;
+	public intersector()
+	{
+		Debug.Log("constructor");	
+	}
 
-    public bool is_aabb;
-    public int max_steps = 100;
-
-    //debug cubes
-    DCube_pool pool;
-    DCube_Ray dcubes;
-    List <DCube_Ray> dCube_rays;
-    
-    //DCube c_int1;
-    Camera cam;
-    List <AB_RAY> cam_rays;
-    int w_rays ;
-    int h_rays ;
-
-    AB_RAY ab_ray;
-    AABB aabb;
-    OBB obb;
-
-    void aabb_intersection(AB_RAY _ray, AABB _box)
+    public void aabb_intersection(AB_RAY _ray, AABB _box, DCube_Ray _dcubes)
     {
         bool min_exist, max_exist;
 
@@ -84,8 +67,8 @@ public class intersector : MonoBehaviour
         Vector3 xyz_sclae_max ;
 
         Vector3 fullRay = new Vector3( _ray.fullRay.x == 0? 0.0001f : _ray.fullRay.x ,
-                                        _ray.fullRay.x == 0? 0.0001f : _ray.fullRay.y,
-                                        _ray.fullRay.x == 0? 0.0001f : _ray.fullRay.z);
+                                        _ray.fullRay.y == 0? 0.0001f : _ray.fullRay.y,
+                                        _ray.fullRay.z == 0? 0.0001f : _ray.fullRay.z);
 
         float _x1 = ray_min.x / _ray.fullRay.x;
         float _x2 =  ray_max.x / _ray.fullRay.x;
@@ -124,87 +107,20 @@ public class intersector : MonoBehaviour
             }
         }
 
-        dcubes.p0.position = _ray.PA.position + min_scale * _ray.fullRay;
-        dcubes.p1.position = _ray.PA.position + max_scale * _ray.fullRay;
-        dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
-        dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
-        dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
-        dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
-        dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
-        dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
-        if (!min_exist)  { dcubes.p0.release(); } else{ dcubes.p0.use();  }
-        if (!max_exist)  { dcubes.p1.release(); } else{ dcubes.p1.use();  }
+        _dcubes.p0.position = _ray.PA.position + min_scale * _ray.fullRay;
+        _dcubes.p1.position = _ray.PA.position + max_scale * _ray.fullRay;
+        _dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
+        _dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
+        _dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
+        _dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
+        _dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
+        _dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
+        if (!min_exist)  { _dcubes.p0.release(); } else{ _dcubes.p0.use();  }
+        if (!max_exist)  { _dcubes.p1.release(); } else{ _dcubes.p1.use();  }
 
     }
 
-    void obb_intersection(AB_RAY _ray, OBB _box)
-    {
-        Vector3 min_inter , max_inter; // intersection point
-        bool min_exist, max_exist;
-
-        Vector3 ray_min = _box.min - _ray.PA.position;
-        Vector3 ray_max = _box.max - _ray.PA.position;
-
-        Vector3 xyz_sclae_min;
-        Vector3 xyz_sclae_max;
-
-        //full ray on x , y , z value
-        Vector3 ray_projected = new Vector3( Vector3.Dot(_box.x_axis ,_ray.fullRay) , Vector3.Dot(_box.y_axis ,_ray.fullRay) , Vector3.Dot(_box.z_axis ,_ray.fullRay));
-        ray_projected.x = ray_projected.x == 0?0.0000001f : ray_projected.x;
-        ray_projected.y = ray_projected.y == 0?0.0000001f : ray_projected.y;
-        ray_projected.z = ray_projected.z == 0?0.0000001f : ray_projected.z;
-
-        float _x1 = Vector3.Dot(_box.x_axis , ray_min ) / ray_projected.x;
-        float _x2 = Vector3.Dot(_box.x_axis , ray_max ) / ray_projected.x;
-
-        xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
-        xyz_sclae_max.x = _x1 > _x2 ? _x1 : _x2;
-
-        float _y1 = Vector3.Dot(_box.y_axis , ray_min ) / ray_projected.y;
-        float _y2 = Vector3.Dot(_box.y_axis , ray_max ) / ray_projected.y;
-
-        xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
-        xyz_sclae_max.y = _y1 > _y2 ? _y1 : _y2;
-
-        float _z1 = Vector3.Dot(_box.z_axis , ray_min ) / ray_projected.z;
-        float _z2 = Vector3.Dot(_box.z_axis , ray_max ) / ray_projected.z;
-
-        xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
-        xyz_sclae_max.z = _z1 > _z2 ? _z1 : _z2;
-
-        float min_scale = Mathf.Max(Mathf.Max(xyz_sclae_min.x ,xyz_sclae_min.y),xyz_sclae_min.z);
-        float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
-
-        min_exist=false;
-        max_exist=false;
-
-        if ( min_scale < max_scale)
-        {
-            if (min_scale > 0 && min_scale <1)
-            {
-                min_exist=true;
-            }
-
-            if(max_scale > 0 && max_scale <1 )
-            {
-                max_exist=true;
-            }
-        }
-
-        //debug info display
-        dcubes.p0.position = _ray.PA.position + min_scale * _ray.fullRay;
-        dcubes.p1.position = _ray.PA.position + max_scale * _ray.fullRay;
-        dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
-        dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
-        dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
-        dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
-        dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
-        dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
-        if (!min_exist)  { dcubes.p0.release(); } else{ dcubes.p0.use();  }
-        if (!max_exist)  { dcubes.p1.release(); } else{ dcubes.p1.use();  }
-    }
-
-    void obb_intersection_cube(AB_RAY _ray, OBB _box)
+	public void obb_intersection_cube(AB_RAY _ray, OBB _box , DCube_Ray _dcubes)
     {
         Vector3 _PA_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PA.position);
         Vector3 _PB_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PB.position);
@@ -271,104 +187,82 @@ public class intersector : MonoBehaviour
         }
 
         //debug info display
-        dcubes.p0.position = p0;
-        dcubes.p1.position = p1;
-        dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
-        dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
-        dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
-        dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
-        dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
-        dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
-        if (!min_exist)  { dcubes.p0.release(); } else{ dcubes.p0.use();  }
-        if (!max_exist)  { dcubes.p1.release(); } else{ dcubes.p1.use();  }
+        _dcubes.p0.position = p0;
+        _dcubes.p1.position = p1;
+        _dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
+        _dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
+        _dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
+        _dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
+        _dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
+        _dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
+        if (!min_exist)  { _dcubes.p0.release(); } else{ _dcubes.p0.use();  }
+        if (!max_exist)  { _dcubes.p1.release(); } else{ _dcubes.p1.use();  }
     }
 
-
-
-    void Start()
+    public void obb_intersection(AB_RAY _ray, OBB _box, DCube_Ray _dcubes)
     {
-        //test cube pool
-        pool = new DCube_pool();
-        dCube_rays = new List <DCube_Ray>();
-        //camera rays
-        cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;
+        Vector3 min_inter , max_inter; // intersection point
+        bool min_exist, max_exist;
 
-        w_rays = 10;
-        h_rays = (int)((float)w_rays * cam.pixelHeight / cam.pixelWidth );
+        Vector3 ray_min = _box.min - _ray.PA.position;
+        Vector3 ray_max = _box.max - _ray.PA.position;
 
-        cam_rays = new List<AB_RAY>();
-        for (int i = 0; i <h_rays ;i++)
+        Vector3 xyz_sclae_min;
+        Vector3 xyz_sclae_max;
+
+        //full ray on x , y , z value
+        Vector3 ray_projected = new Vector3( Vector3.Dot(_box.x_axis ,_ray.fullRay) , Vector3.Dot(_box.y_axis ,_ray.fullRay) , Vector3.Dot(_box.z_axis ,_ray.fullRay));
+        ray_projected.x = ray_projected.x == 0?0.0000001f : ray_projected.x;
+        ray_projected.y = ray_projected.y == 0?0.0000001f : ray_projected.y;
+        ray_projected.z = ray_projected.z == 0?0.0000001f : ray_projected.z;
+
+        float _x1 = Vector3.Dot(_box.x_axis , ray_min ) / ray_projected.x;
+        float _x2 = Vector3.Dot(_box.x_axis , ray_max ) / ray_projected.x;
+
+        xyz_sclae_min.x = _x1 < _x2 ? _x1 : _x2;
+        xyz_sclae_max.x = _x1 > _x2 ? _x1 : _x2;
+
+        float _y1 = Vector3.Dot(_box.y_axis , ray_min ) / ray_projected.y;
+        float _y2 = Vector3.Dot(_box.y_axis , ray_max ) / ray_projected.y;
+
+        xyz_sclae_min.y = _y1 < _y2 ? _y1 : _y2;
+        xyz_sclae_max.y = _y1 > _y2 ? _y1 : _y2;
+
+        float _z1 = Vector3.Dot(_box.z_axis , ray_min ) / ray_projected.z;
+        float _z2 = Vector3.Dot(_box.z_axis , ray_max ) / ray_projected.z;
+
+        xyz_sclae_min.z = _z1 < _z2 ? _z1 : _z2;
+        xyz_sclae_max.z = _z1 > _z2 ? _z1 : _z2;
+
+        float min_scale = Mathf.Max(Mathf.Max(xyz_sclae_min.x ,xyz_sclae_min.y),xyz_sclae_min.z);
+        float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
+
+        min_exist=false;
+        max_exist=false;
+
+        if ( min_scale < max_scale)
         {
-            //need to create the last ray at right edge
-            for (int j = 0; j <w_rays ;j++)
+            if (min_scale > 0 && min_scale <1)
             {
-                //create ray at correct gap
-                Ray myRay = cam.ViewportPointToRay(new Vector3(1.0f/(w_rays-1)*j, 1.0f/(h_rays-1)*i, 0));
+                min_exist=true;
+            }
 
-                Vector3 B = (myRay.origin - cam.transform.position)* cam.farClipPlane / cam.nearClipPlane + cam.transform.position;
-
-                DCube fc = pool.getDCube();
-                fc.position = B;
-                fc.setParent(cam.transform);
-
-                DCube nc = pool.getDCube();
-                nc.position = myRay.origin;
-                nc.setParent(cam.transform);
-
-                AB_RAY cam_ab_ray = new AB_RAY(nc.transform, fc.transform);
-                cam_rays.Add(cam_ab_ray);
-
-            }   
-        }
-
-        //test the cube is a obb or aabb
-        if (is_aabb)
-        {
-            aabb = new AABB(test_cube);
-            dcubes = new DCube_Ray(pool);
-        } 
-        else
-        {
-            obb = new OBB(test_cube);
-            dcubes = new DCube_Ray(pool);
-
-        }
-
-        //create ray
-        ab_ray = new AB_RAY(cam.transform, GetComponent<Transform>().Find("point_b"));
-
-    }
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        //draw debug ray
-    	Debug.DrawLine(ab_ray.PA.position, ab_ray.PB.position, Color.white);
-
-        for (int i = 0; i <h_rays ;i++)
-        {
-            for (int j = 0; j <w_rays ;j++)
+            if(max_scale > 0 && max_scale <1 )
             {
-                // AB_RAY _ray = cam_rays[i *w_rays + j];
-                // Debug.DrawLine(_ray.PA.position, _ray.PB.position, Color.gray);
-                // obb_intersection_cube(_ray , obb);
-            }   
+                max_exist=true;
+            }
         }
-        
-        // draw aabb
-        if (is_aabb)
-        {
-            aabb_intersection(ab_ray , aabb);
-        }
-        else
-        {
-             // obb_intersection(ab_ray , obb);
 
-            obb_intersection_cube(ab_ray , obb);
-            // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
-            // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
-            // Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);
-        }
+        //debug info display
+        _dcubes.p0.position = _ray.PA.position + min_scale * _ray.fullRay;
+        _dcubes.p1.position = _ray.PA.position + max_scale * _ray.fullRay;
+        _dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
+        _dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
+        _dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
+        _dcubes.y1.position = _ray.PA.position + xyz_sclae_max.y * _ray.fullRay;
+        _dcubes.z0.position = _ray.PA.position + xyz_sclae_min.z * _ray.fullRay;
+        _dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
+        if (!min_exist)  { _dcubes.p0.release(); } else{ _dcubes.p0.use();  }
+        if (!max_exist)  { _dcubes.p1.release(); } else{ _dcubes.p1.use();  }
     }
 }
