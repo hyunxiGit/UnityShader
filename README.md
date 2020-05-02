@@ -10,7 +10,7 @@ update :
 
 -PBR / render equation hlsl implementation in 3ds max
 
-https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/pbr.jpg
+![Image volume builder](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/pbr.jpg)
 
 -ray marching displacement with two point interpolation
 
