@@ -20,6 +20,7 @@ public class DCube
     public Vector3 position
     {
         set{this._cube.transform.position = value;}
+        get{return this._cube.transform.position;}
     } 
     public Color color
     {

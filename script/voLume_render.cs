@@ -7,7 +7,7 @@ public class voLume_render : MonoBehaviour
     // Start is called before the first frame update
     public GameObject test_cube;
     public bool is_aabb;
-    public int max_steps = 100;
+    public int max_steps = 500;
 
     //intersector 
     public intersector inter;
@@ -25,6 +25,9 @@ public class voLume_render : MonoBehaviour
     public AB_RAY ab_ray;
     public AABB aabb;
     public OBB obb;
+
+    float step_size;
+    float max_distance;
 
     void Start()
     {
@@ -80,8 +83,15 @@ public class voLume_render : MonoBehaviour
 
         //create ray
         ab_ray = new AB_RAY(cam.transform, GetComponent<Transform>().Find("point_b"));
+        //ray march parameters
+        max_distance = cam.farClipPlane - cam.nearClipPlane;
+        step_size = max_distance/max_steps;
+    }
 
-        
+    void rayMarch(inter_p , float _step_size , float max_distance , int _max_steps)
+    {
+        //todo : convert _max_step and step size to box space
+        int full_step = int((inter_p.p1_world - inter_p.p0_world).magnitude / max_distance * _max_steps);
 
     }
 
@@ -105,13 +115,18 @@ public class voLume_render : MonoBehaviour
         // draw aabb
         if (is_aabb)
         {
-            inter.aabb_intersection(ab_ray , aabb , dcubes);
+            inter_point inter_p = inter.aabb_intersection(ab_ray , aabb , dcubes);
+            print("inter_p.p0_w " + inter_p.p0_world );
         }
         else
         {
              // obb_intersection(ab_ray , obb);
 
-            inter.obb_intersection_cube(ab_ray ,obb, dcubes);
+            inter_point inter_p = inter.obb_intersection_cube(ab_ray ,obb, dcubes);
+            if (inter_p.p0_exist && inter_p.p1_exist) 
+            {
+                rayMarch(inter_p, step_size);
+            }
             // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
             // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
             // Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);

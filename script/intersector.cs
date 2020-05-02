@@ -49,15 +49,55 @@ public class DCube_Ray
         this.z1.release();
     }
 }
+public class inter_point
+{
+	public inter_point(Vector3 _p0_o,Vector3 _p1_o,Vector3 _p0_w,Vector3 _p1_w, bool _p0_e,bool _p1_e )
+	{
+		this.p0_o = _p0_o;
+		this.p1_o = _p1_o;
+		this.p0_w = _p0_w;
+		this.p1_w = _p1_w;
+		this.p0_e = _p0_e;
+		this.p1_e = _p1_e;
+	}
+	Vector3 p0_o;
+    public Vector3 p0_object
+    {
+        get{ return this.p0_o;}
+    }
+	Vector3 p1_o;
+    public Vector3 p1_object
+    {
+        get{ return this.p1_o;}
+    }
+	Vector3 p0_w;
+    public Vector3 p0_world
+    {
+        get{ return this.p0_w;}
+    }
+	Vector3 p1_w;
+    public Vector3 p1_world
+    {
+        get{ return this.p1_w;}
+    }
+	bool p0_e;
+	public bool p0_exist
+    {
+        get{ return this.p0_e;}
+    }
+	bool p1_e;
+	public bool p1_exist
+    {
+        get{ return this.p1_e;}
+    }
+}
 public class intersector
 {
-	public intersector()
-	{
-		Debug.Log("constructor");	
-	}
+	public intersector(){}
 
-    public void aabb_intersection(AB_RAY _ray, AABB _box, DCube_Ray _dcubes)
+    public inter_point aabb_intersection(AB_RAY _ray, AABB _box, DCube_Ray _dcubes)
     {
+
         bool min_exist, max_exist;
 
         Vector3 ray_min = _box.min - _ray.PA.position;
@@ -118,9 +158,11 @@ public class intersector
         if (!min_exist)  { _dcubes.p0.release(); } else{ _dcubes.p0.use();  }
         if (!max_exist)  { _dcubes.p1.release(); } else{ _dcubes.p1.use();  }
 
+        inter_point inter = new inter_point(Vector3.zero,Vector3.zero,_dcubes.p0.position,_dcubes.p1.position, min_exist,max_exist) ;
+        return inter;
     }
 
-	public void obb_intersection_cube(AB_RAY _ray, OBB _box , DCube_Ray _dcubes)
+	public inter_point obb_intersection_cube(AB_RAY _ray, OBB _box , DCube_Ray _dcubes)
     {
         Vector3 _PA_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PA.position);
         Vector3 _PB_pos_cube = _box.w2o.MultiplyPoint3x4(_ray.PB.position);
@@ -164,11 +206,11 @@ public class intersector
         float max_scale = Mathf.Min(Mathf.Min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
 
         //two intersect point in object space
-        Vector3 p0 =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
-        Vector3 p1 =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
+        Vector3 p0_o =_PA_pos_cube +   Mathf.Max(Mathf.Max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
+        Vector3 p1_o =_PA_pos_cube +   Mathf.Min(Mathf.Min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
         //two intersect point in object space
-        p0 = _box.o2w.MultiplyPoint3x4(p0);
-        p1 = _box.o2w.MultiplyPoint3x4(p1);
+        Vector3 p0_w = _box.o2w.MultiplyPoint3x4(p0_o);
+        Vector3 p1_w = _box.o2w.MultiplyPoint3x4(p1_o);
 
         min_exist=false;
         max_exist=false;
@@ -187,8 +229,8 @@ public class intersector
         }
 
         //debug info display
-        _dcubes.p0.position = p0;
-        _dcubes.p1.position = p1;
+        _dcubes.p0.position = p0_w;
+        _dcubes.p1.position = p1_w;
         _dcubes.x0.position = _ray.PA.position + xyz_sclae_min.x * _ray.fullRay;
         _dcubes.x1.position = _ray.PA.position + xyz_sclae_max.x * _ray.fullRay;
         _dcubes.y0.position = _ray.PA.position + xyz_sclae_min.y * _ray.fullRay;
@@ -197,6 +239,9 @@ public class intersector
         _dcubes.z1.position = _ray.PA.position + xyz_sclae_max.z * _ray.fullRay;
         if (!min_exist)  { _dcubes.p0.release(); } else{ _dcubes.p0.use();  }
         if (!max_exist)  { _dcubes.p1.release(); } else{ _dcubes.p1.use();  }
+
+        inter_point inter = new inter_point(p0_o,p1_o,p0_w,p1_w, min_exist,max_exist) ;
+        return inter;
     }
 
     public void obb_intersection(AB_RAY _ray, OBB _box, DCube_Ray _dcubes)
