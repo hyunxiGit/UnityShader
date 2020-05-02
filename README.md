@@ -1,11 +1,16 @@
 # UnityShader
 update :
 -obb aabb intersection
+
 ![Image of obb intersection](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/obb.gif)
 
 -volumen builder plugin for creating 3d texture from texture atler
 
 ![Image volume builder](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/volumeassetBuilder.gif)
+
+-PBR / render equation hlsl implementation in 3ds max
+
+https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/pbr.jpg
 
 -ray marching displacement with two point interpolation
 
