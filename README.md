@@ -1,4 +1,12 @@
 # UnityShader
+update :
+-obb aabb intersection
+
+-volumen builder
+
+-ray marching displacement with two point interpolation
+
+![Image of raymatching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/raymarchingDis.gif)
 
 a seriers of learning shaders / scripts aim to learn the rendering pipeline of Unity
 forward, deferred, shadows, translucent ...
@@ -32,6 +40,4 @@ https://docs.google.com/document/d/1e8QrC7O2QIXjDiG8zIQbFDn7qBQOmDhwqsVZnDHhrRU/
 
 The cook book is still WIP so there might be some inaccuracy.
 
--ray marching displacement with two point interpolation
 
-![Image of raymatching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/raymarchingDis.gif)
