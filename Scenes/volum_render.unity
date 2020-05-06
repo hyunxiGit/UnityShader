@@ -244,6 +244,7 @@ MonoBehaviour:
   test_cube: {fileID: 2132295213}
   is_aabb: 0
   max_steps: 100
+  volume: {fileID: 0}
 --- !u!4 &283240856
 Transform:
   m_ObjectHideFlags: 0
@@ -818,6 +819,7 @@ MonoBehaviour:
   test_cube: {fileID: 2132295213}
   is_aabb: 0
   max_steps: 100
+  volume: {fileID: 0}
 --- !u!1 &2132295213
 GameObject:
   m_ObjectHideFlags: 0
@@ -904,7 +906,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132295213}
   m_LocalRotation: {x: -0.25729024, y: -0, z: -0, w: 0.96633416}
-  m_LocalPosition: {x: 1.18, y: 0.0000000350801, z: -0.471}
+  m_LocalPosition: {x: 1.18, y: -0.02, z: -0.23}
   m_LocalScale: {x: 2.3443856, y: 1, z: 1.3227}
   m_Children: []
   m_Father: {fileID: 0}
