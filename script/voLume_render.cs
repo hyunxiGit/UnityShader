@@ -140,21 +140,23 @@ public class voLume_render : MonoBehaviour
 
     void rayMarch2(inter_point inter_p , float _step_size , float max_distance , int _max_steps , OBB _obb, Vector3 cam_pos)
     {
-        // bool use_object = true; 
-        // Vector3 p0 = inter_p.p0_world;
-        // Vector3 cam = cam_pos;
-        // if (use_object)
-        // {
-        //     p0_c = 
-        // }
+        //z-plane alignment
+        bool use_object = true; 
+        Vector3 p0 = inter_p.p0_world;
+        Vector3 cam = cam_pos;
+        Vector3 z_step = new Vector3 (0,0, max_distance / _max_steps);
+
+        if (use_object)
+        {
+            p0 = inter_p.p0_object;
+            cam = _obb.w2o.MultiplyPoint3x4(cam);
+            z_step = _obb.w2o.MultiplyVector(z_step);
+        }
+
         //the plane alignment should be calculated on cam pos as origin
-        Vector3 p0_c = inter_p.p0_world -cam_pos;
-        //step size
-        float step_size = max_distance / _max_steps;
-        //z_step on z plane 
-        Vector3 z_step = new Vector3 (0,0, step_size);
+        Vector3 p0_c = p0 -cam;
         Vector3 z_dir = z_step.normalized;
-        //step on p0p1 align z
+        //step on p0-p1 align z
         Vector3 p_step = p0_c * Vector3.Dot(z_step , z_dir) / Vector3.Dot(p0_c,z_dir);
         
         Vector3 p0_z_pro = Vector3.Dot(p0_c, z_dir)*z_dir;
@@ -162,46 +164,31 @@ public class voLume_render : MonoBehaviour
         float scale_z_step = Vector3.Dot(z_step , z_dir);
         int scale_p0_z_step = (int)(scale_p0 / scale_z_step);
         Vector3 z_plane = scale_p0_z_step * z_step;
-        // float scale3 = Vector3.Dot(z_plane , z_dir);
-        Vector3 p0_new = (int)(scale_p0_z_step) * scale_z_step /scale_p0 * p0_c + cam_pos;        
-
-        //object space
-        /*
-        Vector3 z_step_o = _obb.w2o.MultiplyVector(z_step);
-        Vector3 z_dir_o = z_step_o.normalized;
-        Vector3 cam_pos_o = _obb.w2o.MultiplyPoint3x4(cam_pos);
-        Vector3 p0_c_o = inter_p.p0_object - cam_pos_o;
-        Vector3 p_step_o = p0_c_o * Vector3.Dot(z_step_o , z_dir_o) / Vector3.Dot(p0_c_o,z_dir_o);
-
-        Vector3 p0_z_pro_o = Vector3.Dot(p0_c_o, z_dir_o)*z_dir_o;
-        float scale_p0_o = Vector3.Dot(p0_z_pro_o , z_dir_o);
-        float scale_z_step_o = Vector3.Dot(z_step_o , z_dir_o);
-        int scale_p0_z_step_o = (int)(scale_p0_o / scale_z_step_o);
-        Vector3 z_plane_o = scale_p0_z_step_o * z_step_o;
-        Vector3 p0_new_o = (int)(scale_p0_z_step_o) * scale_z_step_o /scale_p0_o * p0_c_o + cam_pos_o; 
-        */    
-
+        Vector3 p0_new = (int)(scale_p0_z_step) * scale_z_step /scale_p0 * p0_c + cam;        
 
         // to world space visial test:
-
-        pd = pool.getDCube();        
-        pd.position = p0_new;
-        pd1 = pool.getDCube();
-        pd1.position = p0_new + p_step;
-        pd2 = pool.getDCube();
-        pd2.position = p0_new + 2*p_step;
-        pd3 = pool.getDCube();
-        pd3.position = p0_new + 3*p_step;
-
-        // pd = pool.getDCube();        
-        // pd.position = _obb.o2w.MultiplyPoint3x4(p0_new_o);
-        // pd1 = pool.getDCube();
-        // pd1.position = _obb.o2w.MultiplyPoint3x4(p0_new_o + p_step_o);
-        // pd2 = pool.getDCube();
-        // pd2.position = _obb.o2w.MultiplyPoint3x4(p0_new_o + 2*p_step_o);
-        // pd3 = pool.getDCube();
-        // pd3.position = _obb.o2w.MultiplyPoint3x4(p0_new_o + 3*p_step_o);
-
+        if (use_object)
+        {
+            pd = pool.getDCube();        
+            pd.position = _obb.o2w.MultiplyPoint3x4(p0_new);
+            pd1 = pool.getDCube();
+            pd1.position = _obb.o2w.MultiplyPoint3x4(p0_new + p_step);
+            pd2 = pool.getDCube();
+            pd2.position = _obb.o2w.MultiplyPoint3x4(p0_new + 2*p_step);
+            pd3 = pool.getDCube();
+            pd3.position = _obb.o2w.MultiplyPoint3x4(p0_new + 3*p_step);
+        }
+        else
+        {
+            pd = pool.getDCube();        
+            pd.position = p0_new;
+            pd1 = pool.getDCube();
+            pd1.position = p0_new + p_step;
+            pd2 = pool.getDCube();
+            pd2.position = p0_new + 2*p_step;
+            pd3 = pool.getDCube();
+            pd3.position = p0_new + 3*p_step;
+        }
         
     }
 
