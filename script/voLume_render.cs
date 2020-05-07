@@ -140,6 +140,13 @@ public class voLume_render : MonoBehaviour
 
     void rayMarch2(inter_point inter_p , float _step_size , float max_distance , int _max_steps , OBB _obb, Vector3 cam_pos)
     {
+        // bool use_object = true; 
+        // Vector3 p0 = inter_p.p0_world;
+        // Vector3 cam = cam_pos;
+        // if (use_object)
+        // {
+        //     p0_c = 
+        // }
         //the plane alignment should be calculated on cam pos as origin
         Vector3 p0_c = inter_p.p0_world -cam_pos;
         //step size
@@ -155,24 +162,46 @@ public class voLume_render : MonoBehaviour
         float scale_z_step = Vector3.Dot(z_step , z_dir);
         int scale_p0_z_step = (int)(scale_p0 / scale_z_step);
         Vector3 z_plane = scale_p0_z_step * z_step;
-        float scale3 = Vector3.Dot(z_plane , z_dir);
+        // float scale3 = Vector3.Dot(z_plane , z_dir);
         Vector3 p0_new = (int)(scale_p0_z_step) * scale_z_step /scale_p0 * p0_c + cam_pos;        
-        
+
+        //object space
+        /*
+        Vector3 z_step_o = _obb.w2o.MultiplyVector(z_step);
+        Vector3 z_dir_o = z_step_o.normalized;
+        Vector3 cam_pos_o = _obb.w2o.MultiplyPoint3x4(cam_pos);
+        Vector3 p0_c_o = inter_p.p0_object - cam_pos_o;
+        Vector3 p_step_o = p0_c_o * Vector3.Dot(z_step_o , z_dir_o) / Vector3.Dot(p0_c_o,z_dir_o);
+
+        Vector3 p0_z_pro_o = Vector3.Dot(p0_c_o, z_dir_o)*z_dir_o;
+        float scale_p0_o = Vector3.Dot(p0_z_pro_o , z_dir_o);
+        float scale_z_step_o = Vector3.Dot(z_step_o , z_dir_o);
+        int scale_p0_z_step_o = (int)(scale_p0_o / scale_z_step_o);
+        Vector3 z_plane_o = scale_p0_z_step_o * z_step_o;
+        Vector3 p0_new_o = (int)(scale_p0_z_step_o) * scale_z_step_o /scale_p0_o * p0_c_o + cam_pos_o; 
+        */    
+
+
+        // to world space visial test:
+
+        pd = pool.getDCube();        
+        pd.position = p0_new;
+        pd1 = pool.getDCube();
+        pd1.position = p0_new + p_step;
+        pd2 = pool.getDCube();
+        pd2.position = p0_new + 2*p_step;
+        pd3 = pool.getDCube();
+        pd3.position = p0_new + 3*p_step;
+
         // pd = pool.getDCube();        
-        // pd.position = p0_new;
+        // pd.position = _obb.o2w.MultiplyPoint3x4(p0_new_o);
         // pd1 = pool.getDCube();
-        // pd1.position = p0_new + p_step;
+        // pd1.position = _obb.o2w.MultiplyPoint3x4(p0_new_o + p_step_o);
         // pd2 = pool.getDCube();
-        // pd2.position = p0_new + 2*p_step;
+        // pd2.position = _obb.o2w.MultiplyPoint3x4(p0_new_o + 2*p_step_o);
         // pd3 = pool.getDCube();
-        // pd3.position = p0_new + 3*p_step;
+        // pd3.position = _obb.o2w.MultiplyPoint3x4(p0_new_o + 3*p_step_o);
 
-        //------------------------------------------------------------------------------------------
-
-        Vector3 z_step_o = _obb.w2o.MultiplyPoint3x4(new Vector3 (0,0,(float)max_distance / _max_steps));
-        float p0_scale_o = Vector3.Dot(inter_p.p0_object , z_step_o.normalized)/z_step.magnitude;
-        float p1_scale_o = Vector3.Dot(inter_p.p1_object , z_step_o.normalized)/z_step.magnitude;
-        // print("scale p0 object : " + p0_scale  + " ,scale p1 object:" + p1_scale);
         
     }
 
