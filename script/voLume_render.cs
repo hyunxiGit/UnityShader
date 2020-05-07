@@ -31,7 +31,7 @@ public class voLume_render : MonoBehaviour
     float max_distance;
 
     //temp
-    DCube pd;       
+    DCube pd , pd1 ,pd2,pd3;       
 
     void Start()
     {
@@ -138,31 +138,34 @@ public class voLume_render : MonoBehaviour
         }
     }
 
-    void rayMarch2(inter_point inter_p , float _step_size , float max_distance , int _max_steps , OBB _obb)
+    void rayMarch2(inter_point inter_p , float _step_size , float max_distance , int _max_steps , OBB _obb, Vector3 cam_pos)
     {
+        //the plane alignment should be calculated on cam pos as origin
+        Vector3 p0_c = inter_p.p0_world -cam_pos;
         //step size
         float step_size = max_distance / _max_steps;
         //z_step on z plane 
-        Vector3 z_step;
-        //march ray in world space
-        Vector3 ray_w = inter_p.p1_world - inter_p.p0_world;
-        //aligne direction
-        z_step = new Vector3 (0,0, Mathf.Sign(ray_w.z) * step_size);
-        //get the step on ray but align z plane
-        Vector3 stepv_w = ray_w  * z_step.magnitude / Vector3.Dot(ray_w , z_step.normalized);
-        //aligne direction
-        z_step = new Vector3 (0,0, step_size);
-        Vector3 p0_z_project = Vector3.Dot(inter_p.p0_world , z_step.normalized)*z_step.normalized;
-        float scale0 = Vector3.Dot(p0_z_project , z_step.normalized);
-        float scale1 = Vector3.Dot(z_step , z_step.normalized);
-        int scale2 = (int)(scale0 / scale1);
-        Vector3 z_plane = scale2 * z_step;
-        float scale3 = Vector3.Dot(z_plane , z_step.normalized);
-        Vector3 p0_new = inter_p.p0_world * scale3 / scale0;
-        //todo : the p0_new need to sit on the ray_w 
+        Vector3 z_step = new Vector3 (0,0, step_size);
+        Vector3 z_dir = z_step.normalized;
+        //step on p0p1 align z
+        Vector3 p_step = p0_c * Vector3.Dot(z_step , z_dir) / Vector3.Dot(p0_c,z_dir);
         
-        pd = pool.getDCube();        
-        pd.position = p0_new;
+        Vector3 p0_z_pro = Vector3.Dot(p0_c, z_dir)*z_dir;
+        float scale_p0 = Vector3.Dot(p0_z_pro , z_dir);
+        float scale_z_step = Vector3.Dot(z_step , z_dir);
+        int scale_p0_z_step = (int)(scale_p0 / scale_z_step);
+        Vector3 z_plane = scale_p0_z_step * z_step;
+        float scale3 = Vector3.Dot(z_plane , z_dir);
+        Vector3 p0_new = (int)(scale_p0_z_step) * scale_z_step /scale_p0 * p0_c + cam_pos;        
+        
+        // pd = pool.getDCube();        
+        // pd.position = p0_new;
+        // pd1 = pool.getDCube();
+        // pd1.position = p0_new + p_step;
+        // pd2 = pool.getDCube();
+        // pd2.position = p0_new + 2*p_step;
+        // pd3 = pool.getDCube();
+        // pd3.position = p0_new + 3*p_step;
 
         //------------------------------------------------------------------------------------------
 
@@ -203,7 +206,7 @@ public class voLume_render : MonoBehaviour
             inter_point inter_p = inter.obb_intersection_cube(ab_ray ,obb, dcubes);
             if (inter_p.p0_exist && inter_p.p1_exist) 
             {
-                rayMarch2(inter_p, step_size,max_distance,max_steps , obb);
+                rayMarch2(inter_p, step_size,max_distance,max_steps , obb, cam.transform.position);
             }
             // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
             // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
