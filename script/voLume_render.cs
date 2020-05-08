@@ -141,14 +141,16 @@ public class voLume_render : MonoBehaviour
     void rayMarch2(inter_point inter_p , float _step_size , float max_distance , int _max_steps , OBB _obb, Vector3 cam_pos)
     {
         //z-plane alignment
-        bool use_object = true; 
+        bool use_object = false; 
         Vector3 p0 = inter_p.p0_world;
+        Vector3 p1 = inter_p.p1_world;
         Vector3 cam = cam_pos;
         Vector3 z_step = new Vector3 (0,0, max_distance / _max_steps);
 
         if (use_object)
         {
             p0 = inter_p.p0_object;
+            p1 = inter_p.p1_object;
             cam = _obb.w2o.MultiplyPoint3x4(cam);
             z_step = _obb.w2o.MultiplyVector(z_step);
         }
@@ -158,36 +160,31 @@ public class voLume_render : MonoBehaviour
         Vector3 z_dir = z_step.normalized;
         //step on p0-p1 align z
         Vector3 p_step = p0_c * Vector3.Dot(z_step , z_dir) / Vector3.Dot(p0_c,z_dir);
-        
         Vector3 p0_z_pro = Vector3.Dot(p0_c, z_dir)*z_dir;
         float scale_p0 = Vector3.Dot(p0_z_pro , z_dir);
         float scale_z_step = Vector3.Dot(z_step , z_dir);
         int scale_p0_z_step = (int)(scale_p0 / scale_z_step);
         Vector3 z_plane = scale_p0_z_step * z_step;
-        Vector3 p0_new = (int)(scale_p0_z_step) * scale_z_step /scale_p0 * p0_c + cam;        
+        Vector3 p0_new = (int)(scale_p0_z_step) * scale_z_step /scale_p0 * p0_c + cam;   
+
+        int full_step = (int)((p1 -p0).magnitude / p_step.magnitude);
 
         // to world space visial test:
         if (use_object)
         {
-            pd = pool.getDCube();        
-            pd.position = _obb.o2w.MultiplyPoint3x4(p0_new);
-            pd1 = pool.getDCube();
-            pd1.position = _obb.o2w.MultiplyPoint3x4(p0_new + p_step);
-            pd2 = pool.getDCube();
-            pd2.position = _obb.o2w.MultiplyPoint3x4(p0_new + 2*p_step);
-            pd3 = pool.getDCube();
-            pd3.position = _obb.o2w.MultiplyPoint3x4(p0_new + 3*p_step);
+            for (int i = 0 ; i <full_step+1 ; i++)
+            {
+                DCube pd_t = pool.getDCube();        
+                pd_t.position =_obb.o2w.MultiplyPoint3x4( p0_new + i *p_step);
+            }
         }
         else
         {
-            pd = pool.getDCube();        
-            pd.position = p0_new;
-            pd1 = pool.getDCube();
-            pd1.position = p0_new + p_step;
-            pd2 = pool.getDCube();
-            pd2.position = p0_new + 2*p_step;
-            pd3 = pool.getDCube();
-            pd3.position = p0_new + 3*p_step;
+             for (int i = 0 ; i <full_step+1 ; i++)
+            {
+                DCube pd_t = pool.getDCube();        
+                pd_t.position =p0_new + i *p_step;
+            }
         }
         
     }
