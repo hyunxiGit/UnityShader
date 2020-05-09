@@ -30,8 +30,9 @@ public class voLume_render : MonoBehaviour
     float step_size;
     float max_distance;
 
-    //temp
-    DCube pd , pd1 ,pd2,pd3;       
+    //turn off update dcube each frame
+    bool use_cam_handler = false;
+    bool dcube_created = false;      
 
     void Start()
     {
@@ -89,31 +90,33 @@ public class voLume_render : MonoBehaviour
         }
 
         //create ray
-        ab_ray = new AB_RAY(cam.transform, GetComponent<Transform>().Find("point_b"));
+        ab_ray = new AB_RAY(cam.transform, GetComponent<Transform>().Find("cam_ray_handeler"));
         //ray march parameters
         max_distance = cam.farClipPlane - cam.nearClipPlane;
         step_size = max_distance/max_steps;
 
-        // cretae3dTexture();
     }
 
-    void cretae3dTexture()
+    Color sample3dTexture(Vector3 p)
     {
+        p += new Vector3(0.5f, 0.5f, 0.5f);
         int max_sample = 10;
-        print("volume.depth" + volume.depth);
-        print("volume.height" + volume.height);
-        print("volume.width" + volume.width);
-        for (int i = 0 ; i < volume.depth ; i=i+10)
-        {
-            for (int j = 0 ; j < volume.height ; j=j+10)
-            {
-                for (int k = 0 ; k < volume.width ;k=k+10)
-                {
-                    Color c = volume.GetPixel( k,j,i);
-                    print ("volumen :" + k+","+j+","+i+":"+ c);
-                }   
-            }   
-        }
+        // print("volume.depth" + volume.depth);
+        // print("volume.height" + volume.height);
+        // print("volume.width" + volume.width);
+        Color c = volume.GetPixel( (int)(p.x * volume.width),(int)(p.y * volume.height), (int)(p.z*volume.depth));
+        return c;
+        // for (int i = 0 ; i < volume.depth ; i=i+10)
+        // {
+        //     for (int j = 0 ; j < volume.height ; j=j+10)
+        //     {
+        //         for (int k = 0 ; k < volume.width ;k=k+10)
+        //         {
+        //             Color c = volume.GetPixel( k,j,i);
+        //             print ("volumen :" + k+","+j+","+i+":"+ c);
+        //         }   
+        //     }   
+        // }
         
     }
 
@@ -131,17 +134,14 @@ public class voLume_render : MonoBehaviour
             Debug.DrawLine(inter_p.p0_world, inter_p.p1_world , Color.red);
             // print("full_step_w :" + full_step_w);
             Vector3 stop_p = inter_p.p0_world  + full_ray / full_step_w *i;
-            // pd = pool.getDCube();
-            // print("pd : " + pd);
-            // pd.position = stop_p;
-            // print("pd.position : " + pd.position);
+
         }
     }
 
     void rayMarch2(inter_point inter_p , float _step_size , float max_distance , int _max_steps , OBB _obb, Vector3 cam_pos)
     {
         //z-plane alignment
-        bool use_object = false; 
+        bool use_object = true; 
         Vector3 p0 = inter_p.p0_world;
         Vector3 p1 = inter_p.p1_world;
         Vector3 cam = cam_pos;
@@ -169,43 +169,53 @@ public class voLume_render : MonoBehaviour
 
         int full_step = (int)((p1 -p0).magnitude / p_step.magnitude);
 
-        // to world space visial test:
-        if (use_object)
+        for (int i = 0 ; i <full_step+1 ; i++)
         {
-            for (int i = 0 ; i <full_step+1 ; i++)
+            Vector3 pos = p0_new + i *p_step;
+            Color c = sample3dTexture (pos);
+
+            //debug cubes
+            if (dcube_created == false)
             {
+                print("pos :" + pos );
+                print("color :" + c);
                 DCube pd_t = pool.getDCube();        
-                pd_t.position =_obb.o2w.MultiplyPoint3x4( p0_new + i *p_step);
+                pd_t.position = use_object ? _obb.o2w.MultiplyPoint3x4( pos) : pos ;  
+                pd_t.color = c ;
             }
+            
         }
-        else
-        {
-             for (int i = 0 ; i <full_step+1 ; i++)
-            {
-                DCube pd_t = pool.getDCube();        
-                pd_t.position =p0_new + i *p_step;
-            }
-        }
-        
     }
 
-
-    // Update is called once per frame
-    void Update()
+    void cam_rays_marching()
     {
-        //draw debug ray
-    	Debug.DrawLine(ab_ray.PA.position, ab_ray.PB.position, Color.white);
-
         for (int i = 0; i <h_rays ;i++)
         {
             for (int j = 0; j <w_rays ;j++)
             {
-                // AB_RAY _ray = cam_rays[i *w_rays + j];
-                // Debug.DrawLine(_ray.PA.position, _ray.PB.position, Color.gray);
-                // inter.obb_intersection_cube(ab_ray ,obb , dcubes);
+                AB_RAY _ray = cam_rays[i *w_rays + j];
+                Debug.DrawLine(_ray.PA.position, _ray.PB.position, Color.gray);
+                if (is_aabb)
+                {
+                    // inter_point inter_p = inter.aabb_intersection(ab_ray , aabb , dcubes);
+                    // print("inter_p.p0_w " + inter_p.p0_world );
+                }
+                else
+                {
+                     // obb_intersection(ab_ray , obb);
+                    inter_point inter_p = inter.obb_intersection_cube(_ray ,obb, dcubes);
+                    if (inter_p.p0_exist && inter_p.p1_exist) 
+                    {
+                        rayMarch2(inter_p, step_size,max_distance,max_steps , obb, cam.transform.position);
+                    }
+                }
             }   
         }
-        
+    }
+
+    void cam_handler_marching()
+    {
+        Debug.DrawLine(ab_ray.PA.position, ab_ray.PB.position, Color.white);
         // draw aabb
         if (is_aabb)
         {
@@ -221,9 +231,16 @@ public class voLume_render : MonoBehaviour
             {
                 rayMarch2(inter_p, step_size,max_distance,max_steps , obb, cam.transform.position);
             }
-            // Debug.DrawLine(obb.pos, obb.pos + obb.x_axis , Color.red);
-            // Debug.DrawLine(obb.pos, obb.pos + obb.y_axis , Color.green);
-            // Debug.DrawLine(obb.pos, obb.pos + obb.z_axis , Color.blue);
         }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {   	
+        // cam_rays_marching();
+        if (use_cam_handler) { cam_handler_marching(); }
+        else { cam_rays_marching(); }
+        //only update dcube onece
+        dcube_created = true;
     }
 }
