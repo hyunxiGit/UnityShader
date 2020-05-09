@@ -17,6 +17,7 @@
             #pragma fragment frag
             #include "UnityCG.cginc"
             #include "UnityPBSLighting.cginc"
+            uniform float4 z_step;
 
             struct appdata
             {
@@ -27,7 +28,11 @@
             struct v2f
             {
                 float2 uv : TEXCOORD0;
-                float3 pos_w : TEXCOORD1;
+                float4 ver_w : TEXCOORD1;
+                float4 ver_o : TEXCOORD2;
+                float4 cam_o : TEXCOORD3;
+                float3 z_step_o : TEXCOORD4;
+                float4 ray_b_point_o : TEXCOORD5;
                 float4 vertex : SV_POSITION;
             };
 
@@ -37,7 +42,13 @@
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.pos_w = mul(unity_ObjectToWorld,v.vertex);
+                o.ver_w = mul(unity_ObjectToWorld,v.vertex);
+                o.ver_o = v.vertex;
+                o.cam_o = mul(unity_WorldToObject, _WorldSpaceCameraPos);
+                o.z_step_o = mul(unity_WorldToObject, z_step.xyz);
+                float4 ray_b_point_w = float4(_WorldSpaceCameraPos.xyz + (o.ver_w.xyz -_WorldSpaceCameraPos.xyz) * _ProjectionParams.z / (o.ver_w.z -_WorldSpaceCameraPos.z), 1.0f);
+                //wip : this is the ab ray b point 
+                o. ray_b_point_o = mul(unity_WorldToObject, ray_b_point_w);
                 return o;
             }
 
@@ -72,25 +83,17 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
+                float n_plane = _ProjectionParams.y;
+                float f_plane = _ProjectionParams.z;
+
                 fixed4 col;
                 //should get from script
-                float3 center = float3(0,0,0);
-
-                float3 rayVec = normalize (i.pos_w-_WorldSpaceCameraPos);
-                float3 pos_ray = rayMartch(rayVec, i.pos_w,center);
-                float depth = length(pos_ray);
-                if (depth == 0)
-                    {col = float4(0,0,0,0);                }
-                else
-                {
-                    //col = float4(pos_ray,1);
-                    float3 normal = normalize(pos_ray-center);
-                    float3 l_dir = _WorldSpaceLightPos0;
-                    float c = DotClamped(l_dir,normal);
-                    col = float4(c,c,c,1);
-                }
-                //lighting 
-
+                // col = i.ver_o + float4(0.5,0.5,0.5,0);
+                
+                float3 dir = normalize(i.ver_o - i.cam_o);
+                
+                col = float4(i. ray_b_point_o.xyz,1);
+                
                 return col;
             }
             ENDCG

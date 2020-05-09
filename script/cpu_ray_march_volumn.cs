@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class voLume_render : MonoBehaviour
+public class cpu_ray_march_volumn : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameObject test_cube;
