@@ -1,8 +1,8 @@
 # UnityShader
 update :
--obb aabb intersection
+-software ray marching volumen with z plane alignment
 
-![Image of obb intersection](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/obb.gif)
+![Image of software ray march volumen](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/software_raymarch_volumen.gif)
 
 -volumen builder plugin for creating uniyt 3d texture from texture atler
 
