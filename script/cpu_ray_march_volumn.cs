@@ -43,6 +43,8 @@ public class cpu_ray_march_volumn : MonoBehaviour
         dCube_rays = new List <DCube_Ray>();
         //camera rays
         cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;
+        // print("cam wolr position :" +cam.transform.position);
+
 
         w_rays = 10;
         h_rays = (int)((float)w_rays * cam.pixelHeight / cam.pixelWidth );
@@ -152,6 +154,7 @@ public class cpu_ray_march_volumn : MonoBehaviour
             p0 = inter_p.p0_object;
             p1 = inter_p.p1_object;
             cam = _obb.w2o.MultiplyPoint3x4(cam);
+            // print ("cam in object poistion :" + cam);
             z_step = _obb.w2o.MultiplyVector(z_step);
         }
 
@@ -177,8 +180,8 @@ public class cpu_ray_march_volumn : MonoBehaviour
             //debug cubes
             if (dcube_created == false)
             {
-                print("pos :" + pos );
-                print("color :" + c);
+                // print("pos :" + pos );
+                // print("color :" + c);
                 DCube pd_t = pool.getDCube();        
                 pd_t.position = use_object ? _obb.o2w.MultiplyPoint3x4( pos) : pos ;  
                 pd_t.color = c ;
@@ -220,7 +223,7 @@ public class cpu_ray_march_volumn : MonoBehaviour
         if (is_aabb)
         {
             inter_point inter_p = inter.aabb_intersection(ab_ray , aabb , dcubes);
-            print("inter_p.p0_w " + inter_p.p0_world );
+            // print("inter_p.p0_w " + inter_p.p0_world );
         }
         else
         {
