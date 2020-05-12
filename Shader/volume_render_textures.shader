@@ -48,7 +48,6 @@
                 //ab ray
                 o.ab_ray_p0 = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos,1.0f));
                 float4 ray_b_point_w = float4(_WorldSpaceCameraPos.xyz + (o.ver_w.xyz -_WorldSpaceCameraPos.xyz) * _ProjectionParams.z / (o.ver_w.z -_WorldSpaceCameraPos.z), 1.0f);
-                //wip : this is the ab ray b point 
                 o. ab_ray_p1 = mul(unity_WorldToObject, ray_b_point_w);
                 o.z_step = mul(unity_WorldToObject, z_step.xyz);
                 return o;
@@ -152,18 +151,62 @@
                 }
             }
 
+            float4 rayMarch2(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
+            {
+                //z-plane alignment
+                float3 z_step = float3(0,0, max_distance / _max_steps);                
+                z_step = mul(unity_WorldToObject, z_step);
+
+
+                //the plane alignment should be calculated on cam pos as origin
+                float3 p0_c = _p0 -cam_o;
+                float3 z_dir = normalize(z_step);
+                //step on p0-p1 align z plane
+                float3 p_step = p0_c * dot(z_step , z_dir) / dot(p0_c,z_dir);
+                float3 p0_z_pro = dot(p0_c, z_dir)*z_dir;
+                float scale_p0 = dot(p0_z_pro , z_dir);
+                float scale_z_step = dot(z_step , z_dir);
+                int scale_p0_z_step = ceil(scale_p0 / scale_z_step);
+                float3 z_plane = scale_p0_z_step * z_step;
+                //position
+                float3 p0_new = scale_p0_z_step * scale_z_step /scale_p0 * p0_c + cam_o;   
+
+                int full_step = floor(length(_p1 -_p0) / length(p_step));
+                //todo : solve why full_step can not be use as look
+                //todo : varify if the camera sample point is not move at all in C# script
+                full_step =100;
+                float4 dst = float4(0, 0, 0, 0);
+                float _Threshold = 0.8;
+                for (int i = 0 ; i <full_step+1 ; i++)
+                {
+                    float3 pos = p0_new + i *p_step;
+                    float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
+
+                    float4 src = float4(v, v, v, v);
+                    src.a = src.r;
+                    src.a *= 0.5;
+                    src.rgb *= src.a;
+
+                    // blend
+                    dst = (1.0 - dst.a) * src + dst;
+                    if (dst.a > _Threshold) break;
+                }
+                return saturate(dst);
+            }
+
             fixed4 frag (v2f i) : SV_Target
             {
                 float n_plane = _ProjectionParams.y;
                 float f_plane = _ProjectionParams.z;
 
                 fixed4 col = float4(0,0,0,1);
-                float3 _p0;
-                float3 _p1;
+                float3 _inter_p0;
+                float3 _inter_p1;
 
-                obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _p0 , _p1 );
+                obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0 , _inter_p1 );
                 //p0 and p1 in object space correct presented
-                col = float4(_p0,1.0f) ;     
+
+                col = rayMarch2(float4 (_inter_p0 ,1), float4 (_inter_p1,1) , f_plane-n_plane , 5 , i.ab_ray_p0);   
                 return col;
             }
             ENDCG
