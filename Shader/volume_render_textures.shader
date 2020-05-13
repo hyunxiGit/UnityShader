@@ -65,24 +65,8 @@
                     return false;
             }
 
-            float3 rayMartch(float3 rayVec, float3 pos, float3 center)
-            {
-                for(int i = 0; i<steps;i++)
-                {
-                    
-                    if (inSphere(pos, center, 0.5))
-                    {
-                        return pos;
-                    } 
-                    pos += rayVec*step_size; 
-                    //accumulate the v_texture according to pos
-                    //need to convert the pos into local cube pos
-                }
 
-                return float3(0,0,0);
-            }
-
-            void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float3 p0_o , out float3 p1_o )
+            void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float3 p0_o , out float3 p1_o , out float3 p0_w ,out float3 p1_w )
             {
                 float4 obb_min = float4(-0.5f,-0.5f,-0.5f,1.0f);
                 float4 obb_max = float4(0.5f,0.5f,0.5f,1.0f);
@@ -128,8 +112,8 @@
                 p0_o =_ab_ray_p0.xyz + max(max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
                 p1_o =_ab_ray_p0.xyz + min(min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
                 //two intersect point in object space
-                float3 p0_w = mul(unity_ObjectToWorld,float4(p0_o,1)).xyz;
-                float3 p1_w = mul(unity_ObjectToWorld,float4(p1_o,1)).xyz;       
+                p0_w = mul(unity_ObjectToWorld,float4(p0_o,1)).xyz;
+                p1_w = mul(unity_ObjectToWorld,float4(p1_o,1)).xyz;       
 
                 // p0_o = p0_w;  
                 // p1_o = p1_w;  
@@ -149,6 +133,39 @@
                         max_exist=true;
                     }
                 }
+            }
+
+            //current bug not related to cam orthographa, not related to z plane alignment
+            //todo : is it related to object space ?
+
+            float4 rayMarch(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
+            {
+                float3 z_step = float3(0,0, max_distance / _max_steps);  
+                z_step = mul(unity_WorldToObject, z_step);
+
+                float3 ray_full = _p1 - _p0;
+                float scale = length(z_step) / length(ray_full) ;
+
+                float4 dst = float4(0, 0, 0, 0);
+                // float _Threshold = 0.8;
+                int ITERATION = 100;
+                for (int i = 0 ; i <ITERATION ; i++)
+                {
+                    float3 pos = _p0 + i *scale *ray_full;
+                    float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
+
+                    float4 src = float4(v, v, v, v);
+                    src.a = src.r;
+                    src.a *= 0.5;
+                    src.rgb *= src.a;
+
+                    // blend
+                    dst = (1.0 - dst.a) * src + dst;
+                    // if (i > full_step) break;
+                    if (i *scale > 1.0f) break;
+                }
+                return saturate(dst);
+                // return float4(p0_new,1);
             }
 
             float4 rayMarch2(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
@@ -172,26 +189,29 @@
                 float3 p0_new = scale_p0_z_step * scale_z_step /scale_p0 * p0_c + cam_o;   
 
                 int full_step = floor(length(_p1 -_p0) / length(p_step));
-                //todo : solve why full_step can not be use as look
-                //todo : varify if the camera sample point is not move at all in C# script
-                full_step =100;
+
+                //todo : camera sample point is nowowrking like slice, figure out why
                 float4 dst = float4(0, 0, 0, 0);
                 float _Threshold = 0.8;
-                for (int i = 0 ; i <full_step+1 ; i++)
+                int ITERATION = 100;
+                for (int i = 0 ; i <ITERATION ; i++)
                 {
                     float3 pos = p0_new + i *p_step;
                     float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
 
-                    float4 src = float4(v, v, v, v);
-                    src.a = src.r;
-                    src.a *= 0.5;
-                    src.rgb *= src.a;
+                    // float4 src = float4(v, v, v, v);
+                    // src.a = src.r;
+                    // src.a *= 0.5;
+                    // src.rgb *= src.a;
+
+                    float4 src = float4(1, 1, 1, v*0.05);
 
                     // blend
                     dst = (1.0 - dst.a) * src + dst;
-                    if (dst.a > _Threshold) break;
+                    if (i > full_step) break;
                 }
                 return saturate(dst);
+                // return float4(p0_new,1);
             }
 
             fixed4 frag (v2f i) : SV_Target
@@ -200,13 +220,17 @@
                 float f_plane = _ProjectionParams.z;
 
                 fixed4 col = float4(0,0,0,1);
-                float3 _inter_p0;
-                float3 _inter_p1;
+                float3 _inter_p0_o;
+                float3 _inter_p1_o;
+                float3 _inter_p0_w;
+                float3 _inter_p1_w;
 
-                obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0 , _inter_p1 );
+                obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
                 //p0 and p1 in object space correct presented
 
-                col = rayMarch2(float4 (_inter_p0 ,1), float4 (_inter_p1,1) , f_plane-n_plane , 5 , i.ab_ray_p0);   
+                //col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
+                col = rayMarch2(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
+                // col = float4(_inter_p0_o , 1);
                 return col;
             }
             ENDCG
