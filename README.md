@@ -1,5 +1,8 @@
 # UnityShader
 update :
+-Voumn rendering with ray marching , wip
+![Image of software ray march volumen](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/voulem%20fog%20wip.gif)
+
 -software ray marching volumen with z plane alignment
 
 ![Image of software ray march volumen](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/software_raymarch_volumen.gif)
