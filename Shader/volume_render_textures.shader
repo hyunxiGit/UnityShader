@@ -1,4 +1,8 @@
-﻿Shader "Custom/volume_render_texture"
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Custom/volume_render_texture"
 {
     Properties
     {
@@ -15,6 +19,7 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma target 3.0
             #include "UnityCG.cginc"
             #include "UnityPBSLighting.cginc"
             uniform float4 z_step;
@@ -33,18 +38,20 @@
                 float4 ab_ray_p0 : TEXCOORD3; //camera object space pos
                 float4 ab_ray_p1 : TEXCOORD4;//ray cam-pixel extend to far plane
                 float3 z_step : TEXCOORD5; //z_step vector object space 
-                float4 vertex : SV_POSITION;
+                float4 ver_clip : TEXCOORD6;
+                // float4 vertex : SV_POSITION;
             };
 
             sampler3D _Volume;
 
-            v2f vert (appdata v)
+            v2f vert (appdata v ,  out float4 vertex : SV_POSITION)
             {
                 v2f o;
                 o.uv = v.uv;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                vertex = UnityObjectToClipPos(v.vertex);
                 o.ver_w = mul(unity_ObjectToWorld,v.vertex);
                 o.ver_o = v.vertex;
+                o.ver_clip = vertex;
                 //ab ray
                 o.ab_ray_p0 = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos,1.0f));
                 float4 ray_b_point_w = float4(_WorldSpaceCameraPos.xyz + (o.ver_w.xyz -_WorldSpaceCameraPos.xyz) * _ProjectionParams.z / (o.ver_w.z -_WorldSpaceCameraPos.z), 1.0f);
@@ -137,6 +144,35 @@
 
             //current bug not related to cam orthographa, not related to z plane alignment
             //todo : is it related to object space ?
+            float4 rayMarchPoint(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
+            {
+                float3 z_step = float3(0,0, max_distance / _max_steps);  
+                z_step = mul(unity_WorldToObject, z_step);
+
+                float3 ray_full = _p1 - _p0;
+                float scale = length(z_step) / length(ray_full) ;
+
+                float4 dst = float4(0, 0, 0, 0);
+                // float _Threshold = 0.8;
+                int ITERATION = 100;
+                for (int i = 0 ; i <ITERATION ; i++)
+                {
+                    float3 pos = _p0 + i *scale *ray_full;
+                    // build a sphere on the point
+                    float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
+
+                    float4 src = float4(v, v, v, v);
+                    src.a = src.r;
+                    src.a *= 0.5;
+                    src.rgb *= src.a;
+
+                    // blend
+                    // if (i > full_step) break;
+                    if (i *scale > 1.0f) break;
+                }
+                return saturate(dst);
+                // return float4(p0_new,1);
+            }
 
             float4 rayMarch(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
             {
@@ -152,6 +188,7 @@
                 for (int i = 0 ; i <ITERATION ; i++)
                 {
                     float3 pos = _p0 + i *scale *ray_full;
+                    // build a sphere on the point
                     float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
 
                     float4 src = float4(v, v, v, v);
@@ -214,8 +251,22 @@
                 // return float4(p0_new,1);
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            float debugPoint(float4 p , UNITY_VPOS_TYPE screenPos)
             {
+                p = ComputeScreenPos (UnityObjectToClipPos(p));
+                //p point in screen uv (0-1)
+                float2 uv_p = p.xy / p.w;
+                //screen space uv (0-1)
+                float2 uv_screen = screenPos / _ScreenParams;
+                float c = step(length(uv_p - uv_screen),0.01);
+                return c;
+            }
+
+            fixed4 frag (v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+            {
+                // screenPos.xy = floor(screenPos.xy * 0.25) * 0.5;
+                // float checker = frac(screenPos.r + screenPos.g);
+
                 float n_plane = _ProjectionParams.y;
                 float f_plane = _ProjectionParams.z;
 
@@ -225,13 +276,17 @@
                 float3 _inter_p0_w;
                 float3 _inter_p1_w;
 
+
+
                 obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
                 //p0 and p1 in object space correct presented
 
-                //col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
-                col = rayMarch2(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
-                // col = float4(_inter_p0_o , 1);
-                return col;
+                col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0); 
+                col = rayMarchPoint(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
+                //col = rayMarch2(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
+
+                float c = debugPoint(float4(0.5,0.5,0.5,1) , screenPos);
+                return float4(c,c,c,1);
             }
             ENDCG
         }
