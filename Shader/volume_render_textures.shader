@@ -174,8 +174,9 @@ Shader "Custom/volume_render_texture"
                 // return float4(p0_new,1);
             }
 
+            //ray march with no z plane alignment
             float4 rayMarch(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
-            {
+            {      
                 float3 z_step = float3(0,0, max_distance / _max_steps);  
                 z_step = mul(unity_WorldToObject, z_step);
 
@@ -251,14 +252,16 @@ Shader "Custom/volume_render_texture"
                 // return float4(p0_new,1);
             }
 
-            float debugPoint(float4 p , UNITY_VPOS_TYPE screenPos)
-            {
+            float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
+            {   // p : point position , s: point size in float 
                 p = ComputeScreenPos (UnityObjectToClipPos(p));
                 //p point in screen uv (0-1)
                 float2 uv_p = p.xy / p.w;
                 //screen space uv (0-1)
-                float2 uv_screen = screenPos / _ScreenParams;
-                float c = step(length(uv_p - uv_screen),0.01);
+                float2 uv_screen = screenPos / _ScreenParams ;
+                float2 circle = (uv_p - uv_screen);
+                circle.y*=_ScreenParams.y/_ScreenParams.x;
+                float c = step(length(circle),s);
                 return c;
             }
 
@@ -276,16 +279,38 @@ Shader "Custom/volume_render_texture"
                 float3 _inter_p0_w;
                 float3 _inter_p1_w;
 
-
-
                 obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
                 //p0 and p1 in object space correct presented
 
-                col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0); 
-                col = rayMarchPoint(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
-                //col = rayMarch2(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);   
+                //col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0); 
+                //col = rayMarch2(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);
+                float c =0;
 
-                float c = debugPoint(float4(0.5,0.5,0.5,1) , screenPos);
+                //debug, scater the ray to grid instead of pixel
+                int tile = 5;
+                float gap = 1.0f/tile;
+                float c_offset = fmod(tile,2) * gap*0.5f;
+                int h_tile = tile/2;
+                float d_point_size = 0.003f;
+
+                for (int _i = 0; _i <tile ; _i++)
+                {
+                    for (int _j = 0; _j <tile ; _j++)
+                    {
+                        float i_pos = gap * (_i + 0.5 - d_point_size/2)-0.5f;
+                        float j_pos = gap * (_j + 0.5 - d_point_size/2)-0.5f;
+                        //six faces
+                        c += debugPoint(float4(0.5,i_pos,j_pos,1), d_point_size, screenPos);
+                        c += debugPoint(float4(-0.5,i_pos,j_pos,1), d_point_size, screenPos);
+                        c += debugPoint(float4(i_pos,0.5,j_pos,1), d_point_size, screenPos);
+                        c += debugPoint(float4(i_pos,-0.5,j_pos,1), d_point_size, screenPos);
+                        c += debugPoint(float4(i_pos,j_pos,0.5,1), d_point_size, screenPos);
+                        c += debugPoint(float4(i_pos,j_pos,-0.5,1), d_point_size, screenPos);
+                    }
+                }
+                
+                // col = rayMarchPoint(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);      
+                
                 return float4(c,c,c,1);
             }
             ENDCG
