@@ -228,7 +228,6 @@ Shader "Custom/volume_render_texture"
 
                 int full_step = floor(length(_p1 -_p0) / length(p_step));
 
-                //todo : camera sample point is nowowrking like slice, figure out why
                 float4 dst = float4(0, 0, 0, 0);
                 float _Threshold = 0.8;
                 int ITERATION = 100;
@@ -274,12 +273,12 @@ Shader "Custom/volume_render_texture"
                 float f_plane = _ProjectionParams.z;
 
                 fixed4 col = float4(0,0,0,1);
-                float3 _inter_p0_o;
-                float3 _inter_p1_o;
+                float3 _inter_p0_o = float3(0,0,0);
+                float3 _inter_p1_o= float3(0,0,0);
                 float3 _inter_p0_w;
                 float3 _inter_p1_w;
 
-                obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
+                //obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
                 //p0 and p1 in object space correct presented
 
                 //col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0); 
@@ -292,6 +291,8 @@ Shader "Custom/volume_render_texture"
                 float c_offset = fmod(tile,2) * gap*0.5f;
                 int h_tile = tile/2;
                 float d_point_size = 0.003f;
+                //threshold for tolerate rasterize cause inaccurate pixel position
+                float threshold = 0.005f;
 
                 for (int _i = 0; _i <tile ; _i++)
                 {
@@ -300,14 +301,23 @@ Shader "Custom/volume_render_texture"
                         float i_pos = gap * (_i + 0.5 - d_point_size/2)-0.5f;
                         float j_pos = gap * (_j + 0.5 - d_point_size/2)-0.5f;
                         //six faces
-                        c += debugPoint(float4(0.5,i_pos,j_pos,1), d_point_size, screenPos);
-                        c += debugPoint(float4(-0.5,i_pos,j_pos,1), d_point_size, screenPos);
-                        c += debugPoint(float4(i_pos,0.5,j_pos,1), d_point_size, screenPos);
-                        c += debugPoint(float4(i_pos,-0.5,j_pos,1), d_point_size, screenPos);
-                        c += debugPoint(float4(i_pos,j_pos,0.5,1), d_point_size, screenPos);
-                        c += debugPoint(float4(i_pos,j_pos,-0.5,1), d_point_size, screenPos);
+                        // c += debugPoint(float4(0.5,i_pos,j_pos,1), d_point_size, screenPos);
+                        // c += debugPoint(float4(-0.5,i_pos,j_pos,1), d_point_size, screenPos);
+                        // c += debugPoint(float4(i_pos,0.5,j_pos,1), d_point_size, screenPos);
+                        // c += debugPoint(float4(i_pos,-0.5,j_pos,1), d_point_size, screenPos);
+                        // c += debugPoint(float4(i_pos,j_pos,0.5,1), d_point_size, screenPos);
+                        // c += debugPoint(float4(i_pos,j_pos,-0.5,1), d_point_size, screenPos);
                     }
                 }
+
+                if ( i.ver_o.x - 0.5 <threshold &&  i.ver_o.y <threshold && i.ver_o.z <threshold)
+                {
+                    obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
+                }
+                //todo : fix this 
+                //looks like the interset point is not quite right
+                c += debugPoint(float4(0.5f, _inter_p0_o.y ,_inter_p0_o.z ,1), d_point_size, screenPos);
+                // c += debugPoint(float4(_inter_p1_o,1), d_point_size, screenPos);
                 
                 // col = rayMarchPoint(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);      
                 
