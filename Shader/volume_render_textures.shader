@@ -1,6 +1,11 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+﻿//log
+//camera position object correct
+//object vertex world space correct
+//ray_b_point_w correct
+//ab_ray_p1 correct
+//z_step obeject space correct
+//obb intersect 2 points correct
+//ray march correct 
 
 Shader "Custom/volume_render_texture"
 {
@@ -36,7 +41,6 @@ Shader "Custom/volume_render_texture"
                 float4 ver_w : TEXCOORD1;
                 float4 ver_o : TEXCOORD2;
                 float4 ab_ray_p0 : TEXCOORD3; //camera object space pos
-                float4 ab_ray_p1 : TEXCOORD4;//ray cam-pixel extend to far plane
                 float3 z_step : TEXCOORD5; //z_step vector object space 
                 float4 ver_clip : TEXCOORD6;
                 // float4 vertex : SV_POSITION;
@@ -54,8 +58,6 @@ Shader "Custom/volume_render_texture"
                 o.ver_clip = vertex;
                 //ab ray
                 o.ab_ray_p0 = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos,1.0f));
-                float4 ray_b_point_w = float4(_WorldSpaceCameraPos.xyz + (o.ver_w.xyz -_WorldSpaceCameraPos.xyz) * _ProjectionParams.z / (o.ver_w.z -_WorldSpaceCameraPos.z), 1.0f);
-                o. ab_ray_p1 = mul(unity_WorldToObject, ray_b_point_w);
                 o.z_step = mul(unity_WorldToObject, z_step.xyz);
                 return o;
             }
@@ -73,7 +75,7 @@ Shader "Custom/volume_render_texture"
             }
 
 
-            void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float3 p0_o , out float3 p1_o , out float3 p0_w ,out float3 p1_w )
+            void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out float4 p1_o , out float4 p0_w ,out float4 p1_w )
             {
                 float4 obb_min = float4(-0.5f,-0.5f,-0.5f,1.0f);
                 float4 obb_max = float4(0.5f,0.5f,0.5f,1.0f);
@@ -90,9 +92,9 @@ Shader "Custom/volume_render_texture"
 
                 //full ray on x , y , z value
                 float3 ray_projected = float3( ray_full.x , ray_full.y , ray_full.z);
-                ray_projected.x = ray_projected.x == 0.0f?0.0000001f : ray_projected.x;
-                ray_projected.y = ray_projected.y == 0.0f?0.0000001f : ray_projected.y;
-                ray_projected.z = ray_projected.z == 0.0f?0.0000001f : ray_projected.z;
+                ray_projected.x = ray_projected.x == 0.0f?0.00001f : ray_projected.x;
+                ray_projected.y = ray_projected.y == 0.0f?0.00001f : ray_projected.y;
+                ray_projected.z = ray_projected.z == 0.0f?0.00001f : ray_projected.z;
 
                 float _x1 = ray_min.x / ray_projected.x;
                 float _x2 = ray_max.x / ray_projected.x;
@@ -116,11 +118,11 @@ Shader "Custom/volume_render_texture"
                 float max_scale = min(min(xyz_sclae_max.x ,xyz_sclae_max.y),xyz_sclae_max.z);
 
                 //two intersect point in object space
-                p0_o =_ab_ray_p0.xyz + max(max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full;
-                p1_o =_ab_ray_p0.xyz + min(min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full;
+                p0_o =float4(_ab_ray_p0.xyz + max(max(xyz_sclae_min.x  ,xyz_sclae_min.y),xyz_sclae_min.z) *ray_full,1);
+                p1_o =float4(_ab_ray_p0.xyz + min(min(xyz_sclae_max.x  ,xyz_sclae_max.y),xyz_sclae_max.z) *ray_full,1);
                 //two intersect point in object space
-                p0_w = mul(unity_ObjectToWorld,float4(p0_o,1)).xyz;
-                p1_w = mul(unity_ObjectToWorld,float4(p1_o,1)).xyz;       
+                p0_w = float4(mul(unity_ObjectToWorld,p0_o).xyz,1);
+                p1_w = float4(mul(unity_ObjectToWorld, p1_o).xyz,1);       
 
                 // p0_o = p0_w;  
                 // p1_o = p1_w;  
@@ -144,41 +146,8 @@ Shader "Custom/volume_render_texture"
 
             //current bug not related to cam orthographa, not related to z plane alignment
             //todo : is it related to object space ?
-            float4 rayMarchPoint(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
+            float4 rayMarchPoint(float4 _p0, float4 _p1 , float3 z_step)
             {
-                float3 z_step = float3(0,0, max_distance / _max_steps);  
-                z_step = mul(unity_WorldToObject, z_step);
-
-                float3 ray_full = _p1 - _p0;
-                float scale = length(z_step) / length(ray_full) ;
-
-                float4 dst = float4(0, 0, 0, 0);
-                // float _Threshold = 0.8;
-                int ITERATION = 100;
-                for (int i = 0 ; i <ITERATION ; i++)
-                {
-                    float3 pos = _p0 + i *scale *ray_full;
-                    // build a sphere on the point
-                    float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
-
-                    float4 src = float4(v, v, v, v);
-                    src.a = src.r;
-                    src.a *= 0.5;
-                    src.rgb *= src.a;
-
-                    // blend
-                    // if (i > full_step) break;
-                    if (i *scale > 1.0f) break;
-                }
-                return saturate(dst);
-                // return float4(p0_new,1);
-            }
-
-            //ray march with no z plane alignment
-            float4 rayMarch(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
-            {      
-                float3 z_step = float3(0,0, max_distance / _max_steps);  
-                z_step = mul(unity_WorldToObject, z_step);
 
                 float3 ray_full = _p1 - _p0;
                 float scale = length(z_step) / length(ray_full) ;
@@ -206,11 +175,40 @@ Shader "Custom/volume_render_texture"
                 // return float4(p0_new,1);
             }
 
-            float4 rayMarch2(float4 _p0, float4 _p1 , float max_distance , int _max_steps ,float4 cam_o)
+            //ray march with no z plane alignment
+            float4 rayMarch(float4 _p0, float4 _p1 , float3 z_step )
+            {      
+
+                float3 ray_full = _p1 - _p0;
+                float scale = length(z_step) / length(ray_full) ;
+
+                float4 dst = float4(0, 0, 0, 0);
+                // float _Threshold = 0.8;
+                int ITERATION = 100;
+                for (int i = 0 ; i <ITERATION ; i++)
+                {
+                    float3 pos = _p0 + i *scale *ray_full;
+                    // build a sphere on the point
+                    float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
+
+                    float4 src = float4(v, v, v, v);
+                    src.a = src.r;
+                    src.a *= 0.5;
+                    src.rgb *= src.a;
+
+                    // blend
+                    dst = (1.0 - dst.a) * src + dst;
+                    // if (i > full_step) break;
+                    if (i *scale > 1.0f) break;
+                }
+                return saturate(dst);
+                // return float4(p0_new,1);
+            }
+
+            float4 rayMarch2(float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o)
             {
                 //z-plane alignment
-                float3 z_step = float3(0,0, max_distance / _max_steps);                
-                z_step = mul(unity_WorldToObject, z_step);
+
 
 
                 //the plane alignment should be calculated on cam pos as origin
@@ -273,19 +271,24 @@ Shader "Custom/volume_render_texture"
                 float f_plane = _ProjectionParams.z;
 
                 fixed4 col = float4(0,0,0,1);
-                float3 _inter_p0_o = float3(0,0,0);
-                float3 _inter_p1_o= float3(0,0,0);
-                float3 _inter_p0_w;
-                float3 _inter_p1_w;
+                float4 _inter_p0_o;
+                float4 _inter_p1_o;
+                float4 _inter_p0_w;
+                float4 _inter_p1_w;
 
-                //obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
-                //p0 and p1 in object space correct presented
+                //todo : this step can be optmize
+                float4 ray_b_point_w = float4(_WorldSpaceCameraPos.xyz + (i.ver_w.xyz -_WorldSpaceCameraPos.xyz) * _ProjectionParams.z / (i.ver_w.z -_WorldSpaceCameraPos.z), 1.0f);
+                float4 ab_ray_p1 = mul(unity_WorldToObject, ray_b_point_w); 
 
-                //col = rayMarch(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0); 
-                //col = rayMarch2(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);
-                float c =0;
+                obb_intersect(i.ab_ray_p0 , ab_ray_p1 , _inter_p0_o , _inter_p1_o , _inter_p0_w ,_inter_p1_w );
+
+                //ray march
+                // col = rayMarchPoint(_inter_p0_o , _inter_p1_o , i.z_step );
+                //col = rayMarch(_inter_p0_o,_inter_p1_o ,i.z_step); 
+                col = rayMarch2(_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0);
 
                 //debug, scater the ray to grid instead of pixel
+
                 int tile = 5;
                 float gap = 1.0f/tile;
                 float c_offset = fmod(tile,2) * gap*0.5f;
@@ -309,19 +312,8 @@ Shader "Custom/volume_render_texture"
                         // c += debugPoint(float4(i_pos,j_pos,-0.5,1), d_point_size, screenPos);
                     }
                 }
-
-                if ( i.ver_o.x - 0.5 <threshold &&  i.ver_o.y <threshold && i.ver_o.z <threshold)
-                {
-                    obb_intersect(i.ab_ray_p0 , i.ab_ray_p1,  _inter_p0_o , _inter_p1_o ,_inter_p0_w , _inter_p1_w);
-                }
-                //todo : fix this 
-                //looks like the interset point is not quite right
-                c += debugPoint(float4(0.5f, _inter_p0_o.y ,_inter_p0_o.z ,1), d_point_size, screenPos);
-                // c += debugPoint(float4(_inter_p1_o,1), d_point_size, screenPos);
                 
-                // col = rayMarchPoint(float4 (_inter_p0_o ,1), float4 (_inter_p1_o,1) , f_plane-n_plane ,  500, i.ab_ray_p0);      
-                
-                return float4(c,c,c,1);
+                return col;
             }
             ENDCG
         }

@@ -833,6 +833,7 @@ GameObject:
   - component: {fileID: 2035865790}
   - component: {fileID: 2035865791}
   - component: {fileID: 2035865792}
+  - component: {fileID: 2035865793}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -948,6 +949,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   max_steps: 100
   volume: {fileID: 11700000, guid: c1bf285695018c84a9ffa8f53ecbbbf8, type: 2}
+--- !u!114 &2035865793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035865786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5158ce86010effc41ab70ca4f396cbb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cube: {fileID: 2132295213}
 --- !u!1 &2132295213
 GameObject:
   m_ObjectHideFlags: 0
@@ -1034,11 +1048,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132295213}
-  m_LocalRotation: {x: -0.6141807, y: -0.6522878, z: 0.3480298, w: -0.27600372}
-  m_LocalPosition: {x: -0.47, y: -1.4, z: 2.62}
-  m_LocalScale: {x: 0.97954905, y: 0.97954905, z: 0.97954905}
+  m_LocalRotation: {x: -0.5409956, y: 0.19038053, z: -0.47825047, w: -0.6650982}
+  m_LocalPosition: {x: -1.19, y: -1.59, z: 2.68}
+  m_LocalScale: {x: 1.8577, y: 4.6431894, z: 1.2423555}
   m_Children:
   - {fileID: 1941753355}
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 127.52699, y: -353.644, z: -90.31201}
+  m_LocalEulerAnglesHint: {x: 115.614, y: -502.324, z: -84.31799}
