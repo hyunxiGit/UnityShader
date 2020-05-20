@@ -28,6 +28,7 @@ Shader "Custom/volume_render_texture"
             #include "UnityCG.cginc"
             #include "UnityPBSLighting.cginc"
             uniform float4 z_step;
+            sampler2D _CameraDepthTexture;
 
             struct appdata
             {
@@ -209,8 +210,6 @@ Shader "Custom/volume_render_texture"
             {
                 //z-plane alignment
 
-
-
                 //the plane alignment should be calculated on cam pos as origin
                 float3 p0_c = _p0 -cam_o;
                 float3 z_dir = normalize(z_step);
@@ -264,8 +263,12 @@ Shader "Custom/volume_render_texture"
 
             fixed4 frag (v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
             {
-                // screenPos.xy = floor(screenPos.xy * 0.25) * 0.5;
-                // float checker = frac(screenPos.r + screenPos.g);
+                //camera depth calculation 
+                //todo : use calculated scene depth in the ray marching to terminate ray if intersct 
+                //with other object
+                float4 p = ComputeScreenPos (UnityObjectToClipPos(i.ver_o));
+                float cam_depth = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(p)).r;
+                cam_depth = LinearEyeDepth(cam_depth);
 
                 float n_plane = _ProjectionParams.y;
                 float f_plane = _ProjectionParams.z;
@@ -312,7 +315,11 @@ Shader "Custom/volume_render_texture"
                         // c += debugPoint(float4(i_pos,j_pos,-0.5,1), d_point_size, screenPos);
                     }
                 }
-                
+                // Inside the vertex shader.
+
+
+
+                col = float4(cam_depth , cam_depth , cam_depth, 1);
                 return col;
             }
             ENDCG

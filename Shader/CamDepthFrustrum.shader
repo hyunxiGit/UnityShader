@@ -1,7 +1,7 @@
 ﻿//capture screen depth and save as a texture : shader
 //render target example
 //post process backbon , pass cam frustrum to shader and build 3d pos
-Shader "Hidden/RenderDepth"
+Shader "Hidden/CamDepthFrustrum"
  {
      Properties
      {
@@ -96,9 +96,8 @@ Shader "Hidden/RenderDepth"
              {
 
                 float4 c = calculateWorldPosFromCameraFrustrum(IN);
-                //float3 c = tex2D(_MainTex,IN.uv);
-                //return float4(c,1);
-                return float4(c);
+                float depth = getDepth(IN.uv);
+                return float4(depth,depth,depth,1);
              }
              
              ENDCG

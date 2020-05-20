@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿//a class to help print the screen based color
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
