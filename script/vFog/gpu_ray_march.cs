@@ -13,7 +13,8 @@ public class gpu_ray_march : MonoBehaviour
     void Start()
     {
          //camera rays
-        cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;       
+        cam = this.gameObject.GetComponent(typeof(Camera)) as Camera;   
+        cam.depthTextureMode = DepthTextureMode.Depth;    
 		Vector4 z_step = new Vector4 (0,0, (cam.farClipPlane - cam.nearClipPlane) / max_steps,1);
 		_shader = Shader.Find("Custom/volume_render_texture"); 
 		Shader.SetGlobalVector("z_step", z_step);

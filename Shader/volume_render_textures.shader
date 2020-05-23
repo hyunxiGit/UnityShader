@@ -1,4 +1,8 @@
-﻿//log
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+//log
 //camera position object correct
 //object vertex world space correct
 //ray_b_point_w correct
@@ -24,7 +28,7 @@ Shader "Custom/volume_render_texture"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 3.0
+            #pragma target 4.0
             #include "UnityCG.cginc"
             #include "UnityPBSLighting.cginc"
             uniform float4 z_step;
@@ -206,7 +210,7 @@ Shader "Custom/volume_render_texture"
                 // return float4(p0_new,1);
             }
 
-            float4 rayMarch2(float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o)
+            float4 rayMarch2(float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, float zbuffer)
             {
                 //z-plane alignment
 
@@ -228,9 +232,12 @@ Shader "Custom/volume_render_texture"
                 float4 dst = float4(0, 0, 0, 0);
                 float _Threshold = 0.8;
                 int ITERATION = 100;
+                /* quot for debug
                 for (int i = 0 ; i <ITERATION ; i++)
                 {
                     float3 pos = p0_new + i *p_step;
+                    // float pos_zbuffer = UnityObjectToClipPos(float4(pos,1)).z;
+                    // if (pos_zbuffer < zbuffer) break;
                     float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
 
                     // float4 src = float4(v, v, v, v);
@@ -245,7 +252,16 @@ Shader "Custom/volume_render_texture"
                     if (i > full_step) break;
                 }
                 return saturate(dst);
-                // return float4(p0_new,1);
+                */
+                //debug
+                // todo  : 為每一個step 添加scale ， 由ui可控制
+                //檢測 傳入zdepth 和 march 出來的 step 關係
+                //參考 https://forum.unity.com/threads/custom-depth-buffer-rendering.323279/
+
+                // float eye_space_p0 = -mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, float4(_p0.xyz, 1.0))).z;
+                float d =LinearEyeDepth(zbuffer);
+                // float d = Linear01Depth(zbuffer);
+                return float4(d,d,d,1);
             }
 
             float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
@@ -261,14 +277,19 @@ Shader "Custom/volume_render_texture"
                 return c;
             }
 
+            float4 depthTest(v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
+            {
+
+            }
+
             fixed4 frag (v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
             {
                 //camera depth calculation 
                 //todo : use calculated scene depth in the ray marching to terminate ray if intersct 
                 //with other object
                 float4 p = ComputeScreenPos (UnityObjectToClipPos(i.ver_o));
-                float cam_depth = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(p)).r;
-                cam_depth = LinearEyeDepth(cam_depth);
+                float depth_buffer_scene = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(p)).r;
+                // cam_depth = LinearEyeDepth(cam_depth);
 
                 float n_plane = _ProjectionParams.y;
                 float f_plane = _ProjectionParams.z;
@@ -288,7 +309,7 @@ Shader "Custom/volume_render_texture"
                 //ray march
                 // col = rayMarchPoint(_inter_p0_o , _inter_p1_o , i.z_step );
                 //col = rayMarch(_inter_p0_o,_inter_p1_o ,i.z_step); 
-                col = rayMarch2(_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0);
+                col = rayMarch2(_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,depth_buffer_scene);
 
                 //debug, scater the ray to grid instead of pixel
 
@@ -318,8 +339,7 @@ Shader "Custom/volume_render_texture"
                 // Inside the vertex shader.
 
 
-
-                col = float4(cam_depth , cam_depth , cam_depth, 1);
+                
                 return col;
             }
             ENDCG
