@@ -85,13 +85,23 @@
 
             fixed4 frag (v2f i ) : SV_Target
             {
-                //和 i.depth.x 有10倍的關係，是 i.depth.x 的 0-1的remap？
-                float zbuffer_depth = LinearEyeDepth (tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(i.projPos)).r);  
+                //get depth from depth texture, cam_d has same value as dpeth buffer
+                float4 cam_d = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(i.projPos)).r;
+                
+                //解析方法 ------------------------
+                float zbuffer_depth = LinearEyeDepth (cam_d.r);  
                 //和zbuffer 最爲接近
-                float screenDepth = DecodeFloatRG(tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(i.projPos)).r);
+                float screenDepth = DecodeFloatRG(cam_d.r);
+
+                float cam_linear_depth = Linear01Depth(cam_d.r);
                 //似乎是1-zbuffer
-                float partZ = i.projPos.z;      
-                return float4(zbuffer_depth, partZ, screenDepth, i.depth.x);
+                float partZ = i.projPos.z;   
+
+                //以下都为zbuffer值 : 
+                float frag_calculate_vertex_clip_value = UnityObjectToClipPos(i.vertex_o).z/UnityObjectToClipPos(i.vertex_o).w;
+                float vertex_zbuffer = i.vertex.z;
+                float cam_texture_z = cam_d ;
+                return float4(i.vertex.z, frag_calculate_vertex_clip_value, screenDepth, i.depth.x);
             }
             ENDCG
         }
