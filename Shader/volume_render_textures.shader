@@ -47,7 +47,8 @@ Shader "Custom/volume_render_texture"
                 float4 ver_o : TEXCOORD2;
                 float4 ab_ray_p0 : TEXCOORD3; //camera object space pos
                 float3 z_step : TEXCOORD5; //z_step vector object space 
-                float4 ver_clip : TEXCOORD6;
+                float4 ver_c : TEXCOORD6; // clipspace
+                float4 projPos : TEXCOORD7;
                 // float4 vertex : SV_POSITION;
             };
 
@@ -57,10 +58,12 @@ Shader "Custom/volume_render_texture"
             {
                 v2f o;
                 o.uv = v.uv;
-                vertex = UnityObjectToClipPos(v.vertex);
+                o.ver_c = UnityObjectToClipPos(v.vertex);
+                vertex = o.ver_c;
                 o.ver_w = mul(unity_ObjectToWorld,v.vertex);
                 o.ver_o = v.vertex;
-                o.ver_clip = vertex;
+
+                o.projPos = ComputeScreenPos(vertex);
                 //ab ray
                 o.ab_ray_p0 = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos,1.0f));
                 o.z_step = mul(unity_WorldToObject, z_step.xyz);
@@ -149,8 +152,6 @@ Shader "Custom/volume_render_texture"
                 }
             }
 
-            //current bug not related to cam orthographa, not related to z plane alignment
-            //todo : is it related to object space ?
             float4 rayMarchPoint(float4 _p0, float4 _p1 , float3 z_step)
             {
 
@@ -210,7 +211,7 @@ Shader "Custom/volume_render_texture"
                 // return float4(p0_new,1);
             }
 
-            float4 rayMarch2(float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, float zbuffer)
+            float4 rayMarch2( v2f i , float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, float zbuffer)
             {
                 //z-plane alignment
 
@@ -259,9 +260,26 @@ Shader "Custom/volume_render_texture"
                 //參考 https://forum.unity.com/threads/custom-depth-buffer-rendering.323279/
 
                 // float eye_space_p0 = -mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, float4(_p0.xyz, 1.0))).z;
-                float d =LinearEyeDepth(zbuffer);
-                // float d = Linear01Depth(zbuffer);
-                return float4(d,d,d,1);
+                
+                //todo :  depth test code 需要把这个移动出来成为一个例子,方便以后查阅 
+                float d = i.ver_c.z/i.ver_c.w;
+                float4 col =float4(0.1,0.25,0.3,1);
+
+
+                if (d - zbuffer <0.01 )
+                {
+                    col =  float4(0.5,0.9,1,1);
+                }
+                else
+                {
+                    if (zbuffer >0.0001)
+                    {
+                        col =  float4(0.2,0.5,0.6,1);
+                    }
+                }
+
+
+                return col;
             }
 
             float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
@@ -287,8 +305,8 @@ Shader "Custom/volume_render_texture"
                 //camera depth calculation 
                 //todo : use calculated scene depth in the ray marching to terminate ray if intersct 
                 //with other object
-                float4 p = ComputeScreenPos (UnityObjectToClipPos(i.ver_o));
-                float depth_buffer_scene = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(p)).r;
+
+                float depth_buffer_scene = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(i.projPos)).r;
                 // cam_depth = LinearEyeDepth(cam_depth);
 
                 float n_plane = _ProjectionParams.y;
@@ -309,7 +327,7 @@ Shader "Custom/volume_render_texture"
                 //ray march
                 // col = rayMarchPoint(_inter_p0_o , _inter_p1_o , i.z_step );
                 //col = rayMarch(_inter_p0_o,_inter_p1_o ,i.z_step); 
-                col = rayMarch2(_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,depth_buffer_scene);
+                col = rayMarch2(i,_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,depth_buffer_scene);
 
                 //debug, scater the ray to grid instead of pixel
 
@@ -338,8 +356,6 @@ Shader "Custom/volume_render_texture"
                 }
                 // Inside the vertex shader.
 
-
-                
                 return col;
             }
             ENDCG
