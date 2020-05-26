@@ -1,14 +1,10 @@
 # UnityShader
-collection of tutorial shader and also my own rendering projects,
+collection of tutorial shader and also my own rendering projects.
+my own projects are very random, mostly should be listed in updates, tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tutorials/rendering/
 
-tutorial shader reference to 
 
-catLikeCoding
-https://catlikecoding.com/unity/tutorials/rendering/
+updates
 
-my own projects are more random
-
-update :
 -Scene depth test
 
 ![Image of scene depth test](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/scene_depth_test.gif)
