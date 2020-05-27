@@ -1,4 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
 // Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
@@ -213,8 +213,6 @@ Shader "Custom/volume_render_texture"
 
             float4 rayMarch2( v2f i , float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, float zbuffer)
             {
-                //z-plane alignment
-
                 //the plane alignment should be calculated on cam pos as origin
                 float3 p0_c = _p0 -cam_o;
                 float3 z_dir = normalize(z_step);
@@ -233,27 +231,27 @@ Shader "Custom/volume_render_texture"
                 float4 dst = float4(0, 0, 0, 0);
                 float _Threshold = 0.8;
                 int ITERATION = 100;
-                /* quot for debug
                 for (int i = 0 ; i <ITERATION ; i++)
                 {
                     float3 pos = p0_new + i *p_step;
-                    // float pos_zbuffer = UnityObjectToClipPos(float4(pos,1)).z;
-                    // if (pos_zbuffer < zbuffer) break;
                     float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
-
-                    // float4 src = float4(v, v, v, v);
-                    // src.a = src.r;
-                    // src.a *= 0.5;
-                    // src.rgb *= src.a;
-
-                    float4 src = float4(1, 1, 1, v*0.05);
+                    //todo : optimize clip space calculation
+                    float4 pos_c = UnityObjectToClipPos(float4(pos,1));
+                    float pos_zbuffer = pos_c.z / pos_c.w;
+                    if (pos_zbuffer < zbuffer) break;
+                    
+                    float4 src = float4(1, 1, 1, v * 0.1f);
 
                     // blend
                     dst = (1.0 - dst.a) * src + dst;
+
+                     
                     if (i > full_step) break;
                 }
+              
                 return saturate(dst);
-                */
+                // return float4(p0_new,1);
+                
                 //debug
                 // todo  : 為每一個step 添加scale ， 由ui可控制
                 //檢測 傳入zdepth 和 march 出來的 step 關係
@@ -262,24 +260,20 @@ Shader "Custom/volume_render_texture"
                 // float eye_space_p0 = -mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, float4(_p0.xyz, 1.0))).z;
                 
                 //todo :  depth test code 需要把这个移动出来成为一个例子,方便以后查阅 
-                float d = i.ver_c.z/i.ver_c.w;
-                float4 col =float4(0.1,0.25,0.3,1);
-
-
-                if (d - zbuffer <0.01 )
-                {
-                    col =  float4(0.5,0.9,1,1);
-                }
-                else
-                {
-                    if (zbuffer >0.0001)
-                    {
-                        col =  float4(0.2,0.5,0.6,1);
-                    }
-                }
-
-
-                return col;
+                // float d = i.ver_c.z/i.ver_c.w;
+                // float4 col =float4(0.1,0.25,0.3,1);
+                // if (d - zbuffer <0.01 )
+                // {
+                //     col =  float4(0.5,0.9,1,1);
+                // }
+                // else
+                // {
+                //     if (zbuffer >0.0001)
+                //     {
+                //         col =  float4(0.2,0.5,0.6,1);
+                //     }
+                // }
+                // return col;
             }
 
             float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
@@ -326,7 +320,7 @@ Shader "Custom/volume_render_texture"
 
                 //ray march
                 // col = rayMarchPoint(_inter_p0_o , _inter_p1_o , i.z_step );
-                //col = rayMarch(_inter_p0_o,_inter_p1_o ,i.z_step); 
+                // col = rayMarch(_inter_p0_o,_inter_p1_o ,i.z_step); 
                 col = rayMarch2(i,_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,depth_buffer_scene);
 
                 //debug, scater the ray to grid instead of pixel
