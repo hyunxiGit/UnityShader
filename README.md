@@ -5,6 +5,9 @@ my own projects are very random, mostly should be listed in updates, tutorial sh
 
 updates
 
+-volume scene object correct intersect
+![Image of scene depth test](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_intersect.gif)
+
 -Scene depth test
 
 ![Image of scene depth test](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/scene_depth_test.gif)
