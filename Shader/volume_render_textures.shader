@@ -19,10 +19,45 @@ Shader "Custom/volume_render_texture"
     }
     SubShader
     {
+        // debug purpose
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
+        // Tags { "RenderType"="Opaque" }
         Blend SrcAlpha OneMinusSrcAlpha
         LOD 100
-
+        // Pass 
+        //  {
+        //      Name "ShadowCaster"
+        //      Tags { "LightMode" = "ShadowCaster" }
+             
+        //      Fog {Mode Off}
+        //      ZWrite On ZTest LEqual Cull Off
+        //      Offset 1, 1
+ 
+        //      CGPROGRAM
+        //      #pragma vertex vert
+        //      #pragma fragment frag
+        //      #pragma multi_compile_shadowcaster
+        //      #include "UnityCG.cginc"
+ 
+        //      struct v2f 
+        //      { 
+        //          V2F_SHADOW_CASTER;
+        //      };
+ 
+        //      v2f vert( appdata_base v )
+        //      {
+        //          v2f o;
+        //          TRANSFER_SHADOW_CASTER(o)
+        //          return o;
+        //      }
+ 
+        //      float4 frag( v2f i ) : SV_Target
+        //      {
+        //          SHADOW_CASTER_FRAGMENT(i)
+        //      }
+        //      ENDCG
+ 
+        //  }
         Pass
         {
             CGPROGRAM
@@ -214,66 +249,118 @@ Shader "Custom/volume_render_texture"
             float4 rayMarch2( v2f i , float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, float zbuffer)
             {
                 //the plane alignment should be calculated on cam pos as origin
-                float3 p0_c = _p0 -cam_o;
+                float3 p0_cam = _p0 -cam_o;
                 float3 z_dir = normalize(z_step);
                 //step on p0-p1 align z plane
-                float3 p_step = p0_c * dot(z_step , z_dir) / dot(p0_c,z_dir);
-                float3 p0_z_pro = dot(p0_c, z_dir)*z_dir;
+                float3 p_step = p0_cam * dot(z_step , z_dir) / dot(p0_cam,z_dir);
+
+                float3 p0_z_pro = dot(p0_cam, z_dir)*z_dir;
                 float scale_p0 = dot(p0_z_pro , z_dir);
                 float scale_z_step = dot(z_step , z_dir);
                 int scale_p0_z_step = ceil(scale_p0 / scale_z_step);
                 float3 z_plane = scale_p0_z_step * z_step;
                 //position
-                float3 p0_new = scale_p0_z_step * scale_z_step /scale_p0 * p0_c + cam_o;   
+                float3 p0_new = scale_p0_z_step * scale_z_step /scale_p0 * p0_cam + cam_o;  
 
                 int full_step = floor(length(_p1 -_p0) / length(p_step));
 
                 float4 dst = float4(0, 0, 0, 0);
                 float _Threshold = 0.8;
                 int ITERATION = 100;
+                float3 p0 = p0_new;
+                float3 p1 = p0_new;
+                float4 p0_c = UnityObjectToClipPos(p0);
+                float4 p1_c = p0_c;
+                float d0 = 0;
+                float d1 = 0;
+                float4 col = float4(1,1,0,1); 
                 for (int i = 0 ; i <ITERATION ; i++)
                 {
-                    float3 pos = p0_new + i *p_step;
-                    float v = tex3D(_Volume, pos + float3(0.5,0.5,0.5)).r ;
-                    //todo : optimize clip space calculation
-                    float4 pos_c = UnityObjectToClipPos(float4(pos,1));
-                    float pos_zbuffer = pos_c.z / pos_c.w;
-                    if (pos_zbuffer < zbuffer) break;
-                    
-                    float4 src = float4(1, 1, 1, v * 0.1f);
+                    p0 = p1;
+                    d1 = d0;
+                    p0_c = p1_c;
+                    p1 = p0_new + i *p_step;
+                    float v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
 
+                    //todo : optimize clip space calculation,simple calculate p1_c and p_step will not work, because w will be different in different step
+                    //research the projection matrix , find out if possible find out w
+                    p1_c = UnityObjectToClipPos(p1);
+                    d0 = p1_c.z / p1_c.w; 
+
+                    if (d0 < zbuffer) 
+                    {
+                        //final step
+                        //calculate z buffer 3d position in clip space
+                        float d = zbuffer==0 ? 0.0001 : zbuffer;
+                        // 已知 p1 p0 为clip 上两点, d 为 p点 depth buffer, 求出 pz pw 为 p 点clip 上3d 坐标
+                        float a = p1_c.z - p0_c.z ;
+                        float b = p1_c.w - p0_c.w;
+                        float pz_c = (b*p0_c.z - a*p0_c.w)/(b-a/d);
+                        float pw_c = pz_c/d;
+                        //此处pz_c pw_c 正确
+                        col = float4(pz_c,pw_c,0,1);
+                        //求scale = p.z-p0.z /p0.z-p1.z, object space 和 clip space值为一样
+                        float s = (pz_c - p0_c.z)/(p1_c.z - p0_c.z);
+                        // 此处是否正好在球面上?
+                        p1 = p0 + s *p_step;
+                        v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
+                        //每step opacity为1, 按照final step大小scale 相对于整步的opacity
+                        v *= s;
+                        float4 src = float4(1, 1, 1, v * 0.2f);
+                        dst = (1.0 - dst.a) * src + dst;
+                        return saturate(dst);
+                    }
+                    float4 src = float4(1, 1, 1, v * 0.2f);
                     // blend
                     dst = (1.0 - dst.a) * src + dst;
-
                      
                     if (i > full_step) break;
                 }
-              
-                return saturate(dst);
-                // return float4(p0_new,1);
-                
-                //debug
-                // todo  : 為每一個step 添加scale ， 由ui可控制
-                //檢測 傳入zdepth 和 march 出來的 step 關係
-                //參考 https://forum.unity.com/threads/custom-depth-buffer-rendering.323279/
+                return saturate(dst);           
+                // return col;           
+            }
 
-                // float eye_space_p0 = -mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, float4(_p0.xyz, 1.0))).z;
-                
-                //todo :  depth test code 需要把这个移动出来成为一个例子,方便以后查阅 
-                // float d = i.ver_c.z/i.ver_c.w;
-                // float4 col =float4(0.1,0.25,0.3,1);
-                // if (d - zbuffer <0.01 )
-                // {
-                //     col =  float4(0.5,0.9,1,1);
-                // }
-                // else
-                // {
-                //     if (zbuffer >0.0001)
-                //     {
-                //         col =  float4(0.2,0.5,0.6,1);
-                //     }
-                // }
-                // return col;
+            float4 rayMarch2_debug( v2f i , float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, float zbuffer)
+            {
+                //the plane alignment should be calculated on cam pos as origin
+                float3 p0_c = _p0 -cam_o;
+                float3 z_dir = normalize(z_step);
+                //step on p0-p1 align z plane
+                float3 p_step = p0_c * dot(z_step , z_dir) / dot(p0_c,z_dir);
+
+                float3 p0_z_pro = dot(p0_c, z_dir)*z_dir;
+                float scale_p0 = dot(p0_z_pro , z_dir);
+                float scale_z_step = dot(z_step , z_dir);
+                int scale_p0_z_step = ceil(scale_p0 / scale_z_step);
+                float3 z_plane = scale_p0_z_step * z_step;
+                //position
+                float3 p0_new = scale_p0_z_step * scale_z_step /scale_p0 * p0_c + cam_o;  
+
+                int full_step = floor(length(_p1 -_p0) / length(p_step));
+
+                float4 dst = float4(0, 0, 0, 0);
+                float _Threshold = 0.8;
+                int ITERATION = 100;
+
+                //取自己的dbuffer
+                float4 p = i.ver_c;
+                zbuffer = p.z / p.w;
+                float d = zbuffer==0 ? 0.0001 : zbuffer;
+                // 保证永远在平面前
+                float4 p0 = UnityObjectToClipPos(p0_new -  p_step);
+                // float4 p = UnityObjectToClipPos(p0_new + p_step);
+                float4 p1 = UnityObjectToClipPos(p0_new + 50 * p_step);
+                // float4 col = float4(p.z,i.ver_c.z,p.w ,i.ver_c.w);
+                // (p.z-p0.z)/(p1.z - p0.z) = (p.w-p0.w)/(p1.w - p0.w)
+                // 已知 p1 p0 为clip 上两点, d 为 p点 depth buffer, 求出 pz pw 为 p 点clip 上3d 坐标
+                float a = p1.z - p0.z ;
+                float b = p1.w - p0.w;
+                float pz = (b*p0.z - a*p0.w)/(b-a/d);
+
+                float4 col = float4(pz,p.z,d,1); 
+
+                //assume p is taget pos
+                return col;
             }
 
             float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
@@ -287,11 +374,6 @@ Shader "Custom/volume_render_texture"
                 circle.y*=_ScreenParams.y/_ScreenParams.x;
                 float c = step(length(circle),s);
                 return c;
-            }
-
-            float4 depthTest(v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
-            {
-
             }
 
             fixed4 frag (v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
@@ -322,6 +404,8 @@ Shader "Custom/volume_render_texture"
                 // col = rayMarchPoint(_inter_p0_o , _inter_p1_o , i.z_step );
                 // col = rayMarch(_inter_p0_o,_inter_p1_o ,i.z_step); 
                 col = rayMarch2(i,_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,depth_buffer_scene);
+                // col = rayMarch2_debug(i,_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,depth_buffer_scene);
+
 
                 //debug, scater the ray to grid instead of pixel
 
@@ -349,6 +433,8 @@ Shader "Custom/volume_render_texture"
                     }
                 }
                 // Inside the vertex shader.
+
+                //debug for projection matrix w
 
                 return col;
             }
