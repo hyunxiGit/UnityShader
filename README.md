@@ -4,6 +4,9 @@ my own projects are very random, mostly should be listed in updates, tutorial sh
 
 
 updates
+-round step to avoid slice artifact
+
+![Image of round step](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_intersect_round_step.gif)
 
 -volume scene object correct intersect
 
