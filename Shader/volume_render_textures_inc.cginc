@@ -1,5 +1,8 @@
 void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out float4 p1_o , out float4 p0_w ,out float4 p1_w )
 {
+    //object space intersection
+    //_ab_ray_p0 ：camera
+    //p0，p1 相交两点，若cam在volume中，则p0为cam - p1 反方向点
     float4 obb_min = float4(-0.5f,-0.5f,-0.5f,1.0f);
     float4 obb_max = float4(0.5f,0.5f,0.5f,1.0f);
 
@@ -83,14 +86,14 @@ float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
 
 void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_step, float4 cam_o, out int full_steps)
 {
-    //calculate the p0 (first interact point) with z align and no z align
-    //the plane alignment should be calculated on cam pos as origin
-
+    //若cam在volume 中则需要对起始点进行调整
     float3 ray_dir = normalize(_p1-cam_o);
     float3 p_start = dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o;
 
     if (z_align) 
     {
+        //calculate the p0 (first interact point) with z align and no z align
+        //the plane alignment should be calculated on cam pos as origin
         //calculate new start point and zstep
         float3 p0_cam = _p0 -cam_o;
         float3 z_dir = normalize(z_step);
