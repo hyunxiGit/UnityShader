@@ -5,7 +5,6 @@ void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out
 
     float3 ray_full = _ab_ray_p1 -_ab_ray_p0;
     float3 min_inter , max_inter; // intersection point
-    bool min_exist, max_exist;
 
     float3 ray_min = obb_min - _ab_ray_p0;
     float3 ray_max = obb_max - _ab_ray_p0;
@@ -50,8 +49,8 @@ void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out
     // p0_o = p0_w;  
     // p1_o = p1_w;  
 
-    min_exist=false;
-    max_exist=false;
+    bool min_exist=false;
+    bool max_exist=false;
 
     if ( min_scale < max_scale)
     {
@@ -86,6 +85,10 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
 {
     //calculate the p0 (first interact point) with z align and no z align
     //the plane alignment should be calculated on cam pos as origin
+
+    float3 ray_dir = normalize(_p1-cam_o);
+    float3 p_start = dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o;
+
     if (z_align) 
     {
         //calculate new start point and zstep
@@ -101,16 +104,17 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
         float3 z_plane = scale_p0_z_step * z_step;
         //position
         _p0.xyz = scale_p0_z_step * scale_z_step /scale_p0 * p0_cam + cam_o;  
+        _p0.w = 1;
         z_step = p_step;
         full_steps = floor(length(_p1 -_p0) / length(p_step));
     }
     else
     {
-        _p0 = _p0;
+        _p0 = float4(p_start,1);
         float3 ray_full = _p1 - _p0;
         float scale = length(z_step) / length(ray_full) ;
         z_step = ray_full * scale;
-        full_steps = length(ray_full) / length(z_step);
+        full_steps = ceil(length(ray_full) / length(z_step));
     }
 
 }
@@ -120,9 +124,8 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
 float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3D _Volume,float zbuffer)
 {
     int full_steps;
-    bool z_align = true;
+    bool z_align = false;
     get_p0_step(z_align,_p0, _p1, z_step, cam_o, full_steps);
-
     float4 dst = float4(0, 0, 0, 0);
     float _Threshold = 0.8;
     int ITERATION = 100;

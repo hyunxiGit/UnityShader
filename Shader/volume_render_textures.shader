@@ -107,9 +107,6 @@ Shader "Custom/volume_render_texture"
             fixed4 frag (v2f i , UNITY_VPOS_TYPE screenPos : VPOS) : SV_Target
             {
                 //camera depth calculation 
-                //todo : use calculated scene depth in the ray marching to terminate ray if intersct 
-                //with other object
-
                 float depth_buffer_scene = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(i.projPos)).r;
                 // cam_depth = LinearEyeDepth(cam_depth);
 
@@ -127,6 +124,7 @@ Shader "Custom/volume_render_texture"
                 float4 ab_ray_p1 = mul(unity_WorldToObject, ray_b_point_w); 
 
                 obb_intersect(i.ab_ray_p0 , ab_ray_p1 , _inter_p0_o , _inter_p1_o , _inter_p0_w ,_inter_p1_w );
+                
 
                 //ray march
                 col = rayMarch(_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,_Volume,depth_buffer_scene);
