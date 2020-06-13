@@ -4,6 +4,10 @@ my own projects are very random, mostly should be listed in updates, tutorial sh
 
 
 updates
+-support camera go inside volumen
+
+![Image of round step](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_camera_inside.gif)
+
 -round step to avoid slice artifact
 
 ![Image of round step](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_intersect_round_step.gif)
