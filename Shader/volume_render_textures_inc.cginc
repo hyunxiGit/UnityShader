@@ -88,7 +88,9 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
 {
     //若cam在volume 中则需要对起始点进行调整
     float3 ray_dir = normalize(_p1-cam_o);
-    float3 p_start = dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o;
+    //>0 : inside， <=0 outside 
+    //p0不能直接从cam算，不然project矩阵w为0
+    float3 p_start = dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o + 0.01*ray_dir; 
 
     if (z_align) 
     {
@@ -115,8 +117,7 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
     {
         _p0 = float4(p_start,1);
         float3 ray_full = _p1 - _p0;
-        float scale = length(z_step) / length(ray_full) ;
-        z_step = ray_full * scale;
+        z_step = normalize(ray_full)*length(z_step);
         full_steps = ceil(length(ray_full) / length(z_step));
     }
 
@@ -126,11 +127,12 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
 #define step_size 0.01
 float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3D _Volume,float zbuffer)
 {
+
+
     int full_steps;
     bool z_align = false;
     get_p0_step(z_align,_p0, _p1, z_step, cam_o, full_steps);
     float4 dst = float4(0, 0, 0, 0);
-    float _Threshold = 0.8;
     int ITERATION = 100;
     float3 p0 = _p0.xyz;
     float3 p1 = _p0.xyz;
@@ -154,6 +156,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
 
         if (d0 < zbuffer) 
         {
+            //和scene depth 对比的时候sorting 会出错， 这个时候会导致fog 闪动，需要解决 sort
             //final step , sample on the scene object surface to avoid slice artifact
             //calculate z buffer 3d position in clip space
             float d = zbuffer==0 ? 0.0001 : zbuffer;
@@ -175,6 +178,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
             dst = (1.0 - dst.a) * src + dst;
             return saturate(dst);
         }
+
         float4 src = float4(1, 1, 1, v * 0.2f);
         // blend
         dst = (1.0 - dst.a) * src + dst;
@@ -182,5 +186,5 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
         if (i > full_steps) break;
     }
     return saturate(dst);           
-    // return col;           
+    // return col;        
 }
