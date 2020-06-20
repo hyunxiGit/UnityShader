@@ -31,6 +31,7 @@ public class gpu_ray_march : MonoBehaviour
 
     void flipFace(GameObject o)
     {
+        //镜头进入vfog反面
         Mesh mesh = o.GetComponent<MeshFilter>().mesh;
         print(mesh);
         mesh.triangles = mesh.triangles.Reverse().ToArray();

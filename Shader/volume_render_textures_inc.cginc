@@ -86,20 +86,23 @@ float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
 
 void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_step, float4 cam_o, out int full_steps)
 {
+    //zstep传入的时候有价值的只有长度，（0,0,step）world -> object
+    //calculate the p0 (first interact point) with z align and no z align
     //若cam在volume 中则需要对起始点进行调整
     float3 ray_dir = normalize(_p1-cam_o);
     //>0 : inside， <=0 outside 
     //p0不能直接从cam算，不然project矩阵w为0
-    float3 p_start = dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o + 0.01*ray_dir; 
-
+    _p0 = float4(dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o + 0.01*ray_dir,1); 
+    float3 cam_step = mul(unity_WorldToObject,mul((float3x3)unity_CameraToWorld, float3(0,0,1)));
+    cam_step = normalize(cam_step)*length(z_step);
+    z_step.xyz = cam_step.xyz;
     if (z_align) 
     {
-        //calculate the p0 (first interact point) with z align and no z align
         //the plane alignment should be calculated on cam pos as origin
         //calculate new start point and zstep
         float3 p0_cam = _p0 -cam_o;
         float3 z_dir = normalize(z_step);
-        //step on p0-p1 align z plane
+        //st/ep on p0-p1 align z plane
         float3 p_step = p0_cam * dot(z_step , z_dir) / dot(p0_cam,z_dir);
 
         float3 p0_z_pro = dot(p0_cam, z_dir)*z_dir;
@@ -115,7 +118,6 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
     }
     else
     {
-        _p0 = float4(p_start,1);
         float3 ray_full = _p1 - _p0;
         z_step = normalize(ray_full)*length(z_step);
         full_steps = ceil(length(ray_full) / length(z_step));
