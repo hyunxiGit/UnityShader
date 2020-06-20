@@ -91,30 +91,70 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 z_st
     //若cam在volume 中则需要对起始点进行调整
     float3 ray_dir = normalize(_p1-cam_o);
     //>0 : inside， <=0 outside 
-    //p0不能直接从cam算，不然project矩阵w为0
+    //避免p0,cam重叠
     _p0 = float4(dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o + 0.01*ray_dir,1); 
-    float3 cam_step = mul(unity_WorldToObject,mul((float3x3)unity_CameraToWorld, float3(0,0,1)));
-    cam_step = normalize(cam_step)*length(z_step);
+    //cam 向前方向 dir
+    float3 cam_dir = normalize(mul(unity_WorldToObject,mul((float3x3)unity_CameraToWorld, float3(0,0,1))));
+    //cam 向前每一步vector
+    float3 cam_step = cam_dir*length(z_step);
     z_step.xyz = cam_step.xyz;
     if (z_align) 
     {
-        //the plane alignment should be calculated on cam pos as origin
-        //calculate new start point and zstep
-        float3 p0_cam = _p0 -cam_o;
-        float3 z_dir = normalize(z_step);
-        //st/ep on p0-p1 align z plane
-        float3 p_step = p0_cam * dot(z_step , z_dir) / dot(p0_cam,z_dir);
+        {
+            //以O为anchor做平面
+            // 【CO】 cam->O,cube中心
+            float3 CO = float3(0,0,0) - cam_step;
+            // 【CL】 cam向前vec，L为vec 上 O齐平点
+            // 【len_cl】 CL带符号长度 /cam_dir
+            float len_cl = dot(CO,cam_dir);
+            float3 CL = dot(CO,cam_dir)*cam_dir;
+            // 【len_cam_step】 cam step 的带符号长度 /cam_dir
+            float len_cam_step = dot(cam_step , cam_dir);
+            // 【scale_cl_cam_step】 cam_step/cl 倍数
+            float scale_cam_step_cl = len_cam_step / len_cl;
 
-        float3 p0_z_pro = dot(p0_cam, z_dir)*z_dir;
-        float scale_p0 = dot(p0_z_pro , z_dir);
-        float scale_z_step = dot(z_step , z_dir);
-        int scale_p0_z_step = ceil(scale_p0 / scale_z_step);
-        float3 z_plane = scale_p0_z_step * z_step;
-        //position
-        _p0.xyz = scale_p0_z_step * scale_z_step /scale_p0 * p0_cam + cam_o;  
-        _p0.w = 1;
-        z_step = p_step;
-        full_steps = floor(length(_p1 -_p0) / length(p_step));
+            //【CP0】 cam到第一个接触点
+            float3 CP0 = _p0.xyz -cam_o;
+            float3 march_dir = normalize(CP0);
+            //【CP0】 prj CL 长度
+            float len_Cp0_prj = dot(CP0 ,cam_dir);
+            //【s_CL_Cp0_prj】 cl为Cp0_prj多少倍
+            float s_CL_Cp0_prj = len_cl / len_Cp0_prj;
+            //【CM】M为 p0 p1 上 O 平面上点 
+            float3 CM = CP0*s_CL_Cp0_prj;
+            float3 M = cam_o.xyz + CM;
+            // 【z_step】 march step
+            z_step = CM*scale_cam_step_cl;
+            //[Cp0_prj] cp0 cam dir的projection
+            float3 Cp0_prj = len_Cp0_prj*cam_dir;
+            //[p0_prj_O] 从p0到L
+            float3 p0_prj_L = CL - Cp0_prj;
+            float len_p0_prj_L = dot(p0_prj_L,cam_dir);
+            //从M点反推p0新位置
+            float3 _p0= M - ceil(len_p0_prj_L/len_cam_step)*z_step;                     
+            full_steps = dot(_p1-_p0,march_dir)/ dot(z_step,march_dir);
+
+        }
+        /*old block
+        {
+            //the plane alignment should be calculated on cam pos as origin
+            //calculate new start point and zstep
+            float3 p0_cam = _p0 -cam_o;
+            float3 z_dir = normalize(z_step);
+            //st/ep on p0-p1 align z plane
+            float3 p_step = p0_cam * dot(z_step , z_dir) / dot(p0_cam,z_dir);
+
+            float3 p0_z_pro = dot(p0_cam, z_dir)*z_dir;
+            float scale_p0 = dot(p0_z_pro , z_dir);
+            float scale_z_step = dot(z_step , z_dir);
+            int scale_p0_z_step = ceil(scale_p0 / scale_z_step);
+            float3 z_plane = scale_p0_z_step * z_step;
+            //position
+            _p0.xyz = scale_p0_z_step * scale_z_step /scale_p0 * p0_cam + cam_o;  
+            _p0.w = 1;
+            z_step = p_step;
+            full_steps = floor(length(_p1 -_p0) / length(p_step));
+        }*/
     }
     else
     {
@@ -132,7 +172,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
 
 
     int full_steps;
-    bool z_align = false;
+    bool z_align = true;
     get_p0_step(z_align,_p0, _p1, z_step, cam_o, full_steps);
     float4 dst = float4(0, 0, 0, 0);
     int ITERATION = 100;
