@@ -60,6 +60,9 @@ Shader "Custom/volume_render_texture"
         //  }
         Pass
         {
+            ZWrite Off
+            ZTest Always
+            Cull Back
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -131,7 +134,7 @@ Shader "Custom/volume_render_texture"
 
                 //debug function
                 // float c = debugPoint(float4(0,0,0,1), 0.04f, screenPos);
-
+                // col = float4(i.ver_o.xyz,1);
                 return col;
             }
             ENDCG
