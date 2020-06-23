@@ -8,12 +8,12 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: white
-  m_Shader: {fileID: 4800000, guid: 3d1a56d475b16db4a89c3e2eb3b2d852, type: 3}
+  m_Shader: {fileID: 4800000, guid: b6e5a65a569415b4385d9b66c80224ef, type: 3}
   m_ShaderKeywords: LBEDOLIC_MAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2000
+  m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
@@ -98,7 +98,8 @@ Material:
     - _ZWrite: 1
     - _displacementStrength: 1
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 0}
+    - _Color: {r: 0, g: 0, b: 0, a: 0}
     - _Emission: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Tint: {r: 0.9528302, g: 0, b: 0, a: 0.1764706}
+  m_BuildTextureStacks: []

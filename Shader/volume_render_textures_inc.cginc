@@ -163,10 +163,11 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
     float d0 = 0;
     float d1 = 0;
     float4 col = float4(1,1,0,1); 
+    float alpha_scale = 0.1f;
     for (int i = 0 ; i <ITERATION ; i++)
     {
         p0 = p1;
-        d1 = d0;
+        d0 = d1;
         p0_c = p1_c;
         p1 = _p0.xyz + i *z_step;
         float v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
@@ -174,11 +175,11 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
         //todo : optimize clip space calculation,simple calculate p1_c and z_step will not work, because w will be different in different step
         //research the projection matrix , find out if possible find out w
         p1_c = UnityObjectToClipPos(p1);
-        d0 = p1_c.z / p1_c.w; 
+        d1 = p1_c.z / p1_c.w; 
 
-        if (d0 < zbuffer) 
+        if (d1 < zbuffer) 
         {
-            //和scene depth 对比的时候sorting 会出错， 这个时候会导致fog 闪动，需要解决 sort
+            //can be optimize
             //final step , sample on the scene object surface to avoid slice artifact
             //calculate z buffer 3d position in clip space
             float d = zbuffer==0 ? 0.0001 : zbuffer;
@@ -196,12 +197,12 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
             v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
             v *= s;
-            float4 src = float4(1, 1, 1, v * 0.2f);
+            float4 src = float4(1, 1, 1, v * alpha_scale);
             dst = (1.0 - dst.a) * src + dst;
             return saturate(dst);
         }
 
-        float4 src = float4(1, 1, 1, v * 0.2f);
+        float4 src = float4(1, 1, 1, v * alpha_scale);
         // blend
         dst = (1.0 - dst.a) * src + dst;
          
