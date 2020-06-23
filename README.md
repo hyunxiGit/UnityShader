@@ -2,28 +2,19 @@
 collection of tutorial shader and also my own rendering projects.
 my own projects are very random, mostly should be listed in updates, tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tutorials/rendering/
 
-
 updates
 
--support camera go inside volumen
-
-![Image of round step](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_camera_inside.gif)
-
+more effect can be seen :
+https://www.youtube.com/playlist?list=PLw6ZPnpJDyksqb_Vtfigif4IPL4WZ293P
+-support camera go inside volume
+-support camera go inside colume and scene object correct intersect and sorting
 -round step to avoid slice artifact
 
 ![Image of round step](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_intersect_round_step.gif)
 
--volume scene object correct intersect
-
-![Image of scene depth test](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_intersect.gif)
-
 -Scene depth test
 
 ![Image of scene depth test](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/scene_depth_test.gif)
-
--Voumn rendering with ray marching , wip
-
-![Image of software ray march volumen](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/voulem%20fog%20wip.gif)
 
 -software ray marching volumen with z plane alignment
 
