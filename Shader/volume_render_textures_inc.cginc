@@ -144,6 +144,14 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 mSte
     }
 
 }
+
+void accumulate(inout float4 dst , float v )
+{
+    float4 src = float4(1, 1, 1, v );
+    // blend
+    dst = (1.0 - dst.a) * src + dst;
+}
+
 // work in the loop which can only handle constance
 #define steps 128
 #define step_size 0.01
@@ -196,15 +204,11 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
             p1 = p0 + s *z_step;
             v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
-            v *= s;
-            float4 src = float4(1, 1, 1, v * alpha_scale);
-            dst = (1.0 - dst.a) * src + dst;
+            accumulate(dst , v * alpha_scale *s);
             return saturate(dst);
         }
 
-        float4 src = float4(1, 1, 1, v * alpha_scale);
-        // blend
-        dst = (1.0 - dst.a) * src + dst;
+        accumulate(dst , v * alpha_scale);
          
         if (i > full_steps) break;
     }
