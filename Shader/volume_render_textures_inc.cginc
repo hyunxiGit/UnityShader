@@ -147,10 +147,14 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 mSte
 
 void accumulate(inout float4 dst , float v ,float len_step)
 {
+    //v为采样
+    //返回float4 颜色值后，会自动叠加在原场景里已经有的物体上
+
+
     float4 src = float4(1, 1, 1, v );
     // blend
-    // dst = (1.0 - dst.a) * src + dst;
-    dst = dst + float4(len_step * v * float3(1,1,1),1);
+    dst = (1.0 - dst.a) * src + dst;
+    //dst = dst + float4(len_step * v * float3(1,1,1),1);
 }
 
 // work in the loop which can only handle constance
@@ -173,7 +177,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
     float d0 = 0;
     float d1 = 0;
     float4 col = float4(1,1,0,1); 
-    float alpha_scale = 1;
+    float densityScale = 1;
     for (int i = 0 ; i <ITERATION ; i++)
     {
         p0 = p1;
@@ -206,11 +210,11 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
             p1 = p0 + s *z_step;
             v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
-            accumulate(dst , v * alpha_scale *s,len_z_step);
+            accumulate(dst , v * densityScale *s,len_z_step);
             return saturate(dst);
         }
 
-        accumulate(dst , v * alpha_scale,len_z_step);
+        accumulate(dst , v * densityScale,len_z_step);
          
         if (i > full_steps) break;
     }
