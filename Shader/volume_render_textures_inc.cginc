@@ -145,16 +145,17 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 mSte
 
 }
 
-void accumulate(inout float4 dst , float v ,float len_step)
+void accumulate(inout float step_density , float v ,float len_step)
 {
     //v为采样
-    //返回float4 颜色值后，会自动叠加在原场景里已经有的物体上
+    float3 fogColor = float3(1,1,1);
+    step_density = step_density + len_step * v;
+}
 
-
-    float4 src = float4(1, 1, 1, v );
-    // blend
-    dst = (1.0 - dst.a) * src + dst;
-    //dst = dst + float4(len_step * v * float3(1,1,1),1);
+float calLight(float step_density,float light_distance)
+{
+    float transmittance = exp( - step_density*5 *light_distance );
+    return transmittance;
 }
 
 // work in the loop which can only handle constance
@@ -162,13 +163,11 @@ void accumulate(inout float4 dst , float v ,float len_step)
 #define step_size 0.01
 float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3D _Volume,float zbuffer)
 {
-
-
     int full_steps;
     bool z_align = false;
     get_p0_step(z_align,_p0, _p1, z_step, cam_o, full_steps);
     float len_z_step = length(z_step);
-    float4 dst = float4(0, 0, 0, 0);
+    float step_density = 0;
     int ITERATION = 100;
     float3 p0 = _p0.xyz;
     float3 p1 = _p0.xyz;
@@ -210,15 +209,16 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
             p1 = p0 + s *z_step;
             v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
-            accumulate(dst , v * densityScale *s,len_z_step);
-            return saturate(dst);
+            accumulate(step_density , v * densityScale ,len_z_step*s);
+            float transmittance = calLight(step_density, len_z_step*i + len_z_step*s);
+            return float4(1,1,1,1-transmittance);
         }
 
-        accumulate(dst , v * densityScale,len_z_step);
+        accumulate(step_density , v * densityScale,len_z_step);
          
         if (i > full_steps) break;
     }
-    return saturate(dst); 
-
+    float transmittance = calLight(step_density, len_z_step * i);
+    return float4(1,1,1,1-transmittance); 
     // return col;        
 }
