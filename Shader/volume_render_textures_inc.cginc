@@ -161,14 +161,14 @@ float calLight(float step_density,float light_distance)
 // work in the loop which can only handle constance
 #define steps 128
 #define step_size 0.01
-float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3D _Volume,float zbuffer)
+float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 cam_o, sampler3D _Volume,float zbuffer)
 {
     int full_steps;
     bool z_align = false;
     get_p0_step(z_align,_p0, _p1, z_step, cam_o, full_steps);
     float len_z_step = length(z_step);
     float step_density = 0;
-    int ITERATION = 100;
+    int ITERATION = 30;
     float3 p0 = _p0.xyz;
     float3 p1 = _p0.xyz;
     float4 p0_c = UnityObjectToClipPos(p0);
@@ -177,8 +177,12 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
     float d1 = 0;
     float4 col = float4(1,1,0,1); 
     float densityScale = 1;
+    //calculate light march step
+    l_step *=len_z_step;
+    float3 fogColor = float3(0.1,0.1,0.1);
     for (int i = 0 ; i <ITERATION ; i++)
     {
+        if (i > full_steps) break;
         p0 = p1;
         d0 = d1;
         p0_c = p1_c;
@@ -214,11 +218,34 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float4 cam_o, sampler3
             return float4(1,1,1,1-transmittance);
         }
 
-        accumulate(step_density , v * densityScale,len_z_step);
-         
-        if (i > full_steps) break;
+        step_density += v * densityScale * len_z_step;
+        //accumulate(step_density , v * densityScale,len_z_step);
+        float shadow_dens = 0;
+        if (v>0.01)
+        {
+            
+            float j;
+            float3 p_l = p1;
+            for (j = 0 ; j <15 ; j++)
+            {
+                p_l += l_step;
+                float3 sampleP = p_l+ float3(0.5,0.5,0.5);
+                if ( sampleP.x>1 || sampleP.y>1 || sampleP.z>1 ||sampleP.x<0 || sampleP.y<0 || sampleP.z<0)
+                    break;  
+                shadow_dens += densityScale *len_z_step* tex3D(_Volume,sampleP).r;
+            }
+            float lightParam = 20;
+            float transmittance_l = exp( - shadow_dens*lightParam * j * len_z_step);
+            //this voxel opacity 
+            transmittance_l *=v;
+            //transmit from march point to cam
+            transmittance_l *= exp( - step_density *lightParam* i * len_z_step);
+            if (fogColor.x < _LightColor0.x)
+                fogColor += _LightColor0 *transmittance_l;
+        }
+        
     }
     float transmittance = calLight(step_density, len_z_step * i);
-    return float4(1,1,1,1-transmittance); 
+    return float4(fogColor,1-transmittance); 
     // return col;        
 }

@@ -78,6 +78,7 @@ Shader "Custom/volume_render_texture"
             struct appdata
             {
                 float4 vertex : POSITION;
+                float3 nor : NORMAL;
                 float2 uv : TEXCOORD0;
             };
             struct v2f
@@ -95,8 +96,11 @@ Shader "Custom/volume_render_texture"
             {
                 v2f o;
                 o.uv = v.uv;
+                //debug 需要恢复
                 o.ver_c = UnityObjectToClipPos(v.vertex);
                 vertex = o.ver_c;
+
+
                 o.ver_w = mul(unity_ObjectToWorld,v.vertex);
                 o.ver_o = v.vertex;
 
@@ -128,9 +132,9 @@ Shader "Custom/volume_render_texture"
 
                 obb_intersect(i.ab_ray_p0 , ab_ray_p1 , _inter_p0_o , _inter_p1_o , _inter_p0_w ,_inter_p1_w );
                 
-
+                float3 l_step = UnityWorldToObjectDir( _WorldSpaceLightPos0);
                 //ray march
-                col = rayMarch(_inter_p0_o, _inter_p1_o, i.z_step, i.ab_ray_p0,_Volume,depth_buffer_scene);
+                col = rayMarch(_inter_p0_o, _inter_p1_o, i.z_step, l_step, i.ab_ray_p0,_Volume,depth_buffer_scene);
 
                 //debug function
                 // float c = debugPoint(float4(0,0,0,1), 0.04f, screenPos);
