@@ -14,6 +14,7 @@ Shader "Custom/volume_render_texture"
     Properties
     {
         _Volume ("Volume", 3D) = "" {}
+        [gamma] _DensityPara ("density parameter",Range(0.01, 100)) = 1
     }
     SubShader
     {
@@ -72,6 +73,7 @@ Shader "Custom/volume_render_texture"
             #include "volume_render_textures_inc.cginc"
 
             uniform float4 z_step;
+            float _DensityPara;
             sampler2D _CameraDepthTexture;
             sampler3D _Volume;
 
@@ -134,7 +136,7 @@ Shader "Custom/volume_render_texture"
                 
                 float3 l_step = UnityWorldToObjectDir( _WorldSpaceLightPos0);
                 //ray march
-                col = rayMarch(_inter_p0_o, _inter_p1_o, i.z_step, l_step, i.ab_ray_p0,_Volume,depth_buffer_scene);
+                col = rayMarch(_inter_p0_o, _inter_p1_o, i.z_step, l_step, i.ab_ray_p0,depth_buffer_scene,_Volume,_DensityPara);
 
                 //debug function
                 // float c = debugPoint(float4(0,0,0,1), 0.04f, screenPos);

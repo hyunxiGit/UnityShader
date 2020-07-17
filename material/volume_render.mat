@@ -20,9 +20,10 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _Volume:
-        m_Texture: {fileID: 11700000, guid: 4c3c6684fb9338a4c970c99158b092a5, type: 2}
+        m_Texture: {fileID: 11700000, guid: c3745d124c088674db4b626bc98126b8, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    m_Floats: []
+    m_Floats:
+    - _DensityPara: 16.7
     m_Colors: []
   m_BuildTextureStacks: []

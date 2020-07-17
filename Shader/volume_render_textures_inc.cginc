@@ -154,14 +154,19 @@ void accumulate(inout float step_density , float v ,float len_step)
 
 float calLight(float step_density,float light_distance)
 {
-    float transmittance = exp( - step_density*5 *light_distance );
+    float transmittance = exp( - step_density *light_distance );
     return transmittance;
+}
+
+float sampleVolumen(sampler3D _Volume , float3 uvw , float _DensityPara)
+{
+    return tex3D(_Volume, uvw + float3(0.5,0.5,0.5)).r * _DensityPara;
 }
 
 // work in the loop which can only handle constance
 #define steps 128
 #define step_size 0.01
-float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 cam_o, sampler3D _Volume,float zbuffer)
+float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 cam_o, float zbuffer,sampler3D _Volume,float _DensityPara)
 {
     int full_steps;
     bool z_align = false;
@@ -176,10 +181,10 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
     float d0 = 0;
     float d1 = 0;
     float4 col = float4(1,1,0,1); 
-    float densityScale = 1;
     //calculate light march step
-    l_step *=len_z_step;
-    float3 fogColor = float3(0.1,0.1,0.1);
+    float len_l_step = len_z_step;
+    l_step = len_l_step * l_step ;
+    float3 fogColor = float3(1,1,1);
     for (int i = 0 ; i <ITERATION ; i++)
     {
         if (i > full_steps) break;
@@ -187,7 +192,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
         d0 = d1;
         p0_c = p1_c;
         p1 = _p0.xyz + i *z_step;
-        float v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
+        float v = sampleVolumen(_Volume, p1 ,_DensityPara);
 
         //todo : optimize clip space calculation,simple calculate p1_c and z_step will not work, because w will be different in different step
         //research the projection matrix , find out if possible find out w
@@ -211,37 +216,44 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
             float s = (pz_c - p0_c.z)/(p1_c.z - p0_c.z);
             // 此处是否正好在球面上?
             p1 = p0 + s *z_step;
-            v = tex3D(_Volume, p1 + float3(0.5,0.5,0.5)).r ;
+            v = sampleVolumen(_Volume , p1 , _DensityPara ) ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
-            accumulate(step_density , v * densityScale ,len_z_step*s);
+            accumulate(step_density , v ,len_z_step*s);
             float transmittance = calLight(step_density, len_z_step*i + len_z_step*s);
-            return float4(1,1,1,1-transmittance);
+            return float4(fogColor,1-transmittance);
         }
 
-        step_density += v * densityScale * len_z_step;
-        //accumulate(step_density , v * densityScale,len_z_step);
-        float shadow_dens = 0;
-        if (v>0.01)
+        step_density += v  * len_z_step;
+        //accumulate(step_density , v ,len_z_step);
         {
-            
-            float j;
-            float3 p_l = p1;
-            for (j = 0 ; j <15 ; j++)
+            float shadow_dens = 0;
+            if (v>0.01)
             {
-                p_l += l_step;
-                float3 sampleP = p_l+ float3(0.5,0.5,0.5);
-                if ( sampleP.x>1 || sampleP.y>1 || sampleP.z>1 ||sampleP.x<0 || sampleP.y<0 || sampleP.z<0)
-                    break;  
-                shadow_dens += densityScale *len_z_step* tex3D(_Volume,sampleP).r;
+                
+                float j;
+                float3 p_l = p1;
+                int _step = 0;
+                for (j = 0 ; j <20 ; j++)
+                {
+                    p_l = p_l + l_step * j;
+                    if ( p_l.x>0.5 || p_l.y>0.5 || p_l.z>0.5 ||p_l.x<-0.5 || p_l.y<-0.5 || p_l.z<-0.5)
+                        break;  
+                    _step = j;
+                    shadow_dens +=  len_z_step * sampleVolumen(_Volume , p1 , _DensityPara ) ;
+                }
+                float transmittance_l = exp( - shadow_dens * _step * len_z_step);
+                fogColor *=transmittance_l;
+                /*
+                float lightParam = 1;
+                float transmittance_l = exp( - shadow_dens*lightParam * _step * len_z_step*2);
+                //this voxel opacity 
+                transmittance_l *=v;
+                //transmit from march point to cam
+                //transmittance_l *= exp( - step_density *lightParam* i * len_z_step);
+                fogColor *= transmittance_l;
+                */
             }
-            float lightParam = 20;
-            float transmittance_l = exp( - shadow_dens*lightParam * j * len_z_step);
-            //this voxel opacity 
-            transmittance_l *=v;
-            //transmit from march point to cam
-            transmittance_l *= exp( - step_density *lightParam* i * len_z_step);
-            if (fogColor.x < _LightColor0.x)
-                fogColor += _LightColor0 *transmittance_l;
+            //fogColor = float3(1,1,1);
         }
         
     }
