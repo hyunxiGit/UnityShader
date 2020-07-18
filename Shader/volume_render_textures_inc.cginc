@@ -182,6 +182,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
     float d1 = 0;
     float4 col = float4(1,1,0,1); 
     //calculate light march step
+    float shadow_dens_p_v = 0;
     float len_l_step = len_z_step;
     l_step = len_l_step * l_step ;
     float3 fogColor = float3(1,1,1);
@@ -193,6 +194,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
         p0_c = p1_c;
         p1 = _p0.xyz + i *z_step;
         float v = sampleVolumen(_Volume, p1 ,_DensityPara);
+        shadow_dens_p_v +=  len_z_step * v;
 
         //todo : optimize clip space calculation,simple calculate p1_c and z_step will not work, because w will be different in different step
         //research the projection matrix , find out if possible find out w
@@ -226,34 +228,31 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
         step_density += v  * len_z_step;
         //accumulate(step_density , v ,len_z_step);
         {
-            float shadow_dens = 0;
-            if (v>0.01)
+            float shadow_dens_l_p = 0;
+            if (v>0.001)
             {
                 
                 float j;
                 float3 p_l = p1;
                 int _step = 0;
+                float opacity = sampleVolumen(_Volume , p_l , _DensityPara );
                 for (j = 0 ; j <20 ; j++)
                 {
-                    p_l = p_l + l_step * j;
+
+                    p_l = p_l + l_step;
                     if ( p_l.x>0.5 || p_l.y>0.5 || p_l.z>0.5 ||p_l.x<-0.5 || p_l.y<-0.5 || p_l.z<-0.5)
                         break;  
                     _step = j;
-                    shadow_dens +=  len_z_step * sampleVolumen(_Volume , p1 , _DensityPara ) ;
+                    shadow_dens_l_p +=  len_l_step * sampleVolumen(_Volume , p_l , _DensityPara ) ;
                 }
-                float transmittance_l = exp( - shadow_dens * _step * len_z_step);
-                fogColor *=transmittance_l;
-                /*
-                float lightParam = 1;
-                float transmittance_l = exp( - shadow_dens*lightParam * _step * len_z_step*2);
-                //this voxel opacity 
-                transmittance_l *=v;
-                //transmit from march point to cam
-                //transmittance_l *= exp( - step_density *lightParam* i * len_z_step);
-                fogColor *= transmittance_l;
-                */
+                float transmittance_l_p = exp( - shadow_dens_l_p * _step * len_l_step);
+                float transmittance_p_v = exp( - shadow_dens_p_v * i * len_z_step);
+                fogColor =  transmittance_l_p;
+                //opacity ,加了之后会变的很奇怪
+                //fogColor = opacity *fogColor;
+                //p to v
+                fogColor = fogColor * transmittance_p_v;
             }
-            //fogColor = float3(1,1,1);
         }
         
     }
