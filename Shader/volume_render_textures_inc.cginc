@@ -1,3 +1,18 @@
+struct rayMarchStr
+{
+    float _DensityPara; //user control how dens the fog is
+    float useShadow;
+    bool z_align;
+    float4 _p0;         //enter point in obj space
+    float4 _p1;         //out point in obj space
+    float3 z_step;      //cam view march step
+    float3 l_step;      //fog point light march step
+    float4 cam_o;       //cam in obj space
+    float zbuffer;   
+    sampler3D _Volume;
+    int full_steps;     //how many steps to travel from cam view 
+};
+
 void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out float4 p1_o , out float4 p0_w ,out float4 p1_w )
 {
     //object space intersection
@@ -84,21 +99,21 @@ float debugPoint(float4 p ,float s,  UNITY_VPOS_TYPE screenPos)
     return c;
 }
 
-void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 mStep, float4 cam_o, out int full_steps)
+void get_p0_step(inout rayMarchStr stru)
 {
     //zstep传入的时候有价值的只有长度，（0,0,step）world -> object
     //calculate the p0 (first interact point) with z align and no z align
     //若cam在volume 中则需要对起始点进行调整
-    float3 ray_dir = normalize(_p1-cam_o);
+    float3 ray_dir = normalize(stru._p1-stru.cam_o);
     //>0 : inside， <=0 outside 
     //避免p0,cam重叠
-    _p0 = float4(dot((_p0 - cam_o),ray_dir)>0?_p0 : cam_o + 0.01*ray_dir,1); 
+    stru._p0 = float4(dot((stru._p0 - stru.cam_o),ray_dir)>0?stru._p0 : stru.cam_o + 0.01*ray_dir,1); 
     //cam 向前方向 dir
     float3 cDir = normalize(mul(unity_WorldToObject,mul((float3x3)unity_CameraToWorld, float3(0,0,1))));
     //cam 向前每一步vector
-    float3 cStep = cDir*length(mStep);
-    mStep.xyz = cStep.xyz;
-    if (z_align) 
+    float3 cStep = cDir*length(stru.z_step);
+    stru.z_step.xyz = cStep.xyz;
+    if (stru.z_align) 
     {
         {
             //以O为anchor做平面
@@ -114,7 +129,7 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 mSte
             float scale_cStep_coPrj = len_cStep / len_coPrj;
 
             //【cp0】 cam到第一个接触点
-            float3 cp0 = _p0.xyz -cam_o;
+            float3 cp0 = stru._p0.xyz -stru.cam_o;
             float3 mDir = normalize(cp0);
             //【cp0】 prj CL 长度
             float len_cp0Prj = dot(cp0 ,cDir);
@@ -122,25 +137,25 @@ void get_p0_step(bool z_align , inout float4 _p0, float4 _p1,  inout float3 mSte
             float s_coPrj_cp0Prj = len_coPrj / len_cp0Prj;
             //【coPrj1】oPrj1为 p0 p1 上 O 平面上点 
             float3 coPrj1 = cp0*s_coPrj_cp0Prj;
-            float3 oPrj1 = cam_o.xyz + coPrj1;
-            // 【mStep】 march step
-            mStep = coPrj1*scale_cStep_coPrj;
+            float3 oPrj1 = stru.cam_o.xyz + coPrj1;
+            // 【z_step】 march step
+            stru.z_step = coPrj1*scale_cStep_coPrj;
             //[cp0Prj] cp0 cam dir的projection
             float3 cp0Prj = len_cp0Prj*cDir;
             //[p0_prj_O] 从cp0Prj到coPrj
             float3 cp0Prj_coPrj = coPrj - cp0Prj;
             float len_cp0Prj_coPrj = dot(cp0Prj_coPrj,cDir);
             //从M点反推p0新位置
-            float3 _p0= oPrj1 - ceil(len_cp0Prj_coPrj/len_cStep)*mStep;                     
-            full_steps = dot(_p1-_p0,mDir)/ dot(mStep,mDir);
+            stru._p0.xyz= oPrj1 - ceil(len_cp0Prj_coPrj/len_cStep)*stru.z_step;                     
+            stru.full_steps = dot(stru._p1-stru._p0,mDir)/ dot(stru.z_step,mDir);
         }
 
     }
     else
     {
-        float3 ray_full = _p1 - _p0;
-        mStep = normalize(ray_full)*length(mStep);
-        full_steps = ceil(length(ray_full) / length(mStep));
+        float3 ray_full = stru._p1 - stru._p0;
+        stru.z_step = normalize(ray_full)*length(stru.z_step);
+        stru.full_steps = ceil(length(ray_full) / length(stru.z_step));
     }
 
 }
@@ -166,16 +181,14 @@ float sampleVolumen(sampler3D _Volume , float3 uvw , float _DensityPara)
 // work in the loop which can only handle constance
 #define steps 128
 #define step_size 0.01
-float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 cam_o, float zbuffer,sampler3D _Volume,float _DensityPara)
+float4 rayMarch(rayMarchStr stru)
 {
-    int full_steps;
-    bool z_align = false;
-    get_p0_step(z_align,_p0, _p1, z_step, cam_o, full_steps);
-    float len_z_step = length(z_step);
+    get_p0_step(stru);
+    float len_z_step = length(stru.z_step);
     float step_density = 0;
     int ITERATION = 30;
-    float3 p0 = _p0.xyz;
-    float3 p1 = _p0.xyz;
+    float3 p0 = stru._p0.xyz;
+    float3 p1 = stru._p0.xyz;
     float4 p0_c = UnityObjectToClipPos(p0);
     float4 p1_c = p0_c;
     float d0 = 0;
@@ -184,16 +197,16 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
     //calculate light march step
     float shadow_dens_p_v = 0;
     float len_l_step = len_z_step;
-    l_step = len_l_step * l_step ;
+    stru.l_step = len_l_step * stru.l_step ;
     float3 fogColor = float3(1,1,1);
     for (int i = 0 ; i <ITERATION ; i++)
     {
-        if (i > full_steps) break;
+        if (i > stru.full_steps) break;
         p0 = p1;
         d0 = d1;
         p0_c = p1_c;
-        p1 = _p0.xyz + i *z_step;
-        float v = sampleVolumen(_Volume, p1 ,_DensityPara);
+        p1 = stru._p0.xyz + i *stru.z_step;
+        float v = sampleVolumen(stru._Volume, p1 ,stru._DensityPara);
         shadow_dens_p_v +=  len_z_step * v;
 
         //todo : optimize clip space calculation,simple calculate p1_c and z_step will not work, because w will be different in different step
@@ -201,12 +214,12 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
         p1_c = UnityObjectToClipPos(p1);
         d1 = p1_c.z / p1_c.w; 
 
-        if (d1 < zbuffer) 
+        if (d1 < stru.zbuffer) 
         {
             //can be optimize
             //final step , sample on the scene object surface to avoid slice artifact
             //calculate z buffer 3d position in clip space
-            float d = zbuffer==0 ? 0.0001 : zbuffer;
+            float d = stru.zbuffer==0 ? 0.0001 : stru.zbuffer;
             // 已知 p1 p0 为clip 上两点, d 为 p点 depth buffer, 求出 pz pw 为 p 点clip 上3d 坐标
             float a = p1_c.z - p0_c.z ;
             float b = p1_c.w - p0_c.w;
@@ -217,8 +230,8 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
             //求scale = p.z-p0.z /p0.z-p1.z, object space 和 clip space值为一样
             float s = (pz_c - p0_c.z)/(p1_c.z - p0_c.z);
             // 此处是否正好在球面上?
-            p1 = p0 + s *z_step;
-            v = sampleVolumen(_Volume , p1 , _DensityPara ) ;
+            p1 = p0 + s *stru.z_step;
+            v = sampleVolumen(stru._Volume , p1 , stru._DensityPara ) ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
             accumulate(step_density , v ,len_z_step*s);
             float transmittance = calLight(step_density, len_z_step*i + len_z_step*s);
@@ -229,21 +242,21 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
         //accumulate(step_density , v ,len_z_step);
         {
             float shadow_dens_l_p = 0;
-            if (v>0.001)
+            if (v>0.01)
             {
                 
                 float j;
                 float3 p_l = p1;
                 int _step = 0;
-                float opacity = sampleVolumen(_Volume , p_l , _DensityPara );
+                float opacity = sampleVolumen(stru._Volume , p_l , stru._DensityPara );
                 for (j = 0 ; j <20 ; j++)
                 {
 
-                    p_l = p_l + l_step;
+                    p_l = p_l + stru.l_step;
                     if ( p_l.x>0.5 || p_l.y>0.5 || p_l.z>0.5 ||p_l.x<-0.5 || p_l.y<-0.5 || p_l.z<-0.5)
                         break;  
                     _step = j;
-                    shadow_dens_l_p +=  len_l_step * sampleVolumen(_Volume , p_l , _DensityPara ) ;
+                    shadow_dens_l_p +=  len_l_step * sampleVolumen(stru._Volume , p_l , stru._DensityPara ) ;
                 }
                 float transmittance_l_p = exp( - shadow_dens_l_p * _step * len_l_step);
                 float transmittance_p_v = exp( - shadow_dens_p_v * i * len_z_step);
@@ -251,7 +264,7 @@ float4 rayMarch(  float4 _p0, float4 _p1 , float3 z_step ,float3 l_step, float4 
                 //opacity ,加了之后会变的很奇怪
                 //fogColor = opacity *fogColor;
                 //p to v
-                fogColor = fogColor * transmittance_p_v;
+                fogColor = fogColor * transmittance_p_v*_LightColor0;
             }
         }
         

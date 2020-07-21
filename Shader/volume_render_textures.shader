@@ -15,6 +15,7 @@ Shader "Custom/volume_render_texture"
     {
         _Volume ("Volume", 3D) = "" {}
         [gamma] _DensityPara ("density parameter",Range(0.01, 100)) = 1
+        [MaterialToggle] _UseShadow("is Bending", Float) = 0
     }
     SubShader
     {
@@ -65,6 +66,7 @@ Shader "Custom/volume_render_texture"
             ZTest Always
             Cull Back
             CGPROGRAM
+            #pragma only_renderers d3d11
             #pragma vertex vert
             #pragma fragment frag
             #pragma target 4.0
@@ -76,6 +78,7 @@ Shader "Custom/volume_render_texture"
             float _DensityPara;
             sampler2D _CameraDepthTexture;
             sampler3D _Volume;
+            float _UseShadow;
 
             struct appdata
             {
@@ -94,6 +97,7 @@ Shader "Custom/volume_render_texture"
                 float4 projPos : TEXCOORD7;
                 // float4 vertex : SV_POSITION;
             };
+
             v2f vert (appdata v ,  out float4 vertex : SV_POSITION)
             {
                 v2f o;
@@ -136,7 +140,20 @@ Shader "Custom/volume_render_texture"
                 
                 float3 l_step = UnityWorldToObjectDir( _WorldSpaceLightPos0);
                 //ray march
-                col = rayMarch(_inter_p0_o, _inter_p1_o, i.z_step, l_step, i.ab_ray_p0,depth_buffer_scene,_Volume,_DensityPara);
+                rayMarchStr _stu;
+                _stu._p0 = _inter_p0_o;
+                _stu._p1 = _inter_p1_o;
+                _stu.z_step = i.z_step;
+                _stu.l_step = l_step;
+                _stu.cam_o = i.ab_ray_p0;
+                _stu.zbuffer = depth_buffer_scene;
+                _stu._Volume = _Volume;
+                _stu._DensityPara = _DensityPara;
+                _stu.useShadow = _UseShadow;
+                _stu.z_align = true;
+                _stu.full_steps = 0;
+
+                col = rayMarch(_stu);
 
                 //debug function
                 // float c = debugPoint(float4(0,0,0,1), 0.04f, screenPos);
