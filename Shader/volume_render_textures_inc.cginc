@@ -2,7 +2,7 @@ struct rayMarchStr
 {
     float _DensityPara; //user control how dens the fog is
     float useShadow;
-    bool z_align;
+    float z_align;
     float4 _p0;         //enter point in obj space
     float4 _p1;         //out point in obj space
     float3 z_step;      //cam view march step
@@ -11,6 +11,9 @@ struct rayMarchStr
     float zbuffer;   
     sampler3D _Volume;
     int full_steps;     //how many steps to travel from cam view 
+    float _ShasowStepInt;//step length of a fog when accumulate shadow ,user input parameter
+    float _lightScale;  //scale fog light to normalize
+    float _UseShadow;
 };
 
 void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out float4 p1_o , out float4 p0_w ,out float4 p1_w )
@@ -113,51 +116,47 @@ void get_p0_step(inout rayMarchStr stru)
     //cam 向前每一步vector
     float3 cStep = cDir*length(stru.z_step);
     stru.z_step.xyz = cStep.xyz;
-    if (stru.z_align) 
-    {
-        {
-            //以O为anchor做平面
-            // 【co】 cam->O,cube中心`
-            float3 co = float3(0,0,0) - cStep;
-            // 【coPrj】 cam向前vec，L为vec 上 O齐平点
-            // 【len_coPrj】 coPrj带符号长度 /cDir
-            float len_coPrj = dot(co,cDir);
-            float3 coPrj = dot(co,cDir)*cDir;
-            // 【len_cStep】 cam step 的带符号长度 /cDir
-            float len_cStep = dot(cStep , cDir);
-            // 【scale_cl_cStep】 cStep/coPrj 倍数
-            float scale_cStep_coPrj = len_cStep / len_coPrj;
-
-            //【cp0】 cam到第一个接触点
-            float3 cp0 = stru._p0.xyz -stru.cam_o;
-            float3 mDir = normalize(cp0);
-            //【cp0】 prj CL 长度
-            float len_cp0Prj = dot(cp0 ,cDir);
-            //【s_coPrj_cp0Prj】 coPrj为cp0Prj多少倍
-            float s_coPrj_cp0Prj = len_coPrj / len_cp0Prj;
-            //【coPrj1】oPrj1为 p0 p1 上 O 平面上点 
-            float3 coPrj1 = cp0*s_coPrj_cp0Prj;
-            float3 oPrj1 = stru.cam_o.xyz + coPrj1;
-            // 【z_step】 march step
-            stru.z_step = coPrj1*scale_cStep_coPrj;
-            //[cp0Prj] cp0 cam dir的projection
-            float3 cp0Prj = len_cp0Prj*cDir;
-            //[p0_prj_O] 从cp0Prj到coPrj
-            float3 cp0Prj_coPrj = coPrj - cp0Prj;
-            float len_cp0Prj_coPrj = dot(cp0Prj_coPrj,cDir);
-            //从M点反推p0新位置
-            stru._p0.xyz= oPrj1 - ceil(len_cp0Prj_coPrj/len_cStep)*stru.z_step;                     
-            stru.full_steps = dot(stru._p1-stru._p0,mDir)/ dot(stru.z_step,mDir);
-        }
-
-    }
-    else
+    if (stru.z_align == 0)
     {
         float3 ray_full = stru._p1 - stru._p0;
         stru.z_step = normalize(ray_full)*length(stru.z_step);
         stru.full_steps = ceil(length(ray_full) / length(stru.z_step));
     }
+    else
+    {
+        //以O为anchor做平面
+        // 【co】 cam->O,cube中心`
+        float3 co = float3(0,0,0) - cStep;
+        // 【coPrj】 cam向前vec，L为vec 上 O齐平点
+        // 【len_coPrj】 coPrj带符号长度 /cDir
+        float len_coPrj = dot(co,cDir);
+        float3 coPrj = dot(co,cDir)*cDir;
+        // 【len_cStep】 cam step 的带符号长度 /cDir
+        float len_cStep = dot(cStep , cDir);
+        // 【scale_cl_cStep】 cStep/coPrj 倍数
+        float scale_cStep_coPrj = len_cStep / len_coPrj;
 
+        //【cp0】 cam到第一个接触点
+        float3 cp0 = stru._p0.xyz -stru.cam_o;
+        float3 mDir = normalize(cp0);
+        //【cp0】 prj CL 长度
+        float len_cp0Prj = dot(cp0 ,cDir);
+        //【s_coPrj_cp0Prj】 coPrj为cp0Prj多少倍
+        float s_coPrj_cp0Prj = len_coPrj / len_cp0Prj;
+        //【coPrj1】oPrj1为 p0 p1 上 O 平面上点 
+        float3 coPrj1 = cp0*s_coPrj_cp0Prj;
+        float3 oPrj1 = stru.cam_o.xyz + coPrj1;
+        // 【z_step】 march step
+        stru.z_step = coPrj1*scale_cStep_coPrj;
+        //[cp0Prj] cp0 cam dir的projection
+        float3 cp0Prj = len_cp0Prj*cDir;
+        //[p0_prj_O] 从cp0Prj到coPrj
+        float3 cp0Prj_coPrj = coPrj - cp0Prj;
+        float len_cp0Prj_coPrj = dot(cp0Prj_coPrj,cDir);
+        //从M点反推p0新位置
+        stru._p0.xyz= oPrj1 - ceil(len_cp0Prj_coPrj/len_cStep)*stru.z_step;                     
+        stru.full_steps = dot(stru._p1-stru._p0,mDir)/ dot(stru.z_step,mDir);   
+    }
 }
 
 void accumulate(inout float step_density , float v ,float len_step)
@@ -178,6 +177,32 @@ float sampleVolumen(sampler3D _Volume , float3 uvw , float _DensityPara)
     return tex3D(_Volume, uvw + float3(0.5,0.5,0.5)).r * _DensityPara;
 }
 
+float shadowFactor(float3 p1, float3 l_step ,float len_l_step ,  sampler3D _Volume , float _DensityPara ,float shadow_dens_p_v, float i , float len_z_step , float _ShasowStepInt)
+{
+    float shadow_dens_l_p = 0;//从march点p向light方向累计的fog density
+
+    float j;
+    float3 p_l = p1;
+    int _step = 0;
+    float opacity = sampleVolumen(_Volume , p_l , _DensityPara );
+    for (j = 0 ; j <20 ; j++)
+    {
+
+        p_l = p_l + l_step;
+        if ( p_l.x>0.5 || p_l.y>0.5 || p_l.z>0.5 ||p_l.x<-0.5 || p_l.y<-0.5 || p_l.z<-0.5)
+            break;  
+        _step = j;
+        shadow_dens_l_p +=  len_l_step * sampleVolumen(_Volume , p_l , _DensityPara ) ;
+    }
+
+    float transmittance_l_p = exp( - shadow_dens_l_p * _step * len_l_step * _ShasowStepInt);
+    float transmittance_p_v = exp( - shadow_dens_p_v * i * len_z_step * _ShasowStepInt);
+    
+    //opacity ,加了之后会变的很奇怪,以后需要再看
+    //opacity = 1;
+    return transmittance_l_p * transmittance_p_v * opacity;
+}
+
 // work in the loop which can only handle constance
 #define steps 128
 #define step_size 0.01
@@ -196,9 +221,11 @@ float4 rayMarch(rayMarchStr stru)
     float4 col = float4(1,1,0,1); 
     //calculate light march step
     float shadow_dens_p_v = 0;
+    //light march使用和z step一样的长度
     float len_l_step = len_z_step;
     stru.l_step = len_l_step * stru.l_step ;
     float3 fogColor = float3(1,1,1);
+    float fogLight = stru._UseShadow > 0.98 ? 0:1;
     for (int i = 0 ; i <ITERATION ; i++)
     {
         if (i > stru.full_steps) break;
@@ -234,41 +261,32 @@ float4 rayMarch(rayMarchStr stru)
             v = sampleVolumen(stru._Volume , p1 , stru._DensityPara ) ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
             accumulate(step_density , v ,len_z_step*s);
+            
+            // if (stru._UseShadow > 0.98)
+            // {
+            //     if (v>0.01 )
+            //     {
+            //         float shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,shadow_dens_p_v, i-1+s , len_z_step , stru._ShasowStepInt);
+            //         fogLight = fogLight +  shadowTrans/stru._lightScale;
+            //     }
+            // }
+            fogColor = fogColor * fogLight ;
             float transmittance = calLight(step_density, len_z_step*i + len_z_step*s);
             return float4(fogColor,1-transmittance);
         }
 
         step_density += v  * len_z_step;
         //accumulate(step_density , v ,len_z_step);
+        if (stru._UseShadow > 0.98)
         {
-            float shadow_dens_l_p = 0;
-            if (v>0.01)
+            if (v>0.01 )
             {
-                
-                float j;
-                float3 p_l = p1;
-                int _step = 0;
-                float opacity = sampleVolumen(stru._Volume , p_l , stru._DensityPara );
-                for (j = 0 ; j <20 ; j++)
-                {
-
-                    p_l = p_l + stru.l_step;
-                    if ( p_l.x>0.5 || p_l.y>0.5 || p_l.z>0.5 ||p_l.x<-0.5 || p_l.y<-0.5 || p_l.z<-0.5)
-                        break;  
-                    _step = j;
-                    shadow_dens_l_p +=  len_l_step * sampleVolumen(stru._Volume , p_l , stru._DensityPara ) ;
-                }
-                float transmittance_l_p = exp( - shadow_dens_l_p * _step * len_l_step);
-                float transmittance_p_v = exp( - shadow_dens_p_v * i * len_z_step);
-                fogColor =  transmittance_l_p;
-                //opacity ,加了之后会变的很奇怪
-                //fogColor = opacity *fogColor;
-                //p to v
-                fogColor = fogColor * transmittance_p_v*_LightColor0;
+                float shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,shadow_dens_p_v, i , len_z_step , stru._ShasowStepInt);
+                fogLight = fogLight +  shadowTrans/stru._lightScale;
             }
-        }
-        
+        }        
     }
+    fogColor = fogColor * fogLight ;
     float transmittance = calLight(step_density, len_z_step * i);
     return float4(fogColor,1-transmittance); 
     // return col;        

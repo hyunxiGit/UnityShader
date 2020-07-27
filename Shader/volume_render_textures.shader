@@ -15,7 +15,10 @@ Shader "Custom/volume_render_texture"
     {
         _Volume ("Volume", 3D) = "" {}
         [gamma] _DensityPara ("density parameter",Range(0.01, 100)) = 1
-        [MaterialToggle] _UseShadow("is Bending", Float) = 0
+        [MaterialToggle] _UseZAlign("use z_align", Float) = 0
+        [MaterialToggle] _UseShadow("use shadow", Float) = 0
+        [gamma] _ShasowStepInt ("shadow step intensity",Range(0.01, 30)) = 10
+        [gamma] _lightScale ("shadow light scale",Range(1, 5)) = 1.5
     }
     SubShader
     {
@@ -79,6 +82,9 @@ Shader "Custom/volume_render_texture"
             sampler2D _CameraDepthTexture;
             sampler3D _Volume;
             float _UseShadow;
+            float _UseZAlign;
+            float _ShasowStepInt;
+            float _lightScale;
 
             struct appdata
             {
@@ -150,8 +156,11 @@ Shader "Custom/volume_render_texture"
                 _stu._Volume = _Volume;
                 _stu._DensityPara = _DensityPara;
                 _stu.useShadow = _UseShadow;
-                _stu.z_align = true;
+                _stu.z_align = _UseZAlign;
                 _stu.full_steps = 0;
+                _stu._ShasowStepInt = _ShasowStepInt;
+                _stu._lightScale = _lightScale;
+                _stu._UseShadow =_UseShadow;
 
                 col = rayMarch(_stu);
 
