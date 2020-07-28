@@ -28,6 +28,7 @@ Material:
     - _LightScale: 10
     - _ShasowStepInt: 7.6
     - _UseShadow: 1
+    - _UseZAlign: 0
     - _lightScale: 3.75
     m_Colors: []
   m_BuildTextureStacks: []

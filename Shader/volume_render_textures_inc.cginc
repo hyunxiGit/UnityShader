@@ -174,7 +174,7 @@ float calLight(float step_density,float light_distance)
 
 float sampleVolumen(sampler3D _Volume , float3 uvw , float _DensityPara)
 {
-    return tex3D(_Volume, uvw + float3(0.5,0.5,0.5)).r * _DensityPara;
+    return tex3Dlod(_Volume, float4(uvw + float3(0.5,0.5,0.5),0)).r * _DensityPara;
 }
 
 float shadowFactor(float3 p1, float3 l_step ,float len_l_step ,  sampler3D _Volume , float _DensityPara ,float shadow_dens_p_v, float i , float len_z_step , float _ShasowStepInt)
@@ -250,18 +250,22 @@ float4 rayMarch(rayMarchStr stru)
             // 已知 p1 p0 为clip 上两点, d 为 p点 depth buffer, 求出 pz pw 为 p 点clip 上3d 坐标
             float a = p1_c.z - p0_c.z ;
             float b = p1_c.w - p0_c.w;
-            float pz_c = (b*p0_c.z - a*p0_c.w)/(b-a/d);
+            float _devid = b-a/d; 
+            _devid = _devid == 0? 0.0001 : _devid;
+            float pz_c = (b*p0_c.z - a*p0_c.w)/_devid;
             float pw_c = pz_c/d;
             //此处pz_c pw_c 正确
             col = float4(pz_c,pw_c,0,1);
             //求scale = p.z-p0.z /p0.z-p1.z, object space 和 clip space值为一样
-            float s = (pz_c - p0_c.z)/(p1_c.z - p0_c.z);
+            _devid = p1_c.z - p0_c.z;
+            _devid = _devid == 0? 0.0001 : _devid;
+            float s = (pz_c - p0_c.z)/_devid;
             // 此处是否正好在球面上?
             p1 = p0 + s *stru.z_step;
             v = sampleVolumen(stru._Volume , p1 , stru._DensityPara ) ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
             accumulate(step_density , v ,len_z_step*s);
-            
+
             // if (stru._UseShadow > 0.98)
             // {
             //     if (v>0.01 )
