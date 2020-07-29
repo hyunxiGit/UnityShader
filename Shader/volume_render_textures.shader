@@ -17,6 +17,8 @@ Shader "Custom/volume_render_texture"
         [gamma] _DensityPara ("density parameter",Range(0.01, 100)) = 1
         [MaterialToggle] _UseZAlign("use z_align", Float) = 0
         [MaterialToggle] _UseShadow("use shadow", Float) = 0
+        [MaterialToggle] _UseFinalStep("use final step", Float) = 1
+        [MaterialToggle] _UseFinalStepShadow("use final step shadow", Float) = 0
         [gamma] _ShasowStepInt ("shadow step intensity",Range(0.01, 30)) = 10
         [gamma] _lightScale ("shadow light scale",Range(1, 5)) = 1.5
     }
@@ -82,6 +84,8 @@ Shader "Custom/volume_render_texture"
             sampler2D _CameraDepthTexture;
             sampler3D _Volume;
             float _UseShadow;
+            float _UseFinalStep;
+            float _UseFinalStepShadow;
             float _UseZAlign;
             float _ShasowStepInt;
             float _lightScale;
@@ -161,6 +165,8 @@ Shader "Custom/volume_render_texture"
                 _stu._ShasowStepInt = _ShasowStepInt;
                 _stu._lightScale = _lightScale;
                 _stu._UseShadow =_UseShadow;
+                _stu._UseFinalStep = _UseFinalStep;
+                _stu._UseFinalStepShadow = _UseFinalStepShadow;
 
                 col = rayMarch(_stu);
 

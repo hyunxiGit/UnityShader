@@ -14,6 +14,8 @@ struct rayMarchStr
     float _ShasowStepInt;//step length of a fog when accumulate shadow ,user input parameter
     float _lightScale;  //scale fog light to normalize
     float _UseShadow;
+    float _UseFinalStep;
+    float _UseFinalStepShadow;
 };
 
 void obb_intersect(float4 _ab_ray_p0 , float4 _ab_ray_p1 , out float4 p0_o , out float4 p1_o , out float4 p0_w ,out float4 p1_w )
@@ -179,6 +181,7 @@ float sampleVolumen(sampler3D _Volume , float3 uvw , float _DensityPara)
 
 float shadowFactor(float3 p1, float3 l_step ,float len_l_step ,  sampler3D _Volume , float _DensityPara ,float shadow_dens_p_v, float i , float len_z_step , float _ShasowStepInt)
 {
+    //need add final step to avoid artifect
     float shadow_dens_l_p = 0;//从march点p向light方向累计的fog density
 
     float j;
@@ -243,6 +246,10 @@ float4 rayMarch(rayMarchStr stru)
 
         if (d1 < stru.zbuffer) 
         {
+             if (stru._UseFinalStep < 0.01)
+             {
+                break;
+             }
             //can be optimize
             //final step , sample on the scene object surface to avoid slice artifact
             //calculate z buffer 3d position in clip space
@@ -265,15 +272,18 @@ float4 rayMarch(rayMarchStr stru)
             v = sampleVolumen(stru._Volume , p1 , stru._DensityPara ) ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
             accumulate(step_density , v ,len_z_step*s);
-
-            // if (stru._UseShadow > 0.98)
-            // {
-            //     if (v>0.01 )
-            //     {
-            //         float shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,shadow_dens_p_v, i-1+s , len_z_step , stru._ShasowStepInt);
-            //         fogLight = fogLight +  shadowTrans/stru._lightScale;
-            //     }
-            // }
+            if (stru._UseFinalStepShadow > 0.0001)
+            {
+                if (stru._UseShadow > 0.98)
+                {
+                    if (v>0.01 )
+                    {
+                        float shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,shadow_dens_p_v, i-1+s , len_z_step , stru._ShasowStepInt);
+                        fogLight = fogLight +  shadowTrans/stru._lightScale;
+                    }
+                }
+            }
+            
             fogColor = fogColor * fogLight ;
             float transmittance = calLight(step_density, len_z_step*i + len_z_step*s);
             return float4(fogColor,1-transmittance);
