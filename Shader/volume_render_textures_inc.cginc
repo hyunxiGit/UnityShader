@@ -179,31 +179,29 @@ float sampleVolumen(sampler3D _Volume , float3 uvw , float _DensityPara)
     return tex3Dlod(_Volume, float4(uvw + float3(0.5,0.5,0.5),0)).r * _DensityPara;
 }
 
-float shadowFactor(float3 p1, float3 l_step ,float len_l_step ,  sampler3D _Volume , float _DensityPara ,float shadow_dens_p_v, float i , float len_z_step , float _ShasowStepInt)
+float shadowFactor(float3 p1, float3 l_step ,float len_l_step ,  sampler3D _Volume , float _DensityPara ,float transmittance , float _ShasowStepInt)
 {
     //need add final step to avoid artifect
+    l_step *=0.5;
+    len_l_step *=0.5;
     float shadow_dens_l_p = 0;//从march点p向light方向累计的fog density
 
     float j;
     float3 p_l = p1;
-    int _step = 0;
+    float _step = 0;
     float opacity = sampleVolumen(_Volume , p_l , _DensityPara );
-    for (j = 0 ; j <20 ; j++)
+    for (j = 0 ; j <30 ; j++)
     {
 
         p_l = p_l + l_step;
         if ( p_l.x>0.5 || p_l.y>0.5 || p_l.z>0.5 ||p_l.x<-0.5 || p_l.y<-0.5 || p_l.z<-0.5)
-            break;  
-        _step = j;
+             break;  
+        _step += 1;
         shadow_dens_l_p +=  len_l_step * sampleVolumen(_Volume , p_l , _DensityPara ) ;
     }
-
-    float transmittance_l_p = exp( - shadow_dens_l_p * _step * len_l_step * _ShasowStepInt);
-    float transmittance_p_v = exp( - shadow_dens_p_v * i * len_z_step * _ShasowStepInt);
-    
-    //opacity ,加了之后会变的很奇怪,以后需要再看
-    //opacity = 1;
-    return transmittance_l_p * transmittance_p_v * opacity;
+    float transmittance_l_p = calLight(shadow_dens_l_p, _step * len_l_step * _ShasowStepInt);
+    // exp( - shadow_dens_l_p * _step * len_l_step * _ShasowStepInt);
+    return transmittance_l_p * opacity* transmittance;
 }
 
 // work in the loop which can only handle constance
@@ -223,12 +221,15 @@ float4 rayMarch(rayMarchStr stru)
     float d1 = 0;
     float4 col = float4(1,1,0,1); 
     //calculate light march step
-    float shadow_dens_p_v = 0;
     //light march使用和z step一样的长度
     float len_l_step = len_z_step;
     stru.l_step = len_l_step * stru.l_step ;
-    float3 fogColor = float3(1,1,1);
-    float fogLight = stru._UseShadow > 0.98 ? 0:1;
+    float transmittance = 0;
+    float shadowTrans = 0;
+    float3 fogColor = float3(0.1,0.1,0.1);
+    float fogLight = 0;
+    
+    float returnV = 0;
     for (int i = 0 ; i <ITERATION ; i++)
     {
         if (i > stru.full_steps) break;
@@ -237,18 +238,20 @@ float4 rayMarch(rayMarchStr stru)
         p0_c = p1_c;
         p1 = stru._p0.xyz + i *stru.z_step;
         float v = sampleVolumen(stru._Volume, p1 ,stru._DensityPara);
-        shadow_dens_p_v +=  len_z_step * v;
+        
 
         //todo : optimize clip space calculation,simple calculate p1_c and z_step will not work, because w will be different in different step
         //research the projection matrix , find out if possible find out w
         p1_c = UnityObjectToClipPos(p1);
-        d1 = p1_c.z / p1_c.w; 
+        d1 = p1_c.z / p1_c.w;      
 
-        if (d1 < stru.zbuffer) 
-        {
-             if (stru._UseFinalStep < 0.01)
+        if (d1 < stru.zbuffer) // last step
+        { 
+
+            //break;
+             //if (stru._UseFinalStep < 0.01)
              {
-                break;
+                //break;
              }
             //can be optimize
             //final step , sample on the scene object surface to avoid slice artifact
@@ -271,37 +274,43 @@ float4 rayMarch(rayMarchStr stru)
             p1 = p0 + s *stru.z_step;
             v = sampleVolumen(stru._Volume , p1 , stru._DensityPara ) ;
             //每step opacity为1, 按照final step大小scale 相对于整步的opacity
-            accumulate(step_density , v ,len_z_step*s);
-            if (stru._UseFinalStepShadow > 0.0001)
+            step_density +=len_z_step *v *s;
+            transmittance = calLight(step_density, len_z_step*(i-1) + len_z_step*s);
+            
+            if (stru._UseFinalStepShadow > 0.98)
             {
                 if (stru._UseShadow > 0.98)
                 {
-                    if (v>0.01 )
+                    if (v>0.001 )
                     {
-                        float shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,shadow_dens_p_v, i-1+s , len_z_step , stru._ShasowStepInt);
+                        // shadow density 正确
+                        // shadowTrans 正确
+                        shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,transmittance, stru._ShasowStepInt);
                         fogLight = fogLight +  shadowTrans/stru._lightScale;
+                        //fogLight = fogLight +  shadowTrans/stru._lightScale;
                     }
                 }
             }
-            
-            fogColor = fogColor * fogLight ;
-            float transmittance = calLight(step_density, len_z_step*i + len_z_step*s);
-            return float4(fogColor,1-transmittance);
+            break;
         }
-
-        step_density += v  * len_z_step;
-        //accumulate(step_density , v ,len_z_step);
-        if (stru._UseShadow > 0.98)
+        else //normal step
         {
-            if (v>0.01 )
+
+            step_density += v  * len_z_step;
+            transmittance = calLight(step_density, len_z_step * i);
+            //accumulate(step_density , v ,len_z_step);
+            if (stru._UseShadow > 0.90)
             {
-                float shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,shadow_dens_p_v, i , len_z_step , stru._ShasowStepInt);
-                fogLight = fogLight +  shadowTrans/stru._lightScale;
-            }
-        }        
+                if (v>0.001 )
+                {
+                    shadowTrans =  shadowFactor( p1, stru.l_step, len_l_step, stru._Volume , stru._DensityPara ,transmittance,stru._ShasowStepInt);
+                    fogLight = fogLight +  shadowTrans/stru._lightScale;      
+                }
+            } 
+        }
     }
     fogColor = fogColor * fogLight ;
-    float transmittance = calLight(step_density, len_z_step * i);
-    return float4(fogColor,1-transmittance); 
-    // return col;        
+
+    
+    return float4(fogColor,1-transmittance);        
 }
