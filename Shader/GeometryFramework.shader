@@ -13,7 +13,6 @@
         {
             CGPROGRAM
             #pragma vertex vert
-            //声明geometry shader
             #pragma geometry geom
             #pragma fragment frag
             #include "UnityCG.cginc"
