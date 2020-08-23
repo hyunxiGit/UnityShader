@@ -4,7 +4,7 @@ my own projects are very random, mostly should be listed in updates,
 tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tutorials/rendering/
 
 updates
-grass wip
+grass wip - tesselation and geometry shader user case
 
 ![Image of shadow marching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/grass.gif)
 
