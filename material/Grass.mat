@@ -77,7 +77,7 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _tessFactor: 5.2
+    - _tessFactor: 6.6
     m_Colors:
     - _BottomColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
