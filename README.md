@@ -1,6 +1,7 @@
 # UnityShader
 collection of tutorial shader and also my own rendering projects.
-my own projects are very random, mostly should be listed in updates, tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tutorials/rendering/
+my own projects are very random, mostly should be listed in updates, 
+tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tutorials/rendering/
 
 updates
 grass wip
