@@ -2,6 +2,7 @@
 {
     Properties
     {
+        _tessFactor("grass amount", Range (1,64)) = 1.0
         _Scale("blade scale", Range(0.5,10)) = 5.0
         _TopColor("Top Color", Color) = (0,0,0,1)
         _BottomColor("Bottom Color", Color) = (1,1,1,1)
@@ -19,11 +20,15 @@
         Pass
         {
             CGPROGRAM
-            #pragma vertex vert
-            #pragma geometry geom
-            #pragma fragment frag
+            #pragma target 4.6 // 4.6支持tesselation
+            #pragma vertex myVert
+            #pragma hull myHull  
+            #pragma domain myDomain           
+            #pragma geometry myGeom
+            #pragma fragment myFrag
             #include "UnityCG.cginc"
 
+            float _tessFactor;
             float _Scale;
             float3 _TopColor;
             float3 _BottomColor;       
@@ -36,6 +41,14 @@
                 float2 uv : TEXCOORD0; 
             };
 
+            struct TessellationControlPoint {
+                //tesselation vert shader must output position using [INTERNALTESSPOS] semantic
+                float4 pos : INTERNALTESSPOS;
+                float3 nor : NORMAL;
+                float4 tan : TANGENT;
+                float2 uv : TEXCOORD0;
+            };
+
             struct v2g
             {
                 float4 pos : SV_POSITION;
@@ -43,6 +56,9 @@
                 float4 tan : TANGENT;
                 float2 uv : TEXCOORD0; 
             };
+
+
+
             struct g2f
             {
                 float4 pos : SV_POSITION;
@@ -75,9 +91,9 @@
                     );
             }
 
-            v2g vert (appData i)
+            TessellationControlPoint myVert (appData i)
             {
-                v2g o;
+                TessellationControlPoint o;
                 o.pos = i.vertex;
                 o.nor = i.nor;
                 o.tan = i.tan;
@@ -86,9 +102,52 @@
                 return o;
             }
 
+            struct TessellationFactors
+            {
+                float edge[3]   : SV_TessFactor;
+                float inside    : SV_InsideTessFactor;
+            };
+
+            TessellationFactors myPatchConstant(InputPatch<TessellationControlPoint,3> patch)
+            {
+                TessellationFactors f;
+                f.edge[0]   = _tessFactor;
+                f.edge[1]   = _tessFactor;
+                f.edge[2]   = _tessFactor;
+                f.inside    = _tessFactor;
+                return f;
+            }
+
+            [UNITY_domain("tri")]
+            [UNITY_outputcontrolpoints(3)]
+            [UNITY_outputtopology("triangle_cw")]
+            [UNITY_partitioning("fractional_odd")]
+            [UNITY_patchconstantfunc("myPatchConstant")]
+            TessellationControlPoint myHull (InputPatch<TessellationControlPoint,3> patch , uint id : SV_OutputControlPointID)
+            {
+                return patch[id];
+            }
+
+            [UNITY_domain("tri")]
+            v2g myDomain (TessellationFactors f, OutputPatch<TessellationControlPoint,3> patch , float3 barycentricCoordinates : SV_DomainLocation)
+            {
+                v2g o;
+                #define MY_DOMAIN_PROGRAM_INTERPOLATE(fieldName) o.fieldName = \
+                        patch[0].fieldName  * barycentricCoordinates.x + \
+                        patch[1].fieldName  * barycentricCoordinates.y + \
+                        patch[2].fieldName  * barycentricCoordinates.z ;
+
+                o.pos = MY_DOMAIN_PROGRAM_INTERPOLATE(pos)
+                o.nor = MY_DOMAIN_PROGRAM_INTERPOLATE(nor)
+                o.tan = MY_DOMAIN_PROGRAM_INTERPOLATE(tan)
+                o.uv = MY_DOMAIN_PROGRAM_INTERPOLATE(uv)
+
+                return o;
+            }
+
             [maxvertexcount(3)]
             //最多输出三个点
-            void geom(triangle v2g i[3], inout TriangleStream<g2f> triStream)
+            void myGeom(triangle v2g i[3], inout TriangleStream<g2f> triStream)
             {
                 //geometry输出为clip space
                 g2f o;
@@ -148,7 +207,7 @@
 
             }
 
-            float4 frag (g2f i) : SV_Target
+            float4 myFrag (g2f i) : SV_Target
             {   
                 float4 col = float4(lerp(_TopColor,_BottomColor,i.uv.y),1);
                 return col;
