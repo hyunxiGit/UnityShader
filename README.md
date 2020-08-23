@@ -17,15 +17,9 @@ https://www.youtube.com/playlist?list=PLw6ZPnpJDyksqb_Vtfigif4IPL4WZ293P
 add 1st pass shadow marching. There are some resolution problems need to figure out
 ![Image of shadow marching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/v_fog_light_march.gif)
 
-![Image of round step](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/fog_intersect_round_step.gif)
-
 -Scene depth test
 
 ![Image of scene depth test](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/scene_depth_test.gif)
-
--software ray marching volumen with z plane alignment
-
-![Image of software ray march volumen](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/software_raymarch_volumen.gif)
 
 -volumen builder plugin for creating uniyt 3d texture from texture atler
 
