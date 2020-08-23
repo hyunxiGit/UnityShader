@@ -3,7 +3,7 @@ Shader "Custom/tesselation"
     Properties
     {
         _Color("Base Color", Color) = (1,1,1,1)
-        _tAmount("Tesselation amount" , Int) = 1
+        _tAmount("Tesselation amount" , Range(1,64)) = 1
     }
     SubShader
     {
@@ -24,7 +24,7 @@ Shader "Custom/tesselation"
             #include "UnityLightingCommon.cginc"
 
             float4 _Color;
-            int _tAmount;
+            float _tAmount;
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -85,7 +85,8 @@ Shader "Custom/tesselation"
             [UNITY_domain("tri")]
             [UNITY_outputcontrolpoints(3)]
             [UNITY_outputtopology("triangle_cw")]
-            [UNITY_partitioning("integer")]
+            // [UNITY_partitioning("integer")]
+            [UNITY_partitioning("fractional_odd")]
             [UNITY_patchconstantfunc("myPatchConstant")]
             TessellationControlPoint myHull ( InputPatch<TessellationControlPoint, 3> patch,uint id : SV_OutputControlPointID) 
             {
