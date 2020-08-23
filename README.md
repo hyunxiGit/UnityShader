@@ -3,6 +3,9 @@ collection of tutorial shader and also my own rendering projects.
 my own projects are very random, mostly should be listed in updates, tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tutorials/rendering/
 
 updates
+grass wip
+
+![Image of shadow marching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/grass.gif)
 
 more effect can be seen :
 https://www.youtube.com/playlist?list=PLw6ZPnpJDyksqb_Vtfigif4IPL4WZ293P
