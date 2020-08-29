@@ -4,6 +4,7 @@ Shader "Custom/tesselation"
     {
         _Color("Base Color", Color) = (1,1,1,1)
         _tAmount("Tesselation amount" , Range(1,64)) = 1
+        _tMethod("Tesselation method" , Int)= 0
     }
     SubShader
     {
@@ -14,6 +15,7 @@ Shader "Custom/tesselation"
         {
             CGPROGRAM
             #pragma target 4.6 // 4.6支持tesselation
+            //#pragma shader_feature _ _TESSELATION_INT _TESSELATION_INT
             #pragma vertex myVert
             #pragma hull myHull
             #pragma domain myDomain
@@ -25,6 +27,7 @@ Shader "Custom/tesselation"
 
             float4 _Color;
             float _tAmount;
+            int _tMethod;
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -85,8 +88,8 @@ Shader "Custom/tesselation"
             [UNITY_domain("tri")]
             [UNITY_outputcontrolpoints(3)]
             [UNITY_outputtopology("triangle_cw")]
-            // [UNITY_partitioning("integer")]
-            [UNITY_partitioning("fractional_odd")]
+            //[UNITY_partitioning("fractional_odd")]
+            [UNITY_partitioning("integer")]
             [UNITY_patchconstantfunc("myPatchConstant")]
             TessellationControlPoint myHull ( InputPatch<TessellationControlPoint, 3> patch,uint id : SV_OutputControlPointID) 
             {

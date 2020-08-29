@@ -1,8 +1,13 @@
-﻿Shader "Custom/Grass"
+﻿// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
+Shader "Custom/Grass"
 {
     Properties
     {
-        _tessFactor("grass amount", Range (1,64)) = 1.0
+        _windMap("wind map" , 2d) = "white" {}
+        _windFreq("wind Speed" , Vector) = (1,1,1,1)
+        _tessFactor("grass amount", Range (1,64)) = 5.0
+        _bendScale ("bend toward" , Range (0 , 1)) = 0.2
         _Scale("blade scale", Range(0.5,10)) = 5.0
         _TopColor("Top Color", Color) = (0,0,0,1)
         _BottomColor("Bottom Color", Color) = (1,1,1,1)
@@ -27,12 +32,19 @@
             #pragma geometry myGeom
             #pragma fragment myFrag
             #include "UnityCG.cginc"
+            #include "UnityStandardUtils.cginc"
 
             float _tessFactor;
+            float _bendScale;
             float _Scale;
             float3 _TopColor;
-            float3 _BottomColor;       
+            float3 _BottomColor;      
 
+            sampler2D _windMap; 
+            float4 _windMap_ST;
+            float4 _windFreq;
+
+            //--structures--
             struct appData
             {
                 float4 vertex : POSITION;
@@ -57,8 +69,6 @@
                 float2 uv : TEXCOORD0; 
             };
 
-
-
             struct g2f
             {
                 float4 pos : SV_POSITION;
@@ -66,6 +76,10 @@
                 float4 tan : TANGENT;
                 float2 uv : TEXCOORD0;
             };
+
+            //--structures--
+
+            //--util functions--
 
             float rand(float3 co)
             {
@@ -91,6 +105,10 @@
                     );
             }
 
+            //--util functions--
+
+            //--vertex--
+
             TessellationControlPoint myVert (appData i)
             {
                 TessellationControlPoint o;
@@ -102,6 +120,10 @@
                 return o;
             }
 
+            //--vertex--
+
+            //----tesselation----
+            
             struct TessellationFactors
             {
                 float edge[3]   : SV_TessFactor;
@@ -121,7 +143,7 @@
             [UNITY_domain("tri")]
             [UNITY_outputcontrolpoints(3)]
             [UNITY_outputtopology("triangle_cw")]
-            [UNITY_partitioning("fractional_odd")]
+            [UNITY_partitioning("integer")]
             [UNITY_patchconstantfunc("myPatchConstant")]
             TessellationControlPoint myHull (InputPatch<TessellationControlPoint,3> patch , uint id : SV_OutputControlPointID)
             {
@@ -145,6 +167,8 @@
                 return o;
             }
 
+            //----tesselation----
+            
             [maxvertexcount(3)]
             //最多输出三个点
             void myGeom(triangle v2g i[3], inout TriangleStream<g2f> triStream)
@@ -176,7 +200,7 @@
                 for (int j=0 ; j<3 ; j++)
                 {
                     ran0 = rand(i[0].pos);
-                    ran1 = rand(i[0].pos.zzx);
+                    ran1 = rand(i[0].pos.zyx);
                     
                     float3  vertOffset = j==0?blade_tri[0]:(j==1?blade_tri[1]:blade_tri[2]);
                     o.uv = j==0?float2(1,0):(j==1?float2(0,0):float2(0.5,1));
@@ -186,19 +210,36 @@
                     vertOffset[1]*= ran0*0.2;
                     vertOffset[2]*= ran1*0.2 + 0.6; //0.8~1
 
-                    //z rotate
+                    //z rotate,facing
                     angle = ran0*UNITY_TWO_PI;
                     rM = AngleAxis3x3(angle, float3(0,0,1));
-                    vertOffset = mul(rM , vertOffset);  
 
-                    //x rotate
-                    angle = ran1*UNITY_PI*0.5;
-                    rM = AngleAxis3x3(angle, float3(1,0,0));
+                    //x rotate,bending
+                    ran1 = ran1 ;
+                    angle = ran1*UNITY_TWO_PI*_bendScale;
+                    float3x3 rM_x = AngleAxis3x3(angle, float3(1,0,0)) ;
+                    rM = mul(rM,rM_x);
+
+                    //scale the uv (world position used to sample wind)
+                    float2 uv = i[0].pos.xy*_windMap_ST.xy + _windMap_ST.zw + _Time.y *_windFreq.xy;
+                    //create the wind vector from wind texture
+                    half2 wind_s = tex2Dlod(_windMap, float4(uv, 0, 0)).xy*2-1;
+                    half3 wind_vec = normalize (float3 (wind_s,0));
+                    //convert to tangent space
+                    wind_vec = mul(unity_WorldToObject, wind_vec);
+                    wind_vec = mul(O2T,wind_vec);
+
+                    float3x3 windM = AngleAxis3x3(wind_s.x, wind_vec);
+                    rM = mul(rM,windM);
+
+                    //rotate in tangent space
                     vertOffset = mul(rM , vertOffset);
 
                     //tangent to object space
                     vertOffset = float4(mul(vertOffset , O2T),1);
                     
+
+
                     o.pos = UnityObjectToClipPos(i[0].pos + _Scale * vertOffset); 
                     o.nor = i[0].nor;
                     o.tan = i[0].tan;
@@ -209,7 +250,11 @@
 
             float4 myFrag (g2f i) : SV_Target
             {   
+                float2 uv = i.pos.xy*_windMap_ST.xy + _windMap_ST.zw + _Time.y *_windFreq.xy;
+                half2 wind_vec = tex2D(_windMap, uv).xy;
                 float4 col = float4(lerp(_TopColor,_BottomColor,i.uv.y),1);
+
+                
                 return col;
             }
             ENDCG
