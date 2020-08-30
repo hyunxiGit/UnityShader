@@ -202,6 +202,7 @@ Shader "Custom/Grass"
                     ran0 = rand(i[0].pos);
                     ran1 = rand(i[0].pos.zyx);
                     
+                    //j=2 : top vertex
                     float3  vertOffset = j==0?blade_tri[0]:(j==1?blade_tri[1]:blade_tri[2]);
                     o.uv = j==0?float2(1,0):(j==1?float2(0,0):float2(0.5,1));
 
@@ -210,16 +211,18 @@ Shader "Custom/Grass"
                     vertOffset[1]*= ran0*0.2;
                     vertOffset[2]*= ran1*0.2 + 0.6; //0.8~1
 
-                    //z rotate,facing
-                    angle = ran0*UNITY_TWO_PI;
-                    rM = AngleAxis3x3(angle, float3(0,0,1));
+                    //z rotate,random facing
 
-                    //x rotate,bending
+                    angle = ran0*UNITY_TWO_PI;
+                    float3x3 rM_face = AngleAxis3x3(angle, float3(0,0,1));
+
+                    //x rotate,random bending
                     ran1 = ran1 ;
                     angle = ran1*UNITY_TWO_PI*_bendScale;
-                    float3x3 rM_x = AngleAxis3x3(angle, float3(1,0,0)) ;
-                    rM = mul(rM,rM_x);
+                    float3x3 rM_bend = AngleAxis3x3(angle, float3(1,0,0)) ;
+                    // rM = mul(rM,rM_x);
 
+                    //wind
                     //scale the uv (world position used to sample wind)
                     float2 uv = i[0].pos.xy*_windMap_ST.xy + _windMap_ST.zw + _Time.y *_windFreq.xy;
                     //create the wind vector from wind texture
@@ -229,8 +232,13 @@ Shader "Custom/Grass"
                     wind_vec = mul(unity_WorldToObject, wind_vec);
                     wind_vec = mul(O2T,wind_vec);
 
-                    float3x3 windM = AngleAxis3x3(wind_s.x, wind_vec);
-                    rM = mul(rM,windM);
+                    float3x3 rM_wind = AngleAxis3x3(wind_s.x, wind_vec);
+
+                    float3x3 rm_bottom = mul(rM_face,rM_bend);
+                    float3x3 rm_top = mul(rM_wind,rm_bottom);
+
+                    //为top点添加风矩阵 为bottom点添加普通矩阵
+                    rM = j==2?rm_top : rm_bottom;
 
                     //rotate in tangent space
                     vertOffset = mul(rM , vertOffset);
