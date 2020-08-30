@@ -168,8 +168,11 @@ Shader "Custom/Grass"
             }
 
             //----tesselation----
-            
-            [maxvertexcount(3)]
+            #define seg 4
+            #define vert_count seg*2+1
+            #define inc_x 0.5/uint(seg)
+            #define inc_y 1.0/uint(seg)
+            [maxvertexcount(vert_count)]
             //最多输出三个点
             void myGeom(triangle v2g i[3], inout TriangleStream<g2f> triStream)
             {
@@ -187,9 +190,6 @@ Shader "Custom/Grass"
                                         B.x,B.y,B.z,
                                         N.x,N.y,N.z
                                         );
-                float3x3 blade_tri = float3x3(0.5,0,0,
-                                         -0.5,0,0,
-                                          0,0,1);
 
                 //rotate angle
                 float angle;
@@ -197,14 +197,19 @@ Shader "Custom/Grass"
                 float3x3 rM;
 
                 //loop three points of grass blade
-                for (int j=0 ; j<3 ; j++)
+                for (int j=0 ; j<vert_count ; j++)
                 {
                     ran0 = rand(i[0].pos);
                     ran1 = rand(i[0].pos.zyx);
-                    
-                    //j=2 : top vertex
-                    float3  vertOffset = j==0?blade_tri[0]:(j==1?blade_tri[1]:blade_tri[2]);
-                    o.uv = j==0?float2(1,0):(j==1?float2(0,0):float2(0.5,1));
+                    //grass topology
+                    //    6
+                    //  5  4
+                    //  3  2
+                    //  1  0
+                    float _x = (1-j%2*2)*(0.5-floor(float(j)/2)*inc_x);
+                    float _z = floor(float(j/2))*inc_y;
+                    float3  vertOffset = float3(_x,0,_z);
+                    o.uv = float2(_x+0.5,_z);
 
                     //width height random
                     vertOffset[0]*= ran0*0.2;
