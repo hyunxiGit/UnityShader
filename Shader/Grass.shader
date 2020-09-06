@@ -6,6 +6,7 @@ Shader "Custom/Grass"
     {
         _windMap("wind map" , 2d) = "white" {}
         _windFreq("wind Speed" , Vector) = (1,1,1,1)
+        _windScale("wind strength" , Range(0,50))= 1 
         _tessFactor("grass amount", Range (1,64)) = 5.0
         _bendScale ("bend forward" , Range (0 , 1)) = 0.2
         _curveScale ("curve" , Range(0,4)) = 2
@@ -45,6 +46,7 @@ Shader "Custom/Grass"
             sampler2D _windMap; 
             float4 _windMap_ST;
             float4 _windFreq;
+            float _windScale;
 
             //--structures--
             struct appData
@@ -238,7 +240,7 @@ Shader "Custom/Grass"
                     float2 uv = i[0].pos.xy*_windMap_ST.xy + _windMap_ST.zw + _Time.y *_windFreq.xy;
                     //create the wind vector from wind texture
                     half2 wind_s = tex2Dlod(_windMap, float4(uv, 0, 0)).xy*2-1;
-                    half3 wind_vec = normalize (float3 (wind_s,0));
+                    half3 wind_vec = normalize (float3 (wind_s,0))*_windScale;
                     //convert to tangent space
                     wind_vec = mul(unity_WorldToObject, wind_vec);
                     wind_vec = mul(O2T,wind_vec);
