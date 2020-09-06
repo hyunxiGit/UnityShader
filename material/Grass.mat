@@ -81,13 +81,14 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _bendScale: 0.17
+    - _bendScale: 0.126
+    - _curveScale: 0.6
     - _tessFactor: 5
     m_Colors:
-    - _BottomColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BottomColor: {r: 0.2656461, g: 0.7735849, b: 0.3381344, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
-    - _TopColor: {r: 0, g: 0, b: 0, a: 1}
+    - _TopColor: {r: 0.032467052, g: 0.3018868, b: 0.08765016, a: 1}
     - _windFreq: {r: 0.05, g: 0.05, b: 1, a: 1}
   m_BuildTextureStacks: []

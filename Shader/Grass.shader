@@ -7,7 +7,8 @@ Shader "Custom/Grass"
         _windMap("wind map" , 2d) = "white" {}
         _windFreq("wind Speed" , Vector) = (1,1,1,1)
         _tessFactor("grass amount", Range (1,64)) = 5.0
-        _bendScale ("bend toward" , Range (0 , 1)) = 0.2
+        _bendScale ("bend forward" , Range (0 , 1)) = 0.2
+        _curveScale ("curve" , Range(0,4)) = 2
         _Scale("blade scale", Range(0.5,10)) = 5.0
         _TopColor("Top Color", Color) = (0,0,0,1)
         _BottomColor("Bottom Color", Color) = (1,1,1,1)
@@ -36,6 +37,7 @@ Shader "Custom/Grass"
 
             float _tessFactor;
             float _bendScale;
+            float _curveScale;
             float _Scale;
             float3 _TopColor;
             float3 _BottomColor;      
@@ -195,26 +197,29 @@ Shader "Custom/Grass"
                 float angle;
                 //rotate matrix
                 float3x3 rM;
-
+                ran0 = rand(i[0].pos);
+                ran1 = rand(i[0].pos.zyx);
                 //loop three points of grass blade
                 for (int j=0 ; j<vert_count ; j++)
                 {
-                    ran0 = rand(i[0].pos);
-                    ran1 = rand(i[0].pos.zyx);
-                    //grass topology
+
+                    //grass topology 
                     //    6
                     //  5  4
                     //  3  2
                     //  1  0
+                    //计算生成点相对于输入点位置
                     float _x = (1-j%2*2)*(0.5-floor(float(j)/2)*inc_x);
                     float _z = floor(float(j/2))*inc_y;
                     float3  vertOffset = float3(_x,0,_z);
                     o.uv = float2(_x+0.5,_z);
 
+
                     //width height random
-                    vertOffset[0]*= ran0*0.2;
-                    vertOffset[1]*= ran0*0.2;
-                    vertOffset[2]*= ran1*0.2 + 0.6; //0.8~1
+                    vertOffset.x*= ran0*0.2;
+                    vertOffset.y*= ran0*0.2;
+                    vertOffset.z*= ran1*0.2 + 0.6; //0.8~1
+                    
 
                     //z rotate,random facing
 
@@ -224,8 +229,9 @@ Shader "Custom/Grass"
                     //x rotate,random bending
                     ran1 = ran1 ;
                     angle = ran1*UNITY_TWO_PI*_bendScale;
-                    float3x3 rM_bend = AngleAxis3x3(angle, float3(1,0,0)) ;
-                    // rM = mul(rM,rM_x);
+                    //apply curve by associate the bend degree with how close the vertex is to the bottom
+                    angle = angle * pow(_z , _curveScale);
+                    float3x3 rM_bend = AngleAxis3x3(angle, float3(1,0,0));
 
                     //wind
                     //scale the uv (world position used to sample wind)
@@ -243,7 +249,7 @@ Shader "Custom/Grass"
                     float3x3 rm_top = mul(rM_wind,rm_bottom);
 
                     //为top点添加风矩阵 为bottom点添加普通矩阵
-                    rM = j==2?rm_top : rm_bottom;
+                    rM = (j==0||j ==1)? rm_bottom : rm_top ;
 
                     //rotate in tangent space
                     vertOffset = mul(rM , vertOffset);
