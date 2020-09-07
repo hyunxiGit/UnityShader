@@ -29,7 +29,8 @@ more effect can be seen :
 
 ![Image volume builder](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/pbr.jpg)
 
--ray marching displacement with two point interpolation
+-parallax effect with reverse ray marching self_exclusion shadow
 
-![Image of raymatching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/raymarchingDis.gif)
+[![PARALLAX EFFECT](https://img.youtube.com/vi/tp15Grjampg/0.jpg)](https://www.youtube.com/watch?v=tp15Grjampg)
+
 
