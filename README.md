@@ -8,8 +8,6 @@ interactable grass with wind
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Q8aPmgjUyBg/0.jpg)](https://www.youtube.com/watch?v=Q8aPmgjUyBg)
 
-![Image of shadow marching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/grass.gif)
-
 more effect can be seen :
 https://www.youtube.com/playlist?list=PLw6ZPnpJDyksqb_Vtfigif4IPL4WZ293P
 -support camera go inside volume
