@@ -6,9 +6,11 @@ tutorial shader reference to catLikeCoding : https://catlikecoding.com/unity/tut
 updates
 interactable grass with wind
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Q8aPmgjUyBg/0.jpg)](https://www.youtube.com/watch?v=Q8aPmgjUyBg)
+[![INTERACTABLE GRASS WITH WIND](https://img.youtube.com/vi/Q8aPmgjUyBg/0.jpg)](https://www.youtube.com/watch?v=Q8aPmgjUyBg)
 
 more effect can be seen :
+[![RAY MARCHING VOLUME FOG](https://img.youtube.com/vi/yCp_ShbfV5E/0.jpg)](https://www.youtube.com/watch?v=yCp_ShbfV5E)
+
 https://www.youtube.com/playlist?list=PLw6ZPnpJDyksqb_Vtfigif4IPL4WZ293P
 -support camera go inside volume
 -support camera go inside colume and scene object correct intersect and sorting
