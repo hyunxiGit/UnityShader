@@ -9,16 +9,13 @@ interactable grass with wind
 [![INTERACTABLE GRASS WITH WIND](https://img.youtube.com/vi/Q8aPmgjUyBg/0.jpg)](https://www.youtube.com/watch?v=Q8aPmgjUyBg)
 
 more effect can be seen :
+
 [![RAY MARCHING VOLUME FOG](https://img.youtube.com/vi/yCp_ShbfV5E/0.jpg)](https://www.youtube.com/watch?v=yCp_ShbfV5E)
 
-https://www.youtube.com/playlist?list=PLw6ZPnpJDyksqb_Vtfigif4IPL4WZ293P
 -support camera go inside volume
 -support camera go inside colume and scene object correct intersect and sorting
 -round step to avoid slice artifact
 -shadow marching
-
-add 1st pass shadow marching. There are some resolution problems need to figure out
-![Image of shadow marching](https://github.com/hyunxiGit/UnityShader/blob/master/readmeImg/v_fog_light_march.gif)
 
 -Scene depth test
 
