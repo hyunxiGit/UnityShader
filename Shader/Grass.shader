@@ -13,6 +13,7 @@ Shader "Custom/Grass"
         _Scale("blade scale", Range(0.5,10)) = 5.0
         _TopColor("Top Color", Color) = (0,0,0,1)
         _BottomColor("Bottom Color", Color) = (1,1,1,1)
+        _interPos("inter position", Vector) = (0,0,0,1) 
     }
     SubShader
     {
@@ -47,6 +48,8 @@ Shader "Custom/Grass"
             float4 _windMap_ST;
             float4 _windFreq;
             float _windScale;
+
+            float4 _interPos;
 
             //--structures--
             struct appData
@@ -201,6 +204,9 @@ Shader "Custom/Grass"
                 float3x3 rM;
                 ran0 = rand(i[0].pos);
                 ran1 = rand(i[0].pos.zyx);
+
+                //interative object
+                float3 int_pos = float3(0,0,0);
                 //loop three points of grass blade
                 for (int j=0 ; j<vert_count ; j++)
                 {
@@ -240,11 +246,10 @@ Shader "Custom/Grass"
                     float2 uv = i[0].pos.xy*_windMap_ST.xy + _windMap_ST.zw + _Time.y *_windFreq.xy;
                     //create the wind vector from wind texture
                     half2 wind_s = tex2Dlod(_windMap, float4(uv, 0, 0)).xy*2-1;
-                    half3 wind_vec = normalize (float3 (wind_s,0))*_windScale;
+                    half3 wind_vec = normalize (half3(wind_s,0))*_windScale;
+                    
                     //convert to tangent space
-                    wind_vec = mul(unity_WorldToObject, wind_vec);
-                    wind_vec = mul(O2T,wind_vec);
-
+                    wind_vec = mul(O2T,mul(unity_WorldToObject, wind_vec));
                     float3x3 rM_wind = AngleAxis3x3(wind_s.x, wind_vec);
 
                     float3x3 rm_bottom = mul(rM_face,rM_bend);
@@ -256,10 +261,20 @@ Shader "Custom/Grass"
                     //rotate in tangent space
                     vertOffset = mul(rM , vertOffset);
 
+                    //interact
+                    float3 pos0_tan = mul(O2T,i[0].pos);
+                    float3 pos_inter = mul(O2T, mul(unity_WorldToObject , _interPos.xyz));
+                    float3 pos_vec = pos0_tan - pos_inter;
+                    float inter_range = 5;
+                    float push_angle = -2;
+                    float pushScale = 1-smoothstep(0,inter_range,length(pos_vec)) ;
+                    float3 push_vec = normalize(cross(pos_vec , float3(0,0,1)));
+
+                    float3x3 rM_push = AngleAxis3x3(push_angle*pushScale, push_vec);
+                    vertOffset = mul(rM_push , vertOffset);
+     
                     //tangent to object space
                     vertOffset = float4(mul(vertOffset , O2T),1);
-                    
-
 
                     o.pos = UnityObjectToClipPos(i[0].pos + _Scale * vertOffset); 
                     o.nor = i[0].nor;
